@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import md5 from "../md5"
-import { pool } from "./db"
+import { exists, pool } from "./db"
 
 const createSession = (userID: number, tokenHash: string, refreshTokenHash: string, tokenExpire: Date, refreshTokenExpire: Date): Promise<boolean> => {
     return new Promise((resolve, reject) => {
@@ -15,40 +15,17 @@ const createSession = (userID: number, tokenHash: string, refreshTokenHash: stri
     })
 }
 
-const updateSession = ({ tokenID, tokenHash, tokenExpire, refreshTokenHash, refreshTokenExpire }: { tokenID: number, tokenHash?: string, tokenExpire?: Date, refreshTokenHash?: string, refreshTokenExpire?: Date }): Promise<Boolean> => {
-    return new Promise((resolve, reject) => {
-        // update token
-        if (tokenHash && tokenExpire) {
-            pool.query("UPDATE session SET tokenHash = ?, tokenExpire = ? WHERE id = ?", [tokenHash, tokenExpire, tokenID], (err) => {
-                if (err) {
-                    console.error("SQL error: ", err)
-                    return reject(err)
-                }
-
-                return resolve(true);
-            })
-        }
-
-        // update refresh token
-
-        if (refreshTokenHash && refreshTokenExpire) {
-            pool.query("UPDATE session SET refreshTokenHash = ?, refreshTokenExpire = ? WHERE id = ?", [refreshTokenHash, refreshTokenExpire, tokenID], (err) => {
-                if (err) {
-                    console.error("SQL error: ", err)
-                    return reject(err)
-                }
-
-                return resolve(true);
-            })
-        }
-    })
-}
-
 const getNewToken = (refreshToken: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
         const newTokenHash = md5(newToken)
+
+        // TODO: add expired token handling
+        const recordExists = await exists("session", "refreshTokenHash", hashed);
+        if (!recordExists) {
+            return reject("Session does not exist")
+        }
 
         pool.query("UPDATE session SET tokenHash = ? WHERE refreshTokenHash = ?", [newTokenHash, hashed], (err) => {
             if (err) {
@@ -62,10 +39,16 @@ const getNewToken = (refreshToken: string): Promise<string> => {
 }
 
 const getNewRefreshToken = (refreshToken: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
         const newTokenHash = md5(newToken)
+
+        // TODO: add expired token handling
+        const recordExists = await exists("session", "refreshTokenHash", hashed);
+        if (!recordExists) {
+            return reject("Session does not exist")
+        }
 
         pool.query("UPDATE session SET refreshTokenHash = ? WHERE refreshTokenHash = ?", [newTokenHash, hashed], (err) => {
             if (err) {
@@ -78,4 +61,4 @@ const getNewRefreshToken = (refreshToken: string): Promise<string> => {
     })
 }
 
-export { createSession, updateSession, getNewToken, getNewRefreshToken }
+export { createSession, getNewToken, getNewRefreshToken }

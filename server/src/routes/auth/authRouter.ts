@@ -2,6 +2,7 @@ import express from "express";
 import registerHandler from "./register";
 import { body } from "express-validator";
 import loginHandler from "./login";
+import tokenHandler from "./token";
 
 const authRouter = express.Router();
 
@@ -15,5 +16,7 @@ authRouter.post("/login",
     body("username").notEmpty().trim().withMessage("Username field is required"),
     body("password").notEmpty().withMessage("Password field is required"),
     loginHandler)
+
+authRouter.get("/token", tokenHandler)
 
 export default authRouter;
