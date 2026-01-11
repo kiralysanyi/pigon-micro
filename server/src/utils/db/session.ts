@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto"
+import md5 from "../md5"
 import { pool } from "./db"
 
 const createSession = (userID: number, tokenHash: string, refreshTokenHash: string, tokenExpire: Date, refreshTokenExpire: Date): Promise<boolean> => {
@@ -42,4 +44,38 @@ const updateSession = ({ tokenID, tokenHash, tokenExpire, refreshTokenHash, refr
     })
 }
 
-export { createSession, updateSession }
+const getNewToken = (refreshToken: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const hashed = md5(refreshToken);
+        const newToken = randomUUID();
+        const newTokenHash = md5(newToken)
+
+        pool.query("UPDATE session SET tokenHash = ? WHERE refreshTokenHash = ?", [newTokenHash, hashed], (err) => {
+            if (err) {
+                console.error("SQL error: ", err)
+                return reject(err);
+            }
+
+            resolve(newToken)
+        })
+    })
+}
+
+const getNewRefreshToken = (refreshToken: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const hashed = md5(refreshToken);
+        const newToken = randomUUID();
+        const newTokenHash = md5(newToken)
+
+        pool.query("UPDATE session SET refreshTokenHash = ? WHERE refreshTokenHash = ?", [newTokenHash, hashed], (err) => {
+            if (err) {
+                console.error("SQL error: ", err)
+                return reject(err);
+            }
+
+            resolve(newToken)
+        })
+    })
+}
+
+export { createSession, updateSession, getNewToken, getNewRefreshToken }
