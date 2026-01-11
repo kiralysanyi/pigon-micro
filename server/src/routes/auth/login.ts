@@ -11,11 +11,13 @@ const loginHandler: RequestHandler = (req, res) => {
         })
     }
 
-    loginUser(req.body.username, req.body.password).then(({token, refreshToken}) => {
+    loginUser(req.body.username, req.body.password).then(({token, refreshToken, refreshTokenExpire, tokenExpire}) => {
         return res.json({
             success: true,
             token: token,
-            refreshToken: refreshToken
+            refreshToken: refreshToken,
+            tokenExpire: tokenExpire,
+            refreshTokenExpire: refreshTokenExpire
         })
     }).catch((err) => {
         console.error(err);

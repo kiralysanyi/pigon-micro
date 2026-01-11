@@ -28,7 +28,7 @@ const createUser = (username: string, password: string): Promise<boolean> => {
     })
 }
 
-const loginUser = (username: string, password: string): Promise<{token: string, refreshToken: string}> => {
+const loginUser = (username: string, password: string): Promise<{ token: string, refreshToken: string, tokenExpire: Date, refreshTokenExpire: Date }> => {
     return new Promise((resolve, reject) => {
         pool.query<RowDataPacket[]>("SELECT * FROM users WHERE username = ?", [username], (err, result) => {
             if (err) {
@@ -42,23 +42,31 @@ const loginUser = (username: string, password: string): Promise<{token: string, 
             }
 
             const userData: userdata = result[0] as userdata;
-            
+
 
             verifyPass(password, userData.password).then((success) => {
                 if (success == true) {
                     const token = randomUUID();
                     const tokenHash = md5(token);
                     const refreshToken = randomUUID();
-                    const refreshTokenHash = md5(token);
+                    const refreshTokenHash = md5(refreshToken);
 
                     console.log(tokenHash);
                     // save token hash
 
-                    createSession(userData.ID, tokenHash, refreshTokenHash)
+                    const tokenExpire = new Date();
+                    const refreshTokenExpire = new Date();
+
+                    tokenExpire.setMinutes(tokenExpire.getMinutes() + 5);
+                    refreshTokenExpire.setHours(refreshTokenExpire.getHours() + 128);
+
+                    createSession(userData.ID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire)
 
                     resolve({
                         token: token,
-                        refreshToken: refreshToken
+                        refreshToken: refreshToken,
+                        tokenExpire: tokenExpire,
+                        refreshTokenExpire: refreshTokenExpire
                     });
                 } else {
                     return reject("Wrong password")
