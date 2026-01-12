@@ -1,5 +1,7 @@
 // encryption code
 
+import type { encryptedData } from "../../types/encryptedData";
+
 // Convert string helpers
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -48,7 +50,7 @@ async function encrypt(message: string, password: string) {
 }
 
 // Decrypt text
-async function decrypt({ salt, iv, ciphertext }: { salt: string, iv: string, ciphertext: string }, password: string) {
+async function decrypt({ salt, iv, ciphertext }: encryptedData, password: string) {
     const saltBytes = Uint8Array.from(atob(salt), c => c.charCodeAt(0));
     const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
     const cipherBytes = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
@@ -64,7 +66,7 @@ async function decrypt({ salt, iv, ciphertext }: { salt: string, iv: string, cip
     return dec.decode(plainBuffer);
 }
 
-function stringifyEncryptionData({ salt, iv, ciphertext }: { salt: string, iv: string, ciphertext: string }) {
+function stringifyEncryptionData({ salt, iv, ciphertext }: encryptedData) {
     return `${salt}:${iv}:${ciphertext}`
 }
 
@@ -114,14 +116,6 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
     );
 }
 
-/**
- * Export shared key to string
- * @param key
- * @returns 
- */
-async function exportKeyToString(key: CryptoKey): Promise<string> {
-    return dec.decode(new Uint8Array(await crypto.subtle.exportKey("raw", key)));
-}
 
 
-export { generateECDHKeyPair, deriveSharedKey, stringifyEncryptionData, parseEncryption, encrypt, decrypt, exportKeyToString}
+export { generateECDHKeyPair, deriveSharedKey, stringifyEncryptionData, parseEncryption, encrypt, decrypt}

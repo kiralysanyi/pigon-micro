@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
-import { deriveSharedKey, generateECDHKeyPair, encrypt, decrypt, exportKeyToString } from "../lib/encryption/ecdh";
-
-const enc = new TextEncoder();
-const dec = new TextDecoder();
-
+import { deriveSharedKey, generateECDHKeyPair, encrypt, decrypt } from "../lib/encryption/ecdh";
+import { decodeEncryptedData, encodeEncryptedData, exportKeyToBase64, exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
 
 
 const TestPage = () => {
@@ -23,19 +20,23 @@ const TestPage = () => {
 
     const onEncrypt = async () => {
         if (aShared) {
-            setEncryptOutput(JSON.stringify(await encrypt(encryptInput, aShared)))
+            setEncryptOutput(encodeEncryptedData(await encrypt(encryptInput, aShared)))
         }
     }
 
     const onDecrypt = async () => {
         if (bShared) {
             try {
-                setDecryptOutput(await decrypt(JSON.parse(decryptInput), bShared))
+                setDecryptOutput(await decrypt(decodeEncryptedData(decryptInput), bShared))
             } catch (error) {
                 console.error(error)
             }
         }
     }
+
+    /*
+        In a production environment "a" is the client where you are seeing things and "b" is the remote
+    */
 
     const genKeyPairs = async () => {
         console.log("Generate keypairs")
@@ -49,8 +50,8 @@ const TestPage = () => {
         const as = await deriveSharedKey(a.privateKey, b.publicKey);
         const bs = await deriveSharedKey(b.privateKey, a.publicKey);
 
-        setaShared(await exportKeyToString(as));
-        setbShared(await exportKeyToString(bs));
+        setaShared(await exportKeyToBase64(as));
+        setbShared(await exportKeyToBase64(bs));
 
     }
 
@@ -63,16 +64,16 @@ const TestPage = () => {
             let bkeys = "";
 
             if (aPair) {
-                akeys += dec.decode(await crypto.subtle.exportKey("pkcs8", aPair.privateKey))
+                akeys += await exportPrivateKeyToBase64(aPair.privateKey);
                 akeys += ":"
-                akeys += dec.decode(await crypto.subtle.exportKey("spki", aPair.publicKey))
+                akeys += await exportPublicKeyToBase64(aPair.publicKey);
                 setaKeyStr(akeys)
             }
 
             if (bPair) {
-                bkeys += dec.decode(await crypto.subtle.exportKey("pkcs8", bPair.privateKey))
+                bkeys += await exportPrivateKeyToBase64(bPair.privateKey);
                 bkeys += ":"
-                bkeys += dec.decode(await crypto.subtle.exportKey("spki", bPair.publicKey))
+                bkeys += await exportPublicKeyToBase64(bPair.publicKey);
                 setbKeyStr(bkeys)
             }
 
