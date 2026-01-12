@@ -3,6 +3,7 @@ interface userdata {
     username: string,
     password?: string,
     pubKey: string,
+    encryptedPrivKey?: string
     created_at: Date,
     updated_at: Date
 }
