@@ -10,10 +10,11 @@ const tokenHandler: RequestHandler = async (req, res) => {
         })
     }
 
-    getNewToken(token).then((newToken) => {
+    getNewToken(token).then(({token, tokenExpire}) => {
         return res.json({
             success: true,
-            token: newToken
+            token: token,
+            tokenExpire: tokenExpire
         })
     }).catch((err) => {
         return res.status(401).json({

@@ -10,10 +10,11 @@ const refreshTokenHandler: RequestHandler = (req, res) => {
         })
     }
 
-    getNewRefreshToken(token).then((newToken) => {
+    getNewRefreshToken(token).then(({refreshToken, refreshTokenExpire}) => {
         return res.json({
             success: true,
-            refreshToken: newToken
+            refreshToken: refreshToken,
+            refreshTokenExpire: refreshTokenExpire
         })
     }).catch((err) => {
         return res.status(401).json({

@@ -18,7 +18,7 @@ const createSession = (userID: number, tokenHash: string, refreshTokenHash: stri
     })
 }
 
-const getNewToken = (refreshToken: string): Promise<string> => {
+const getNewToken = (refreshToken: string): Promise<{token: string, tokenExpire: Date}> => {
     return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
@@ -55,13 +55,13 @@ const getNewToken = (refreshToken: string): Promise<string> => {
                     return reject(err);
                 }
 
-                resolve(newToken)
+                resolve({token: newToken, tokenExpire: newExpireDate})
             })
         })
     })
 }
 
-const getNewRefreshToken = (refreshToken: string): Promise<string> => {
+const getNewRefreshToken = (refreshToken: string): Promise<{refreshToken: string, refreshTokenExpire: Date}> => {
     return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
@@ -96,7 +96,7 @@ const getNewRefreshToken = (refreshToken: string): Promise<string> => {
                     return reject(err);
                 }
 
-                resolve(newToken)
+                resolve({refreshToken: newToken, refreshTokenExpire: newExpireDate})
             })
         })
     })

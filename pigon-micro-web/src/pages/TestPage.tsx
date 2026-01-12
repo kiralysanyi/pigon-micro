@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { deriveSharedKey, generateECDHKeyPair, encrypt, decrypt } from "../lib/encryption/ecdh";
 import { decodeEncryptedData, encodeEncryptedData, exportKeyToBase64, exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
+import { io } from "socket.io-client";
 
 
 const TestPage = () => {
@@ -86,6 +87,33 @@ const TestPage = () => {
         genKeyPairs();
 
         return () => { }
+    }, [])
+
+    useEffect(() => {
+        const socket = io("localhost:8080", { path: "/socket" });
+
+        socket.on("connect", () => {
+            console.log("Socket connected")
+        })
+
+        socket.on("auth_done", () => {
+            console.log("Auth done")
+        })
+
+        socket.on("error", (err) => {
+            console.error(err)
+        })
+
+        socket.on("connect_error", (err) => {
+            console.error(err)
+        })
+
+
+        socket.on("auth_error", (err) => {
+            console.error(err)
+        })
+
+        socket.connect()
     }, [])
 
     return <>

@@ -66,21 +66,6 @@ async function decrypt({ salt, iv, ciphertext }: encryptedData, password: string
     return dec.decode(plainBuffer);
 }
 
-function stringifyEncryptionData({ salt, iv, ciphertext }: encryptedData) {
-    return `${salt}:${iv}:${ciphertext}`
-}
-
-
-function parseEncryption(data: string) {
-    const splitData = data.split(':');
-    return {
-        salt: splitData[0],
-        iv: splitData[1],
-        ciphertext: splitData[2]
-    }
-}
-
-
 // encryption code end
 
 
@@ -118,4 +103,4 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
 
 
 
-export { generateECDHKeyPair, deriveSharedKey, stringifyEncryptionData, parseEncryption, encrypt, decrypt}
+export { generateECDHKeyPair, deriveSharedKey, encrypt, decrypt}
