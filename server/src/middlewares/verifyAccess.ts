@@ -1,7 +1,8 @@
 import { RequestHandler } from "express";
-import { getNewRefreshToken } from "../../utils/db/session";
+import { verifyAccessToken } from "../utils/db/session";
+import { reqWithUserinfo } from "../types/reqWithUserinfo";
 
-const refreshTokenHandler: RequestHandler = (req, res) => {
+const verifyAccessMiddleware: RequestHandler = (req: reqWithUserinfo, res, next) => {
     const token = req.headers["authorization"] ? req.headers["authorization"].split(' ')[1] : null;
 
     if (token == null) {
@@ -10,11 +11,9 @@ const refreshTokenHandler: RequestHandler = (req, res) => {
         })
     }
 
-    getNewRefreshToken(token).then((newToken) => {
-        return res.json({
-            success: true,
-            refreshToken: newToken
-        })
+    verifyAccessToken(token).then((userinfo) => {
+        req.userinfo = userinfo;
+        next()
     }).catch((err) => {
         return res.status(401).json({
             success: false,
@@ -23,4 +22,4 @@ const refreshTokenHandler: RequestHandler = (req, res) => {
     })
 }
 
-export default refreshTokenHandler;
+export default verifyAccessMiddleware;

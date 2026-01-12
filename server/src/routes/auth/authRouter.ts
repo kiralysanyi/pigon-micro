@@ -3,6 +3,9 @@ import registerHandler from "./register";
 import { body } from "express-validator";
 import loginHandler from "./login";
 import tokenHandler from "./token";
+import refreshTokenHandler from "./refreshtoken";
+import verifyAccessMiddleware from "../../middlewares/verifyAccess";
+import infoHandler from "./info";
 
 const authRouter = express.Router();
 
@@ -17,6 +20,9 @@ authRouter.post("/login",
     body("password").notEmpty().withMessage("Password field is required"),
     loginHandler)
 
-authRouter.get("/token", tokenHandler)
+authRouter.get("/token", tokenHandler);
+authRouter.get("/refreshtoken", refreshTokenHandler)
+authRouter.get("/info", verifyAccessMiddleware, infoHandler)
+
 
 export default authRouter;
