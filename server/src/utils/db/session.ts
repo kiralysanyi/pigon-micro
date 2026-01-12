@@ -46,7 +46,7 @@ const getNewToken = (refreshToken: string): Promise<string> => {
             }
 
             const newExpireDate = new Date();
-            newExpireDate.setHours(newExpireDate.getHours() + serverConfig.REFRESH_EXPIRE)
+            newExpireDate.setHours(newExpireDate.getMinutes() + serverConfig.ACCESS_EXPIRE)
 
 
             pool.query("UPDATE session SET tokenHash = ?, tokenExpire = ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed], (err) => {
