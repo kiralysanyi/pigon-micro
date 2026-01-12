@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+
+.test_content {
+  background-color: rgb(59, 0, 0);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.test_content div {
+  background-color: rgb(88, 66, 70);
+}
