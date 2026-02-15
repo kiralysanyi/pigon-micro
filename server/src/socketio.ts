@@ -36,7 +36,7 @@ const attachSocketio = (server: Server) => {
     })
 
     io.on('connection', (socket: ExtendedSocket) => {
-        console.log("Socket connected: ", socket.id)
+        console.log("Socket connected: ", socket.id, socket.authenticated)
 
         socket.on("message", (message: Message) => {
             if (socket.authenticated) {

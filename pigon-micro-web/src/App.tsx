@@ -4,6 +4,8 @@ import IndexPage from './pages/IndexPage'
 import TestPage from './pages/TestPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import SetupPage from './pages/SetupPage'
+import UnlockPage from './pages/UnlockPage'
 
 const router = createBrowserRouter([
   {
@@ -18,6 +20,14 @@ const router = createBrowserRouter([
   {
     path: "/register",
     Component: RegisterPage
+  },
+  {
+    path: "/setup",
+    Component: SetupPage
+  },
+  {
+    path: "/unlock",
+    Component: UnlockPage
   },
   {
     path: "/test",
