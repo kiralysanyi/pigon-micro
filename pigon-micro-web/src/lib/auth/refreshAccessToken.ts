@@ -5,7 +5,7 @@ import getRefreshToken from "./getRefreshToken";
 const refreshAccessToken = (): Promise<{ token: string, tokenExpire: string }> => {
     return new Promise(async (resolved, rejected) => {
         const rtoken = await getRefreshToken();
-        axios.post(BASEURL + "/api/v1/auth/token", null, { headers: { Authorization: `Bearer ${rtoken}` } }).then((response) => {
+        axios.get(BASEURL + "/api/v1/auth/token", { headers: { Authorization: `Bearer ${rtoken}` } }).then((response) => {
             console.log(response.statusText);
             if (response.status !== 200) {
                 rejected();

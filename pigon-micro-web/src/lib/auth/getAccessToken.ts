@@ -27,6 +27,8 @@ const getAccessToken = (): Promise<string> => {
                 console.error("Failed to get new access token: ", error)
                 rejected();
             }
+        } else {
+            resolved(atoken)
         }
     })
 }
