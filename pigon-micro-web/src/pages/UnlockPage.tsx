@@ -32,6 +32,7 @@ const UnlockPage = () => {
     }, []);
 
     const unlock = () => {
+        setError(undefined)
         setLoading(true);
         if (encryptedPrivkey && pubkey) {
             const epkeyData = decodeEncryptedData(encryptedPrivkey);
