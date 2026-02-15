@@ -18,7 +18,7 @@ const createSession = (userID: number, tokenHash: string, refreshTokenHash: stri
     })
 }
 
-const getNewToken = (refreshToken: string): Promise<{token: string, tokenExpire: Date}> => {
+const getNewToken = (refreshToken: string): Promise<{ token: string, tokenExpire: Date }> => {
     return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
@@ -46,7 +46,7 @@ const getNewToken = (refreshToken: string): Promise<{token: string, tokenExpire:
             }
 
             const newExpireDate = new Date();
-            newExpireDate.setHours(newExpireDate.getMinutes() + serverConfig.ACCESS_EXPIRE)
+            newExpireDate.setMinutes(newExpireDate.getMinutes() + serverConfig.ACCESS_EXPIRE)
 
 
             pool.query("UPDATE session SET tokenHash = ?, tokenExpire = ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed], (err) => {
@@ -55,13 +55,13 @@ const getNewToken = (refreshToken: string): Promise<{token: string, tokenExpire:
                     return reject(err);
                 }
 
-                resolve({token: newToken, tokenExpire: newExpireDate})
+                resolve({ token: newToken, tokenExpire: newExpireDate })
             })
         })
     })
 }
 
-const getNewRefreshToken = (refreshToken: string): Promise<{refreshToken: string, refreshTokenExpire: Date}> => {
+const getNewRefreshToken = (refreshToken: string): Promise<{ refreshToken: string, refreshTokenExpire: Date }> => {
     return new Promise(async (resolve, reject) => {
         const hashed = md5(refreshToken);
         const newToken = randomUUID();
@@ -96,7 +96,7 @@ const getNewRefreshToken = (refreshToken: string): Promise<{refreshToken: string
                     return reject(err);
                 }
 
-                resolve({refreshToken: newToken, refreshTokenExpire: newExpireDate})
+                resolve({ refreshToken: newToken, refreshTokenExpire: newExpireDate })
             })
         })
     })
