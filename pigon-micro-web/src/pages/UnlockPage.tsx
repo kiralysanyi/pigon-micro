@@ -53,6 +53,7 @@ const UnlockPage = () => {
     return <>
         <div className="modal">
             <h2>{statusText}</h2>
+            {error && <div className="error-msg">{error}</div>}
             {loading ? <div className="spinner" style={{ marginLeft: "auto", marginRight: "auto" }}></div> : <>
                 <div className="form-group">
                     <label htmlFor="kpass">Keyring password</label>
