@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<string>();
+    const [keys, setKeys] = useState<{ pubKey: string | null, privKey: string | null }>();
 
     const navigate = useNavigate();
 
@@ -24,6 +25,17 @@ const IndexPage = () => {
         }).catch(() => {
             console.error("Failed to get access token")
         })
+
+        const k = {
+            pubKey: sessionStorage.getItem("pubKey"),
+            privKey: sessionStorage.getItem("privKey")
+        }
+
+        if (k.privKey == null) {
+            navigate("/unlock")
+        }
+
+        setKeys(k)
     }, [])
 
     useEffect(() => {
@@ -33,6 +45,7 @@ const IndexPage = () => {
     return <>
         <h1>Das ist pigon</h1>
         {userdata && <p>Logged in as: {userdata}</p>}
+        {keys && <p>Keys: {JSON.stringify(keys)}</p>}
     </>
 }
 

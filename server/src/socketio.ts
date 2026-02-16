@@ -2,7 +2,6 @@ import { Server } from "http";
 import * as SocketIO from "socket.io"
 import { verifyAccessToken } from "./utils/db/session";
 import { ExtendedSocket } from "./types/ExtendedSocket";
-import { Message } from "./types/Message";
 
 const attachSocketio = (server: Server) => {
     console.log("Attaching socket.io")
@@ -38,11 +37,7 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected: ", socket.id, socket.authenticated)
 
-        socket.on("message", (message: Message) => {
-            if (socket.authenticated) {
-                
-            }
-        })
+        
     });
 }
 

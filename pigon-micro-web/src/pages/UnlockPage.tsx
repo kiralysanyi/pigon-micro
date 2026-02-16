@@ -4,6 +4,7 @@ import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { decodeEncryptedData } from "../lib/encryption/utils";
 import { decrypt } from "../lib/encryption/ecdh";
+import { useNavigate } from "react-router";
 
 const UnlockPage = () => {
     const [loading, setLoading] = useState(true);
@@ -11,7 +12,9 @@ const UnlockPage = () => {
     const [error, setError] = useState<string>()
     const [encryptedPrivkey, setEncryptedPrivkey] = useState<string>();
     const [pubkey, setPubkey] = useState<string>();
-    const [kpass, setKpass] = useState("")
+    const [kpass, setKpass] = useState("");
+
+    const navigate = useNavigate()
 
     useEffect(() => {
         getAccessToken().then((token) => {
@@ -39,6 +42,11 @@ const UnlockPage = () => {
             decrypt(epkeyData, kpass).then((decrypted) => {
                 console.log("Decrypted privkey: ", decrypted)
                 setStatusText("Unlocked keyring successfully")
+
+                sessionStorage.setItem("privKey", decrypted);
+                sessionStorage.setItem("pubKey", pubkey);
+                
+                navigate("/")
             }).catch((error) => {
                 console.error("Failed to decrypt private key: ", error)
                 setStatusText("Unlock keyring")

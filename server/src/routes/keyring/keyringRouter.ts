@@ -4,6 +4,8 @@ import submitPubKey from "./submitPubKey";
 import submitPrivKey from "./submitPrivKey";
 import getPrivKey from "./getPrivKey";
 import getPubKey from "./getPubKey";
+import getKeys from "./getKeys";
+import submitKeys from "./submitKeys";
 
 const keyringRouter = express.Router();
 
@@ -11,5 +13,11 @@ keyringRouter.post("/pubkey", body("pubKey").notEmpty().withMessage("Pubkey fiel
 keyringRouter.post("/privkey", body("encryptedPrivKey").notEmpty().withMessage("encryptedPrivKey field is required"), submitPrivKey);
 keyringRouter.get("/privkey", getPrivKey);
 keyringRouter.get("/pubkey", getPubKey);
+keyringRouter.get("/keys", getKeys);
+keyringRouter.post("/keys",
+    body("chatID").notEmpty().withMessage("chatID required"),
+    body("key").notEmpty().withMessage("key required"),
+    body("type").notEmpty().withMessage("type required"),
+    submitKeys);
 
 export default keyringRouter;
