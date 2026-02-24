@@ -31,6 +31,9 @@ const UnlockPage = () => {
                     setStatusText("Unlock keyring")
                 })
             })
+        }).catch(() => {
+            //access token error, redirect to login
+            navigate("/login")
         })
     }, []);
 

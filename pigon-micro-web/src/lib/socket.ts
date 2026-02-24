@@ -1,20 +1,33 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 import getAccessToken from "./auth/getAccessToken";
 
 //Todo: configure properly
-const socket = io("localhost:8080", { path: "/socket", extraHeaders: { "Authorization": `Bearer ${await getAccessToken()}` } });
+let socket: Socket | undefined;
 
-socket.on("connect_error", (err) => {
-    console.error(err);
-});
+getAccessToken().then(async (token: string) => {
+    socket = io("localhost:8080", { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
+    socket.on("connect_error", (err) => {
+        console.error(err);
+    });
 
-socket.on("error", (err) => {
-    console.error(err);
+    socket.on("error", (err) => {
+        console.error(err);
+    })
+
+    socket.on("connected", () => {
+        console.log("Socket connected")
+    })
+}).catch(() => {
+    console.log("Failed to initialize socket connection, probabbly no token")
 })
 
-socket.on("connected", () => {
-    console.log("Socket connected")
-})
+const getSocket = () => {
+    if (socket) {
+        return socket
+    } else {
+        throw new Error("Socket not initialized yet");
+    }
+}
 
 
-export { socket }
+export { getSocket }

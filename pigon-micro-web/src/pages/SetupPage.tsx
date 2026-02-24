@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { encrypt, generateECDHKeyPair } from "../lib/encryption/ecdh";
 import { encodeEncryptedData, exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
 import axios from "axios";
@@ -17,6 +17,13 @@ const SetupPage = () => {
     const [kpass1, setKpass1] = useState("");
 
     const navigate = useNavigate();
+
+    // check auth
+    useEffect(() => {
+        getAccessToken().catch(() => {
+            navigate("/login")
+        })
+    }, [])
 
     const create = () => {
         setError(undefined)

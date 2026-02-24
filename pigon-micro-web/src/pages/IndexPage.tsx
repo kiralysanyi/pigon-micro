@@ -2,7 +2,6 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
-import { socket } from "../lib/socket";
 import { useNavigate } from "react-router";
 
 const IndexPage = () => {
@@ -37,10 +36,6 @@ const IndexPage = () => {
 
         setKeys(k)
     }, [])
-
-    useEffect(() => {
-        console.log("Connected: ", socket.connected)
-    }, [socket.connected])
 
     return <>
         <h1>Das ist pigon</h1>
