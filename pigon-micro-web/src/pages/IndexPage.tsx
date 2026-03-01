@@ -2,10 +2,12 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
-import { useNavigate } from "react-router";
+import { Outlet, useNavigate } from "react-router";
+import type { userdata } from "../types/userdata";
+import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 
 const IndexPage = () => {
-    const [userdata, setUserdata] = useState<string>();
+    const [userdata, setUserdata] = useState<userdata>();
     const [keys, setKeys] = useState<{ pubKey: string | null, privKey: string | null }>();
 
     const navigate = useNavigate();
@@ -13,7 +15,7 @@ const IndexPage = () => {
     useEffect(() => {
         getAccessToken().then((token) => {
             axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}` } }).then((response) => {
-                setUserdata(JSON.stringify(response.data.data))
+                setUserdata(response.data.data)
                 console.log("Got user data: ", response.data.data)
                 if (response.data.data.pubKey == null) {
                     navigate("/setup")
@@ -38,9 +40,18 @@ const IndexPage = () => {
     }, [])
 
     return <>
-        <h1>Das ist pigon</h1>
-        {userdata && <p>Logged in as: {userdata}</p>}
-        {keys && <p>Keys: {JSON.stringify(keys)}</p>}
+        <div className="header">
+            <div className="user-display">
+                <span>{userdata?.username}</span>
+                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24}/>
+            </div>
+        </div>
+        <div className="sidebar">
+            {/* Chat list render */}
+        </div>
+        <div className="chat-main-container">
+            <Outlet />
+        </div>
     </>
 }
 

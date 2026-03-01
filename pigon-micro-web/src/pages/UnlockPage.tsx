@@ -42,13 +42,27 @@ const UnlockPage = () => {
         setLoading(true);
         if (encryptedPrivkey && pubkey) {
             const epkeyData = decodeEncryptedData(encryptedPrivkey);
-            decrypt(epkeyData, kpass).then((decrypted) => {
+            decrypt(epkeyData, kpass).then(async (decrypted) => {
                 console.log("Decrypted privkey: ", decrypted)
                 setStatusText("Unlocked keyring successfully")
 
                 sessionStorage.setItem("privKey", decrypted);
                 sessionStorage.setItem("pubKey", pubkey);
-                
+
+                // get rsa keys
+
+                axios.get(BASEURL + "/api/v1/keyring/rsa/keys", { headers: { Authorization: `Bearer: ${await getAccessToken()}` } }).then(async (response) => {
+                    if (response.status == 200) {
+                        const pubRsaKey = response.data.keys.public;
+                        const privRsaKey = response.data.keys.private;
+                        const decryptedPrivateKey = await decrypt(decodeEncryptedData(privRsaKey), kpass)
+                        sessionStorage.setItem("privRsa", decryptedPrivateKey);
+                        sessionStorage.setItem("pubRsa", pubRsaKey)
+                    }
+                }).catch((err) => {
+                    console.error("Failed to get rsa keys: ", err)
+                })
+
                 navigate("/")
             }).catch((error) => {
                 console.error("Failed to decrypt private key: ", error)

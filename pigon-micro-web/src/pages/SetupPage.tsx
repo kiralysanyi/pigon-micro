@@ -5,6 +5,7 @@ import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
+import { exportRsaPrivateKey, exportRsaPublicKey, generateRsaKeyPair } from "../lib/encryption/rsa";
 
 // page for setting up keystore and other cryptographic shit
 const SetupPage = () => {
@@ -44,6 +45,8 @@ const SetupPage = () => {
             return;
         }
 
+        // TODO: error handling
+
         generateECDHKeyPair().then(async (keypair) => {
             setStatusText("Generating keys");
             const pub = await exportPublicKeyToBase64(keypair.publicKey);
@@ -51,18 +54,40 @@ const SetupPage = () => {
             setStatusText("Encrypting private key for storage");
             const encryptedPKey = encodeEncryptedData(await encrypt(priv, kpass));
             setStatusText("Uploading keys")
+            // send ecdh public key
             axios.post(BASEURL + "/api/v1/keyring/pubkey",
                 { pubKey: pub },
                 { headers: { Authorization: `Bearer ${await getAccessToken()}` } }
             ).then(async (response) => {
                 if (response.status == 201) {
+                    // send ecdh private key
                     axios.post(BASEURL + "/api/v1/keyring/privkey", { encryptedPrivKey: encryptedPKey }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
                         if (response.status == 201) {
-                            setStatusText("Keys uploaded successfully")
-                            setTimeout(() => {
-                                console.log("Navigate to keyring unlock")
-                                navigate("/unlock")
-                            }, 300);
+                            setStatusText("Setting up rsa keys")
+                            // set up rsa keys
+                            generateRsaKeyPair().then(async (rsakeys) => {
+                                let rsaPriv = await exportRsaPrivateKey(rsakeys.privateKey);
+                                let rsaPub = await exportRsaPublicKey(rsakeys.publicKey);
+
+                                // encrypt rsa private key too
+                                rsaPriv = encodeEncryptedData(await encrypt(rsaPriv, kpass));
+
+                                // send keys
+                                axios.post(BASEURL + "/api/v1/keyring/rsa/keys", {
+                                    public: rsaPub,
+                                    private: rsaPriv
+                                }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
+                                    if (response.status == 201) {
+                                        console.log("Rsa keys uploaded")
+                                        navigate("/unlock");
+                                    } else {
+                                        console.log("Unhandled status from server: ", response.status)
+                                    }
+                                }).catch((err) => {
+                                    console.error("Failed to upload rsa keys: ", err)
+                                })
+                            })
+
                         } else {
                             setStatusText("Failed to upload private key")
                             setCreating(false)

@@ -7,6 +7,7 @@ import getPubKey from "./getPubKey";
 import getKeys from "./getKeys";
 import submitKeys from "./submitKeys";
 import submitRsaKeys from "./submitRsaKeys";
+import getRsaKeys from "./getRsaKeys";
 
 const keyringRouter = express.Router();
 
@@ -26,5 +27,7 @@ keyringRouter.post("/rsa/keys",
     body("private").notEmpty().withMessage("private field required"),
     submitRsaKeys
 )
+
+keyringRouter.get("/rsa/keys", getRsaKeys)
 
 export default keyringRouter;

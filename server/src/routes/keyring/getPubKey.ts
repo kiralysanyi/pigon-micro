@@ -4,7 +4,11 @@ import { pool } from "../../utils/db/db";
 import { RowDataPacket } from "mysql2";
 
 const getPubKey: RequestHandler = (req: reqWithUserinfo, res) => {
-    pool.query<RowDataPacket[]>("SELECT pubKey FROM users WHERE ID = ?", [req.userinfo.ID], (err, result) => {
+    let targetID = req.userinfo.ID;
+    if (req.query.userID != undefined) {
+        targetID = parseInt((req.query.userID as string));
+    }
+    pool.query<RowDataPacket[]>("SELECT pubKey FROM users WHERE ID = ?", [targetID], (err, result) => {
         if (err) {
             console.error(err)
             return res.status(500).json({
