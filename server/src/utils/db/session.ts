@@ -133,7 +133,6 @@ const verifyAccessToken = (token: string): Promise<userdata> => {
                 }
 
                 const data: userdata = result[0] as userdata;
-                console.log(data)
 
                 return resolve(data);
             })

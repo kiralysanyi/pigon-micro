@@ -1,5 +1,6 @@
 import refreshAccessToken from "./refreshAccessToken";
 
+// todo: fix expired token handling
 const getAccessToken = (): Promise<string> => {
     return new Promise(async (resolved, rejected) => {
         let atoken = localStorage.getItem("atoken");
