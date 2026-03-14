@@ -6,6 +6,8 @@ const ChatPage = () => {
     const params = useParams();
     const [message, setMessage] = useState("");
 
+    const [messages, setMessages] = useState<any[]>([])
+
     const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined)
 
     // Load chatservice
@@ -25,6 +27,7 @@ const ChatPage = () => {
 
             // message related to this chat
             console.log(senderID, message);
+            setMessages(prev => [...prev, { message: message, sender: senderID }]);
         })
 
         console.log(chatProvider.sendMessage)
@@ -42,11 +45,20 @@ const ChatPage = () => {
         }
     }, [])
 
-    return <div style={{ paddingTop: "5rem" }}>
-        <h1>Chat: {params.id}</h1>
-        <div className="input-group">
+    const sendMsg = () => {
+        sendMessageRef.current?.(message);
+        setMessages(prev => [...prev, { sender: "you", message: message }])
+    }
+
+    return <div>
+        <div className="message-display">
+            {messages.reverse().map((msg) => <div>
+                <span>{msg.sender}: {msg.message}</span>
+            </div>)}
+        </div>
+        <div className="send-message">
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="msg" />
-            <button onClick={() => sendMessageRef.current?.(message)}>Send</button>
+            <button onClick={sendMsg}>Send</button>
         </div>
     </div>
 }
