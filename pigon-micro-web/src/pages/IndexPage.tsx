@@ -9,12 +9,14 @@ import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
     const [keys, setKeys] = useState<{ pubKey: string | null, privKey: string | null }>();
+    const [chats, setChats] = useState<any[]>()
 
     const navigate = useNavigate();
 
     useEffect(() => {
         getAccessToken().then((token) => {
-            axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}` } }).then((response) => {
+            // get userinfo
+            axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
                 setUserdata(response.data.data)
                 console.log("Got user data: ", response.data.data)
                 if (response.data.data.pubKey == null) {
@@ -22,6 +24,15 @@ const IndexPage = () => {
                 }
             }).catch((error) => {
                 console.error(error)
+            })
+
+            // get chats
+
+            axios.get(BASEURL + "/api/v1/chat", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
+                setChats(response.data.chats);
+                console.log(response.data)
+            }).catch((err) => {
+                console.error("Failed to get chats: ", err)
             })
         }).catch(() => {
             console.error("Failed to get access token")
@@ -43,11 +54,17 @@ const IndexPage = () => {
         <div className="header">
             <div className="user-display">
                 <span>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24}/>
+                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} />
             </div>
         </div>
         <div className="sidebar">
             {/* Chat list render */}
+            <div className="chatlist">
+                {chats && chats.map((chat) => <div onClick={() => navigate("/chat/" + chat.chatID)}>
+                    <span>{chat.name}</span>
+                </div>)}
+            </div>
+            <div className="newchat" onClick={() => navigate("/newchat")}>Start new chat</div>
         </div>
         <div className="chat-main-container">
             <Outlet />

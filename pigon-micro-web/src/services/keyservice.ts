@@ -30,7 +30,15 @@ const getSharedKey = (chatID: number): Promise<string> => {
 
 }
 
+const getRsaKeys = () => {
+
+}
+
+const getPubRsaKey = (userID: number) => {}
+
 
 export {
-    getSharedKey
+    getSharedKey,
+    getRsaKeys,
+    getPubRsaKey
 }

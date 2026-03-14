@@ -1,5 +1,8 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
+import { getSharedKey } from "./keyservice";
+import { decrypt, encrypt } from "../lib/encryption/ecdh";
+import { decodeEncryptedData, encodeEncryptedData } from "../lib/encryption/utils";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number }>;
@@ -22,16 +25,24 @@ class ChatService extends EventTarget {
 
     socket: Socket | undefined;
 
-    private messageHandler(payload: string, chatID: number, senderID: number) {
+    private async messageHandler(payload: string, chatID: number, senderID: number) {
+        const dKey = await getSharedKey(chatID);
 
+        decrypt(decodeEncryptedData(payload), dKey).then((message) => {
+            this.dispatchEvent(new CustomEvent("message", {
+                detail: { message: message, chatID, senderID }
+            }))
+        }).catch((err) => {
+            console.error("Failed to decrypt message: ", err)
+            console.error("MSGINFO: ", payload, chatID, senderID)
+        })
     }
 
-    sendMessage(message: string, chatID: number) {
-        let encrypted = message;
-        // todo: encrypt
-
+    async sendMessage(message: string, chatID: number) {
+        const sharedKey = await getSharedKey(chatID)
+        let encrypted = await encrypt(message, sharedKey)
         // todo: add ack
-        this.socket?.emit("message", { payload: encrypted, chatID })
+        this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID })
     }
 
     init() {

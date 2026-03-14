@@ -5,6 +5,7 @@ import { userdata } from "../../types/userdata";
 import { randomUUID } from "node:crypto";
 import md5 from "../md5";
 import { createSession } from "./session";
+import { userdataBrief } from "../../types/userdataBrief";
 
 const createUser = (username: string, password: string): Promise<boolean> => {
     return new Promise(async (resolve, reject) => {
@@ -76,4 +77,17 @@ const loginUser = (username: string, password: string): Promise<{ token: string,
     })
 }
 
-export { createUser, loginUser };
+const listUsers = (search: string, limit: number = 50): Promise<userdataBrief[]> => {
+    return new Promise((resolve, reject) => {
+        pool.query<RowDataPacket[]>("SELECT id, username, created_at FROM users WHERE username LIKE ? LIMIT ?", [`%${search}%`, limit], (err, result) => {
+            if (err) {
+                console.error("Failed to list users: ", err)
+                return reject(err)
+            }
+
+            resolve(result as userdataBrief[])
+        })
+    })
+}
+
+export { createUser, loginUser, listUsers };
