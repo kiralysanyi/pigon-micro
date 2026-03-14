@@ -29,12 +29,9 @@ class ChatService extends EventTarget {
         const dKey = await getSharedKey(chatID);
         console.log("Shared key (decrypt): ",dKey)
 
-        console.log(this.dispatchEvent)
-        const dp = this.dispatchEvent;
-
         decrypt(decodeEncryptedData(payload), dKey).then((message) => {
             console.log("Decrypted: ", message)
-            dp(new CustomEvent("message", {
+            this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: message, chatID, senderID }
             }))
         }).catch((err) => {
