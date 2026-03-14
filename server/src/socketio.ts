@@ -45,11 +45,7 @@ const attachSocketio = (server: Server) => {
             // get chat participants
             const participants = await getParticipants(chatID)
 
-            console.log("Participants: ", participants)
-
             const filteredParticipants = participants.filter((p) => p.id != socket.userinfo.ID);
-
-            console.log("Filtered: ",filteredParticipants)
 
             filteredParticipants.forEach((p) => {
                 io.to("usr" + p.id).emit("message", payload, chatID, socket.userinfo.ID)
