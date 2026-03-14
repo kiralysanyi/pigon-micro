@@ -19,7 +19,11 @@ const getSharedKey = (chatID: number): Promise<string> => {
             // get current user's ID.
             const userInfo = await getUserInfo();
 
+            console.log("Exclude: ", userInfo.ID)
+
             const targetID = participants.filter((p: any) => p.id != userInfo.ID)[0].id
+
+            console.log("gsk targetID: ", targetID)
 
             // get private key of current user
             const savedPrivKey = sessionStorage.getItem("privKey");

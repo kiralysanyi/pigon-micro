@@ -27,8 +27,10 @@ class ChatService extends EventTarget {
 
     private async messageHandler(payload: string, chatID: number, senderID: number) {
         const dKey = await getSharedKey(chatID);
+        console.log("Shared key (decrypt): ",dKey)
 
         decrypt(decodeEncryptedData(payload), dKey).then((message) => {
+            console.log("Decrypted: ", message)
             this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: message, chatID, senderID }
             }))
@@ -41,7 +43,9 @@ class ChatService extends EventTarget {
     async sendMessage(message: string, chatID: number) {
         const sharedKey = await getSharedKey(chatID)
         let encrypted = await encrypt(message, sharedKey)
+        console.log("Shared key: ", sharedKey)
         // todo: add ack
+        console.log("Sending message: ", encrypted, chatID, this.socket)
         this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID })
     }
 
@@ -50,8 +54,10 @@ class ChatService extends EventTarget {
     }
 
     init() {
+        console.log("Chatservice init")
         getSocket()
             .then((sock) => {
+                console.log("Got socket")
                 this.socket = sock;
 
                 // attach event listeners

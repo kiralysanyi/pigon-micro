@@ -7,7 +7,7 @@ const getUserInfo = (): Promise<userdata> => {
     return new Promise((resolve, reject) => {
         getAccessToken().then((token) => {
             axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
-                resolve(response.data)
+                resolve(response.data.data)
             }).catch((error) => {
                 console.error(error)
                 reject(error)

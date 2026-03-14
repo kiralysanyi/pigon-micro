@@ -22,6 +22,8 @@ const getSocket = (): Promise<Socket> => {
                 socket.on("connected", () => {
                     console.log("Socket connected")
                 })
+
+                resolve(socket)
             }).catch(() => {
                 reject("Failed to initialize socket connection, probabbly no token")
             })
