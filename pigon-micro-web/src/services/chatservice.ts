@@ -45,15 +45,17 @@ class ChatService extends EventTarget {
         this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID })
     }
 
+    unload() {
+        this.socket?.off("message", this.messageHandler)
+    }
+
     init() {
         getSocket()
             .then((sock) => {
                 this.socket = sock;
 
                 // attach event listeners
-                sock.on("message", (payload: string, chatID: number, senderID: number) => {
-                    this.messageHandler(payload, chatID, senderID);
-                })
+                sock.on("message", this.messageHandler)
 
 
             })
