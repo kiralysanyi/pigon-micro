@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import ChatService from "../services/chatservice";
+import type { Message } from "../types/Message";
+import type { userdata } from "../types/userdata";
 
 const ChatPage = () => {
     const params = useParams();
     const [message, setMessage] = useState("");
 
-    const [messages, setMessages] = useState<any[]>([])
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [userInfo, setUserInfo] = useState<userdata>();
 
     const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined)
 
@@ -27,17 +30,27 @@ const ChatPage = () => {
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { message: message, sender: senderID }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, date: new Date().toISOString(), message: message, type: "text" }]);
         })
 
         console.log(chatProvider.sendMessage)
 
-        const smsg = (message: string) => {
-            chatProvider.sendMessage(message, parseInt(params.id as string))
+        const smsg = async (message: string) => {
             console.log("Sending")
+            await chatProvider.sendMessage(message, parseInt(params.id as string))
+            console.log("Sent")
         }
 
         sendMessageRef.current = smsg;
+
+        // get message history
+
+        chatProvider.getMessageHistory(parseInt(params.id as string)).then((pastMessages) => {
+            console.log("Got decrypted message history: ", pastMessages)
+            setMessages(pastMessages)
+        }).catch((err) => {
+            console.error("Failed to get message history: ", err)
+        })
 
         return () => {
             console.log("Unloading chat service for chat: ", params.id)
@@ -47,13 +60,13 @@ const ChatPage = () => {
 
     const sendMsg = () => {
         sendMessageRef.current?.(message);
-        setMessages(prev => [...prev, { sender: "you", message: message }])
+        setMessages(prev => [...prev, { senderID: 0, chatID: parseInt(params.id as string), date: new Date().toISOString(), message: message, type: "text" }])
     }
 
     return <div>
         <div className="message-display">
-            {messages.reverse().map((msg) => <div>
-                <span>{msg.sender}: {msg.message}</span>
+            {[...messages].reverse().map((msg) => <div>
+                <span>{msg.senderID}: {msg.message}</span>
             </div>)}
         </div>
         <div className="send-message">
