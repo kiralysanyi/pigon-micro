@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Feb 17. 07:34
+-- Létrehozás ideje: 2026. Már 15. 21:19
 -- Kiszolgáló verziója: 10.6.21-MariaDB-ubu2004
 -- PHP verzió: 8.2.27
 
@@ -20,8 +20,6 @@ SET time_zone = "+00:00";
 --
 -- Adatbázis: `pigonmicro`
 --
-CREATE DATABASE IF NOT EXISTS `pigonmicro` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `pigonmicro`;
 
 -- --------------------------------------------------------
 
@@ -32,7 +30,7 @@ USE `pigonmicro`;
 CREATE TABLE `chats` (
   `ID` int(11) NOT NULL,
   `type` enum('direct','group') NOT NULL,
-  `name` text NOT NULL,
+  `name` text DEFAULT NULL,
   `creator` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -74,7 +72,6 @@ CREATE TABLE `messages` (
   `ID` int(11) NOT NULL,
   `chatID` int(11) NOT NULL,
   `senderID` int(11) NOT NULL,
-  `keyID` mediumtext NOT NULL,
   `type` varchar(50) NOT NULL,
   `message` longtext NOT NULL COMMENT 'Encrypted message',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -183,7 +180,9 @@ ALTER TABLE `keyring-chat`
 -- A tábla indexei `messages`
 --
 ALTER TABLE `messages`
-  ADD PRIMARY KEY (`ID`);
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `msg-chat` (`chatID`),
+  ADD KEY `msg-user` (`senderID`);
 
 --
 -- A tábla indexei `messageSpool`
@@ -305,6 +304,13 @@ ALTER TABLE `keyring-chat`
   ADD CONSTRAINT `chatc` FOREIGN KEY (`chatId`) REFERENCES `chats` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `key` FOREIGN KEY (`keyId`) REFERENCES `keyring` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `user` FOREIGN KEY (`userId`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Megkötések a táblához `messages`
+--
+ALTER TABLE `messages`
+  ADD CONSTRAINT `msg-chat` FOREIGN KEY (`chatID`) REFERENCES `chats` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `msg-user` FOREIGN KEY (`senderID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `messageSpool`
