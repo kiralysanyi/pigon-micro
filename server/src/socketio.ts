@@ -3,6 +3,7 @@ import * as SocketIO from "socket.io"
 import { verifyAccessToken } from "./utils/db/session";
 import { ExtendedSocket } from "./types/ExtendedSocket";
 import { getParticipants } from "./utils/db/chat";
+import { pool } from "./utils/db/db";
 
 const attachSocketio = (server: Server) => {
     console.log("Attaching socket.io")
@@ -47,9 +48,22 @@ const attachSocketio = (server: Server) => {
 
             const filteredParticipants = participants.filter((p) => p.id != socket.userinfo.ID);
 
+            // send message to recipient devices
             filteredParticipants.forEach((p) => {
                 io.to("usr" + p.id).emit("message", payload, chatID, socket.userinfo.ID)
             })
+
+            // save to db
+            const msgType = "text"
+
+            pool.query("INSERT INTO messages (chatID, senderID, type, message) VALUES (?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload], (err) => {
+                if (err) {
+                    console.error("Failed to save message");
+                    return;
+                }
+
+                // saved message send ack or something
+            });
         })
     });
 }
