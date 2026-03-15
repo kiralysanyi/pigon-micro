@@ -3,10 +3,15 @@ import type { userdata } from "../../types/userdata";
 import getAccessToken from "./getAccessToken";
 import { BASEURL } from "../../conf";
 
-const getUserInfo = (): Promise<userdata> => {
+const getUserInfo = (userID?: number): Promise<userdata> => {
     return new Promise((resolve, reject) => {
         getAccessToken().then((token) => {
-            axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
+            let url = "/api/v1/auth/info";
+            if (userID != undefined) {
+                url += "?id=" + userID
+            }
+            
+            axios.get(BASEURL + url, { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
                 resolve(response.data.data)
             }).catch((error) => {
                 console.error(error)

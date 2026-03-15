@@ -8,6 +8,7 @@ import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
+import getUsernameById from "../lib/auth/getUsernameById";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number }>;
@@ -73,13 +74,14 @@ class ChatService extends EventTarget {
                     // decrypt handler
                     const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
                         return new Promise((resolve, reject) => {
-                            decrypt(decodeEncryptedData(msg.payload), dKey).then((message) => {
+                            decrypt(decodeEncryptedData(msg.payload), dKey).then(async (message) => {
                                 decrypted.push({
                                     chatID: msg.chatID,
                                     date: msg.date,
                                     message: message,
                                     senderID: msg.senderID,
-                                    type: msg.type
+                                    type: msg.type,
+                                    senderName: await getUsernameById(msg.senderID)
                                 })
                                 resolve();
                             }).catch((err) => {

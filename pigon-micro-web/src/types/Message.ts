@@ -3,6 +3,7 @@ interface Message {
     message: string,
     senderID: number,
     date: string,
+    senderName?: string,
     type: "text" | "file" | "video" | "image"
 }
 

@@ -90,4 +90,22 @@ const listUsers = (search: string, limit: number = 50): Promise<userdataBrief[]>
     })
 }
 
-export { createUser, loginUser, listUsers };
+// get user info
+const getUser = (userID: number): Promise<userdata | false> => {
+    return new Promise((resolve, reject) => {
+        pool.query<RowDataPacket[]>("SELECT ID, username, created_at, updated_at, pubKey FROM users WHERE ID = ?", [userID], (err, result) => {
+            if (err) {
+                console.error("Failed to get user info: ", err)
+                return reject(err);
+            }
+
+            if (result.length == 0) {
+                return resolve(false)
+            }
+
+            resolve(result[0] as userdata)
+        })
+    })
+}
+
+export { createUser, loginUser, listUsers, getUser };
