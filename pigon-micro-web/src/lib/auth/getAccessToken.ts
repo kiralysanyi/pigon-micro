@@ -28,8 +28,8 @@ const getAccessToken = (): Promise<string> => {
                     atoken = newToken.token;
                     localStorage.setItem("atoken", newToken.token);
                     localStorage.setItem("atokenExpire", newToken.tokenExpire);
-                    resolved(atoken);
                     lock = false;
+                    resolved(atoken);
                 } catch (error) {
                     console.error("Failed to get new access token: ", error)
                     rejected();
@@ -44,15 +44,20 @@ const getAccessToken = (): Promise<string> => {
             const wait = () => {
                 setTimeout(() => {
                     if (lock == true) {
+                        console.warn("Access token retrieval locked")
                         return wait();
                     } else {
+                        console.warn("Access token retrieval unlocked")
                         // no lock, return token
                         getToken();
                     }
                 }, 200);
             }
 
+            wait();
+
         } else {
+            console.log("Access token retrieval not locked")
             // no locking, return token
             getToken();
         }
