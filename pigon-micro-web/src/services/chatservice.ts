@@ -10,6 +10,7 @@ import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
+import type { DKeyWrapper } from "../types/DKeyWrapper";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
@@ -64,7 +65,7 @@ class ChatService extends EventTarget {
 
             const sharedKey = await getNewMessageEncryptionKey(recipientID, this.masterKey)
 
-            // todo: use key properly
+            // TODO: improve speed by throwing out this base64 bullshit
             let encrypted = await encrypt(message, await exportKeyToBase64(sharedKey.key))
             // todo: add ack
             console.log("Sending message: ", encrypted, chatID, this.socket)
@@ -88,6 +89,7 @@ class ChatService extends EventTarget {
                     let decrypted: Message[] = []
 
                     // decrypt handler
+                    const loadedKeys: DKeyWrapper[] = []
                     const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
                         return new Promise(async (resolve, reject) => {
                             if (!msg.senderKeyId || !msg.recipientKeyId) {
@@ -99,7 +101,19 @@ class ChatService extends EventTarget {
                                 return reject("Failed to process message: masterKey not loaded")
                             }
 
-                            const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey)
+                            const loaded = loadedKeys.filter((k) => (k.idA == msg.senderKeyId && k.idB == msg.recipientKeyId) || (k.idA == msg.recipientKeyId && k.idB == msg.senderKeyId))[0]
+
+                            const dkey = loaded ? loaded.dkey : await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
+
+                            if (!loaded) {
+                                loadedKeys.push({
+                                    dkey: dkey,
+                                    idA: msg.senderKeyId,
+                                    idB: msg.recipientKeyId
+                                })
+                            }
+
+                            // TODO: improve speed by throwing out this base64 bullshit
                             decrypt(decodeEncryptedData(msg.payload), await exportKeyToBase64(dkey)).then(async (message) => {
                                 decrypted.push({
                                     chatID: msg.chatID,
@@ -120,9 +134,14 @@ class ChatService extends EventTarget {
                     }
 
                     // decrypt messages
+                    const startTime = new Date().getTime();
                     for (let i in messages) {
                         await decryptMessage(messages[i])
                     }
+
+                    const endTime = new Date().getTime();
+
+                    console.log("Message history decryption took: ", `${endTime - startTime}ms`)
 
                     resolve(decrypted);
                 }).catch((err) => {

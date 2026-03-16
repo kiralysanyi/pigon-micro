@@ -8,7 +8,6 @@ import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
-    const [keys, setKeys] = useState<{ pubKey: string | null, privKey: string | null }>();
     const [chats, setChats] = useState<any[]>()
 
     const navigate = useNavigate();
@@ -47,7 +46,7 @@ const IndexPage = () => {
             navigate("/unlock")
         }
 
-        setKeys(k)
+
     }, [])
 
     return <>

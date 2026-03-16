@@ -48,6 +48,7 @@ const getSharedKey = (chatID: number): Promise<string> => {
 }
 
 const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: number, senderID: number, masterKey: CryptoKey): Promise<CryptoKey> => {
+    const startTime = new Date();
     const userinfo = await getUserInfo();
 
     let myKeyID = recipientKeyId;
@@ -72,7 +73,9 @@ const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: numb
     const privKey = await importECDHPrivateKeyFromBase64(await masterDecrypt(myEncryptedKey, masterKey));
 
     const shared = await deriveSharedKey(privKey, pubKey);
+    const endTime = new Date();
 
+    console.log("Shared key derivation took: ", `${endTime.getTime() - startTime.getTime()}ms`);
     return shared
 }
 
