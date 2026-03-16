@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 16. 10:31
+-- Létrehozás ideje: 2026. Már 16. 14:32
 -- Kiszolgáló verziója: 10.6.21-MariaDB-ubu2004
 -- PHP verzió: 8.2.27
 
@@ -61,6 +61,9 @@ CREATE TABLE `messages` (
   `senderID` int(11) NOT NULL,
   `type` varchar(50) NOT NULL,
   `message` longtext NOT NULL COMMENT 'Encrypted message',
+  `keyID` mediumtext DEFAULT NULL,
+  `senderKeyId` int(11) DEFAULT NULL,
+  `recipientKeyId` int(11) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -76,19 +79,6 @@ CREATE TABLE `messageSpool` (
   `sender` int(11) NOT NULL,
   `receiver` int(11) NOT NULL,
   `data` longtext NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Tábla szerkezet ehhez a táblához `rsa_keys`
---
-
-CREATE TABLE `rsa_keys` (
-  `ID` int(11) NOT NULL,
-  `userID` int(11) NOT NULL,
-  `public` longtext NOT NULL,
-  `private` longtext NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -172,13 +162,6 @@ ALTER TABLE `messageSpool`
   ADD KEY `receiver-user` (`receiver`);
 
 --
--- A tábla indexei `rsa_keys`
---
-ALTER TABLE `rsa_keys`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `uid` (`userID`);
-
---
 -- A tábla indexei `session`
 --
 ALTER TABLE `session`
@@ -231,12 +214,6 @@ ALTER TABLE `messageSpool`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT a táblához `rsa_keys`
---
-ALTER TABLE `rsa_keys`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
 -- AUTO_INCREMENT a táblához `session`
 --
 ALTER TABLE `session`
@@ -283,12 +260,6 @@ ALTER TABLE `messages`
 ALTER TABLE `messageSpool`
   ADD CONSTRAINT `receiver-user` FOREIGN KEY (`receiver`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
   ADD CONSTRAINT `sender-user` FOREIGN KEY (`sender`) REFERENCES `users` (`ID`) ON DELETE CASCADE;
-
---
--- Megkötések a táblához `rsa_keys`
---
-ALTER TABLE `rsa_keys`
-  ADD CONSTRAINT `usr-key` FOREIGN KEY (`userID`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Megkötések a táblához `session`
