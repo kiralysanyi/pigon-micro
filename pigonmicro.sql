@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 15. 21:19
+-- Létrehozás ideje: 2026. Már 16. 10:31
 -- Kiszolgáló verziója: 10.6.21-MariaDB-ubu2004
 -- PHP verzió: 8.2.27
 
@@ -37,29 +37,16 @@ CREATE TABLE `chats` (
 -- --------------------------------------------------------
 
 --
--- Tábla szerkezet ehhez a táblához `keyring`
+-- Tábla szerkezet ehhez a táblához `chat_keys`
 --
 
-CREATE TABLE `keyring` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE `chat_keys` (
+  `keyID` int(11) NOT NULL,
   `userID` int(11) NOT NULL,
-  `type` varchar(50) NOT NULL,
-  `value` longtext NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Tábla szerkezet ehhez a táblához `keyring-chat`
---
-
-CREATE TABLE `keyring-chat` (
-  `indexId` int(11) NOT NULL,
-  `chatId` int(11) NOT NULL,
-  `keyId` int(11) NOT NULL,
-  `userId` int(11) NOT NULL
+  `pubKey` longtext NOT NULL,
+  `encryptedPrivKey` longtext NOT NULL,
+  `status` enum('active','retired') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -145,6 +132,7 @@ CREATE TABLE `users` (
   `password` text NOT NULL,
   `pubKey` longtext DEFAULT NULL,
   `encryptedPrivKey` longtext DEFAULT NULL,
+  `masterKey` longtext DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -161,20 +149,11 @@ ALTER TABLE `chats`
   ADD KEY `creator` (`creator`);
 
 --
--- A tábla indexei `keyring`
+-- A tábla indexei `chat_keys`
 --
-ALTER TABLE `keyring`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `userID` (`userID`);
-
---
--- A tábla indexei `keyring-chat`
---
-ALTER TABLE `keyring-chat`
-  ADD PRIMARY KEY (`indexId`),
-  ADD KEY `chatid` (`chatId`),
-  ADD KEY `keyindex` (`keyId`),
-  ADD KEY `userindex` (`userId`);
+ALTER TABLE `chat_keys`
+  ADD PRIMARY KEY (`keyID`),
+  ADD KEY `usr_key` (`userID`);
 
 --
 -- A tábla indexei `messages`
@@ -234,16 +213,10 @@ ALTER TABLE `chats`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT a táblához `keyring`
+-- AUTO_INCREMENT a táblához `chat_keys`
 --
-ALTER TABLE `keyring`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT a táblához `keyring-chat`
---
-ALTER TABLE `keyring-chat`
-  MODIFY `indexId` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `chat_keys`
+  MODIFY `keyID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT a táblához `messages`
@@ -292,18 +265,10 @@ ALTER TABLE `chats`
   ADD CONSTRAINT `creator` FOREIGN KEY (`creator`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
--- Megkötések a táblához `keyring`
+-- Megkötések a táblához `chat_keys`
 --
-ALTER TABLE `keyring`
-  ADD CONSTRAINT `userKeyring` FOREIGN KEY (`userID`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE NO ACTION;
-
---
--- Megkötések a táblához `keyring-chat`
---
-ALTER TABLE `keyring-chat`
-  ADD CONSTRAINT `chatc` FOREIGN KEY (`chatId`) REFERENCES `chats` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `key` FOREIGN KEY (`keyId`) REFERENCES `keyring` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `user` FOREIGN KEY (`userId`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `chat_keys`
+  ADD CONSTRAINT `usr_key` FOREIGN KEY (`userID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `messages`
