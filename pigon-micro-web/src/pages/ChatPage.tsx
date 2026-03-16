@@ -8,6 +8,7 @@ import { KeyRingContext } from "../services/KeyRingProvider";
 const ChatPage = () => {
     const params = useParams();
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(true);
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [userInfo, setUserInfo] = useState<userdata>();
@@ -61,6 +62,7 @@ const ChatPage = () => {
         chatProvider.getMessageHistory(parseInt(params.id as string)).then((pastMessages) => {
             console.log("Got decrypted message history: ", pastMessages)
             setMessages(pastMessages)
+            setLoading(false);
         }).catch((err) => {
             console.error("Failed to get message history: ", err)
         })
@@ -79,13 +81,16 @@ const ChatPage = () => {
     return <div>
         <div className="message-display">
             {[...messages].reverse().map((msg) => <div>
-                <span>{msg.senderName? msg.senderName : msg.senderID}: {msg.message}</span>
+                <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
             </div>)}
         </div>
         <div className="send-message">
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="msg" />
             <button onClick={sendMsg}>Send</button>
         </div>
+        {loading && <div className="loading-popup">
+            <h1>Loading...</h1>
+        </div>}
     </div>
 }
 

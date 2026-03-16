@@ -57,7 +57,6 @@ const getAccessToken = (): Promise<string> => {
             wait();
 
         } else {
-            console.log("Access token retrieval not locked")
             // no locking, return token
             getToken();
         }

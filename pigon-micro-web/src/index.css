@@ -259,3 +259,14 @@ button:focus-visible {
   border-radius: 1rem;
   padding: 1rem;
 }
+
+.loading-popup {
+  position: absolute;
+  top: 5rem;
+  left: 50%;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 1rem;
+  padding: 1rem;
+  transform: translate(-50%, 0%);
+  z-index: 100;
+}

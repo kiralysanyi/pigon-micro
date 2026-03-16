@@ -15,13 +15,11 @@ const getSharedKey = (chatID: number): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         // todo: get chat info
         axios.get(BASEURL + "/api/v1/chat/" + chatID, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
-            console.log(response.data)
             const participants = response.data.chat.participants;
 
             // get current user's ID.
             const userInfo = await getUserInfo();
 
-            console.log("Exclude: ", userInfo.ID)
 
             const targetID = participants.filter((p: any) => p.id != userInfo.ID)[0].id
 
@@ -58,7 +56,6 @@ const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: numb
     if (senderID == userinfo.ID) {
         myKeyID = senderKeyId;
         remoteKeyID = recipientKeyId;
-        console.log("Sender is you")
     }
 
     const myKeys = (await axios.get(BASEURL + "/api/v1/keyring/chatkeys/self", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.keys as any[];
@@ -70,11 +67,6 @@ const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: numb
     // ecdh keys
     const myEncryptedKey = (myKeys.filter((key) => key.keyID == myKeyID))[0].encryptedPrivKey; // encrypted json
     const remotePubKey = remoteKey.pubKey; // base64 exported
-
-    console.log("==============================")
-    console.log("my key id: ", myKeyID);
-    console.log("remote key id: ", remoteKeyID)
-    console.log("==============================")
 
     const pubKey = await importECDHPublicKeyFromBase64(remotePubKey);
     const privKey = await importECDHPrivateKeyFromBase64(await masterDecrypt(myEncryptedKey, masterKey));

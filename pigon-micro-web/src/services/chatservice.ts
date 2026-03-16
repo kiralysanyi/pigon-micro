@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
-import { getMessageDecryptionKey, getNewMessageEncryptionKey, getSharedKey } from "./keyservice";
+import { getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
 import { decrypt, encrypt } from "../lib/encryption/ecdh";
 import { decodeEncryptedData, encodeEncryptedData, exportKeyToBase64 } from "../lib/encryption/utils";
 import axios from "axios";
@@ -34,17 +34,14 @@ class ChatService extends EventTarget {
     masterKey: CryptoKey | undefined;
 
     private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
-        console.log(payload, chatID, senderID, senderKeyId, recipientKeyId);
         if (!this.masterKey) {
             console.warn("Message handling aborted: masterKey not loaded")
             return;
         }
 
         const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey)
-        console.log("Shared key (decrypt): ", dKey)
 
         decrypt(decodeEncryptedData(payload), await exportKeyToBase64(dKey)).then((message) => {
-            console.log("Decrypted: ", message)
             this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: message, chatID, senderID }
             }))
@@ -69,7 +66,6 @@ class ChatService extends EventTarget {
 
             // todo: use key properly
             let encrypted = await encrypt(message, await exportKeyToBase64(sharedKey.key))
-            console.log("Shared key: ", sharedKey)
             // todo: add ack
             console.log("Sending message: ", encrypted, chatID, this.socket)
             this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
@@ -103,8 +99,6 @@ class ChatService extends EventTarget {
                                 return reject("Failed to process message: masterKey not loaded")
                             }
 
-                            console.log("-----------------------")
-                            console.log(msg)
                             const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey)
                             decrypt(decodeEncryptedData(msg.payload), await exportKeyToBase64(dkey)).then(async (message) => {
                                 decrypted.push({
