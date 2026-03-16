@@ -2,15 +2,19 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
+import getUsernameById from "../lib/auth/getUsernameById";
+import getChatName from "../lib/chat/getChatName";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
-    const [chats, setChats] = useState<any[]>()
+    const [chats, setChats] = useState<any[]>();
+    const [chatName, setChatname] = useState("")
 
     const navigate = useNavigate();
+    const params = useParams();
 
     useEffect(() => {
         getAccessToken().then((token) => {
@@ -49,11 +53,22 @@ const IndexPage = () => {
 
     }, [])
 
+    useEffect(() => {
+        if (params.id) {
+            getChatName(parseInt(params.id)).then((cname) => {
+                setChatname(cname);
+            })
+        }
+    }, [params])
+
     return <>
         <div className="header">
             <div className="user-display">
                 <span>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} />
+            </div>
+            <div className="chat-header">
+                <span>Chat: {chatName}</span>
             </div>
         </div>
         <div className="sidebar">

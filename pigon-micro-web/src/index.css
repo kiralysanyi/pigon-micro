@@ -280,3 +280,16 @@ button:focus-visible {
   transform: translate(-50%, 0%);
   z-index: 100;
 }
+
+.chat-header {
+  position: absolute;
+  top: 15%;
+  left: 50%;
+  padding: 1rem;
+  text-align: center;
+  line-height: 1rem;
+  height: 1rem;
+  border-radius: 1rem;
+  width: fit-content;
+  background-color: #1a1a1a;
+}
