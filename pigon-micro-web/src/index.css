@@ -254,10 +254,20 @@ button:focus-visible {
   overflow-y: auto;
 }
 
-.message-display div {
+.message-display .message {
+  background-color: #353a9499;
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-right: auto;
+  align-self: flex-start;
+}
+
+.message-display .mymessage {
   background-color: #353a94;
   border-radius: 1rem;
   padding: 1rem;
+  margin-left: auto;
+  align-self: flex-start;
 }
 
 .loading-popup {

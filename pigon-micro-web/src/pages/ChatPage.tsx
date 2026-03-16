@@ -101,7 +101,7 @@ const ChatPage = () => {
 
     return <div>
         <div className="message-display">
-            {[...messages].reverse().map((msg) => <div>
+            {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage": "message"}`}>
                 <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
             </div>)}
         </div>
