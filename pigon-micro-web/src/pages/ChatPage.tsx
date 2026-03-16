@@ -37,12 +37,15 @@ const ChatPage = () => {
             return;
         }
 
+        setLoading(true);
+        setMessages([]);
+
         console.log("Loading chat service for chat: ", params.id)
         const chatProvider = new ChatService();
         chatProvider.init(krp.masterKey);
         console.log("Chat service loaded")
         chatProvider.addEventListener("message", (e) => {
-            const { chatID, message, senderID } = e.detail;
+            const { chatID, message, senderID, senderName } = e.detail;
 
             // message not related to this chat so we simply ignore it
             if (chatID.toString() != params.id) {
@@ -52,7 +55,7 @@ const ChatPage = () => {
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, date: new Date().toISOString(), message: message, type: "text" }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date().toISOString(), message: message, type: "text" }]);
         })
 
         console.log(chatProvider.sendMessage)
@@ -79,15 +82,21 @@ const ChatPage = () => {
             console.log("Unloading chat service for chat: ", params.id)
             chatProvider.unload();
         }
-    }, [krp?.masterKey])
+    }, [krp?.masterKey, params])
 
     const sendMsg = () => {
         if (!userInfo) {
             console.log("Message sending not allowed: userinfo not loaded.")
             return;
         }
+
+        if (message.trim() === "") {
+            return;
+        }
+
         sendMessageRef.current?.(message);
         setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date().toISOString(), message: message, type: "text" }])
+        setMessage("")
     }
 
     return <div>
@@ -96,10 +105,11 @@ const ChatPage = () => {
                 <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
             </div>)}
         </div>
-        <div className="send-message">
+
+        <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="msg" />
             <button onClick={sendMsg}>Send</button>
-        </div>
+        </form>
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>
         </div>}

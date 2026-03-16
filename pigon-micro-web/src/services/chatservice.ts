@@ -12,7 +12,7 @@ import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
 
 interface ChatServiceEventMap {
-    "message": CustomEvent<{ message: string; chatID: number; senderID: number }>;
+    "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
 }
 
 class ChatService extends EventTarget {
@@ -41,9 +41,9 @@ class ChatService extends EventTarget {
 
         const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey)
 
-        decrypt(decodeEncryptedData(payload), await exportKeyToBase64(dKey)).then((message) => {
+        decrypt(decodeEncryptedData(payload), await exportKeyToBase64(dKey)).then(async (message) => {
             this.dispatchEvent(new CustomEvent("message", {
-                detail: { message: message, chatID, senderID }
+                detail: { message: message, chatID, senderID, senderName: await getUsernameById(senderID) }
             }))
         }).catch((err) => {
             console.error("Failed to decrypt message: ", err)

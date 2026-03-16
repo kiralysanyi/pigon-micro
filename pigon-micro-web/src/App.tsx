@@ -8,6 +8,7 @@ import SetupPage from './pages/SetupPage'
 import UnlockPage from './pages/UnlockPage'
 import NewChat from './pages/NewChat'
 import ChatPage from './pages/ChatPage'
+import ChatIndex from './pages/ChatIndex'
 
 // TODO: add some kind of auth middleware
 const router = createBrowserRouter([
@@ -15,6 +16,11 @@ const router = createBrowserRouter([
     path: "/",
     Component: IndexPage,
     children: [
+      {
+        path: "/",
+        Component: ChatIndex,
+        index: true
+      },
       {
         path: "/chat/:id",
         Component: ChatPage
