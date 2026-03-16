@@ -272,9 +272,11 @@ button:focus-visible {
   overflow-y: auto;
 }
 
-.message-display .message, .message-display .mymessage {
+.message-display .message,
+.message-display .mymessage {
   max-width: 50%;
   text-align: left;
+  overflow-wrap: anywhere;
 }
 
 .message-display .message {
@@ -283,7 +285,6 @@ button:focus-visible {
   padding: 1rem;
   margin-right: auto;
   align-self: flex-start;
-  overflow-wrap: anywhere;
 }
 
 .message-display .mymessage {
