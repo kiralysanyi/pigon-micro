@@ -7,6 +7,7 @@ import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 import getUsernameById from "../lib/auth/getUsernameById";
 import getChatName from "../lib/chat/getChatName";
+import logout from "../lib/auth/logout";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -65,7 +66,7 @@ const IndexPage = () => {
         <div className="header">
             <div className="user-display">
                 <span>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} />
+                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => {logout().then(() => {navigate("/login")})}} />
             </div>
             <div className="chat-header">
                 <span>Chat: {chatName}</span>

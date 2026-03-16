@@ -7,6 +7,7 @@ import refreshTokenHandler from "./refreshtoken";
 import verifyAccessMiddleware from "../../middlewares/verifyAccess";
 import infoHandler from "./info";
 import getUsers from "./getUsers";
+import logout from "./logout";
 
 const authRouter = express.Router();
 
@@ -22,10 +23,12 @@ authRouter.post("/login",
     loginHandler)
 
 authRouter.get("/token", tokenHandler);
-authRouter.get("/refreshtoken", refreshTokenHandler)
-authRouter.get("/info", verifyAccessMiddleware, infoHandler)
+authRouter.get("/refreshtoken", refreshTokenHandler);
+authRouter.get("/info", verifyAccessMiddleware, infoHandler);
 
 authRouter.get("/users", verifyAccessMiddleware, getUsers);
+
+authRouter.post("/logout", verifyAccessMiddleware, logout);
 
 
 export default authRouter;

@@ -79,6 +79,10 @@ button:focus-visible {
   backdrop-filter: blur(16px);
 }
 
+.modal h1 {
+  margin: 1rem;
+}
+
 .error-msg {
   background-color: rgb(74, 0, 0);
   padding: 1rem;
