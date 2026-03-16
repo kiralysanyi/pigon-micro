@@ -40,7 +40,7 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected: ", socket.id, socket.authenticated)
 
-        socket.on("message", async ({ payload, chatID }: { payload: string, chatID: number }) => {
+        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId }: { payload: string, chatID: number, senderKeyId: number, recipientKeyId: number }) => {
             console.log(payload, `${socket.userinfo.ID} -->> ${chatID}`)
 
             // get chat participants
@@ -50,15 +50,15 @@ const attachSocketio = (server: Server) => {
 
             // send message to recipient devices
             filteredParticipants.forEach((p) => {
-                io.to("usr" + p.id).emit("message", payload, chatID, socket.userinfo.ID)
+                io.to("usr" + p.id).emit("message", payload, chatID, socket.userinfo.ID, senderKeyId, recipientKeyId)
             })
 
             // save to db
             const msgType = "text"
 
-            pool.query("INSERT INTO messages (chatID, senderID, type, message) VALUES (?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload], (err) => {
+            pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
                 if (err) {
-                    console.error("Failed to save message");
+                    console.error("Failed to save message", err);
                     return;
                 }
 

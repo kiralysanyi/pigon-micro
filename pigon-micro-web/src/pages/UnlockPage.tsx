@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { decodeEncryptedData } from "../lib/encryption/utils";
@@ -7,6 +7,7 @@ import { decrypt } from "../lib/encryption/ecdh";
 import { useNavigate } from "react-router";
 import getMasterKey from "../lib/encryption/getMasterKey";
 import { masterDecrypt } from "../lib/encryption/masterkey";
+import { KeyRingContext } from "../services/KeyRingProvider";
 
 const UnlockPage = () => {
     const [loading, setLoading] = useState(true);
@@ -15,6 +16,7 @@ const UnlockPage = () => {
     const [encryptedPrivkey, setEncryptedPrivkey] = useState<string>();
     const [pubkey, setPubkey] = useState<string>();
     const [kpass, setKpass] = useState("");
+    const krp = useContext(KeyRingContext)
 
     const navigate = useNavigate()
 
@@ -45,6 +47,10 @@ const UnlockPage = () => {
         setLoading(true);
         if (encryptedPrivkey && pubkey) {
             getMasterKey(kpass).then(async (masterKey) => {
+                // Load masterkey to context
+                krp?.setMasterKey(masterKey);
+
+                // Decrypt user keys
                 masterDecrypt(encryptedPrivkey, masterKey).then((decrypted) => {
                     console.log("Decrypted privkey: ", decrypted)
                     setStatusText("Unlocked keyring successfully")

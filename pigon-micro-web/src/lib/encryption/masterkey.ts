@@ -79,5 +79,20 @@ const masterDecrypt = async (encrypted: string, masterKey: CryptoKey): Promise<s
     return new TextDecoder().decode(decrypted);
 }
 
+const exportMasterToBase64 = async (masterKey: CryptoKey): Promise<string> => {
+    const raw = await crypto.subtle.exportKey("raw", masterKey);
+    return btoa(String.fromCharCode(...new Uint8Array(raw)));
+}
 
-export { generateMasterKey, wrapMasterKey, unwrapMasterKey, masterDecrypt, masterEncrypt }
+const importMasterFromBase64 = async (base64Key: string): Promise<CryptoKey> => {
+    const keyBytes = Uint8Array.from(atob(base64Key), c => c.charCodeAt(0));
+    return crypto.subtle.importKey(
+        "raw",
+        keyBytes,
+        { name: "AES-GCM", length: 256 },
+        true,
+        ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
+    );
+}
+
+export { generateMasterKey, wrapMasterKey, unwrapMasterKey, masterDecrypt, masterEncrypt, exportMasterToBase64, importMasterFromBase64 }

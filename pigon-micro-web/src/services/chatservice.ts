@@ -1,14 +1,15 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
-import { getSharedKey } from "./keyservice";
+import { getMessageDecryptionKey, getNewMessageEncryptionKey, getSharedKey } from "./keyservice";
 import { decrypt, encrypt } from "../lib/encryption/ecdh";
-import { decodeEncryptedData, encodeEncryptedData } from "../lib/encryption/utils";
+import { decodeEncryptedData, encodeEncryptedData, exportKeyToBase64 } from "../lib/encryption/utils";
 import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
+import getUserInfo from "../lib/auth/getUserInfo";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number }>;
@@ -30,12 +31,19 @@ class ChatService extends EventTarget {
     }
 
     socket: Socket | undefined;
+    masterKey: CryptoKey | undefined;
 
-    private messageHandler = async (payload: string, chatID: number, senderID: number) => {
-        const dKey = await getSharedKey(chatID);
+    private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
+        console.log(payload, chatID, senderID, senderKeyId, recipientKeyId);
+        if (!this.masterKey) {
+            console.warn("Message handling aborted: masterKey not loaded")
+            return;
+        }
+
+        const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey)
         console.log("Shared key (decrypt): ", dKey)
 
-        decrypt(decodeEncryptedData(payload), dKey).then((message) => {
+        decrypt(decodeEncryptedData(payload), await exportKeyToBase64(dKey)).then((message) => {
             console.log("Decrypted: ", message)
             this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: message, chatID, senderID }
@@ -46,13 +54,26 @@ class ChatService extends EventTarget {
         })
     }
 
+    // TODO: make this group chat compatible
     sendMessage = async (message: string, chatID: number) => {
-        const sharedKey = await getSharedKey(chatID)
-        let encrypted = await encrypt(message, sharedKey)
-        console.log("Shared key: ", sharedKey)
-        // todo: add ack
-        console.log("Sending message: ", encrypted, chatID, this.socket)
-        this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID })
+        axios.get(BASEURL + "/api/v1/chat/" + chatID, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
+            if (this.masterKey == undefined) {
+                console.error("Chatservice not inited properly");
+                return;
+            }
+            const participants = response.data.chat.participants as any[];
+            const userInfo = await getUserInfo();
+            const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
+
+            const sharedKey = await getNewMessageEncryptionKey(recipientID, this.masterKey)
+
+            // todo: use key properly
+            let encrypted = await encrypt(message, await exportKeyToBase64(sharedKey.key))
+            console.log("Shared key: ", sharedKey)
+            // todo: add ack
+            console.log("Sending message: ", encrypted, chatID, this.socket)
+            this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
+        })
     }
 
     unload = () => {
@@ -63,7 +84,6 @@ class ChatService extends EventTarget {
     getMessageHistory = (chatID: number): Promise<Message[]> => {
         return new Promise(async (resolve, reject) => {
             // get decryption key
-            const dKey = await getSharedKey(chatID);
 
             // get messages
             getAccessToken().then((token) => {
@@ -73,8 +93,20 @@ class ChatService extends EventTarget {
 
                     // decrypt handler
                     const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
-                        return new Promise((resolve, reject) => {
-                            decrypt(decodeEncryptedData(msg.payload), dKey).then(async (message) => {
+                        return new Promise(async (resolve, reject) => {
+                            if (!msg.senderKeyId || !msg.recipientKeyId) {
+                                console.log("Invalid message data: ", msg)
+                                return;
+                            }
+
+                            if (!this.masterKey) {
+                                return reject("Failed to process message: masterKey not loaded")
+                            }
+
+                            console.log("-----------------------")
+                            console.log(msg)
+                            const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey)
+                            decrypt(decodeEncryptedData(msg.payload), await exportKeyToBase64(dkey)).then(async (message) => {
                                 decrypted.push({
                                     chatID: msg.chatID,
                                     date: msg.date,
@@ -107,8 +139,9 @@ class ChatService extends EventTarget {
         })
     }
 
-    init = () => {
-        console.log("Chatservice init")
+    init = (masterKey: CryptoKey) => {
+        console.log("Chatservice init: ", masterKey)
+        this.masterKey = masterKey;
         getSocket()
             .then((sock) => {
                 console.log("Got socket")

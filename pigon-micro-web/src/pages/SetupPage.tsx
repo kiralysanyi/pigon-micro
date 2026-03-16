@@ -8,6 +8,7 @@ import { useNavigate } from "react-router";
 import { exportRsaPrivateKey, exportRsaPublicKey, generateRsaKeyPair } from "../lib/encryption/rsa";
 import { generateMasterKey, masterEncrypt } from "../lib/encryption/masterkey";
 import uploadMasterKey from "../lib/encryption/uploadMasterKey";
+import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";
 
 // page for setting up keystore and other cryptographic shit
 const SetupPage = () => {
@@ -72,7 +73,13 @@ const SetupPage = () => {
                             if (response.status == 201) {
                                 setStatusText("Setting up initial chat keys")
                                 // set up first shared chat keypair (ecdh)
-                                // TODO: implement
+                                uploadChatKeyPair(masterKey).then(() => {
+                                    navigate("/unlock")
+                                }).catch((err) => {
+                                    console.error("Failed to set up chat keys: ", err);
+                                    setCreating(false);
+                                })
+
 
                             } else {
                                 setStatusText("Failed to upload private key")

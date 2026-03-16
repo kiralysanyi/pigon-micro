@@ -4,10 +4,12 @@ import { exportKeyToBase64, importECDHPrivateKeyFromBase64, importECDHPublicKeyF
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import getUserInfo from "../lib/auth/getUserInfo";
+import { masterDecrypt } from "../lib/encryption/masterkey";
 
 // get shared "key" for a specific chat, if its a private chat we use ecdh, if group then we get it from the encrypted blob with rsa decrypt,
 // or if its saved we use that, but with ecdh we always calculate.
 // This garbage always returns a base64 string, for now we use the base64 itself as the shared key, later on i may make it more optimal
+
 const getSharedKey = (chatID: number): Promise<string> => {
     // TODO: make this group chat compatible
     return new Promise(async (resolve, reject) => {
@@ -45,18 +47,64 @@ const getSharedKey = (chatID: number): Promise<string> => {
         })
 
     })
-
 }
 
-const getRsaKeys = () => {
+const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: number, senderID: number, masterKey: CryptoKey): Promise<CryptoKey> => {
+    const userinfo = await getUserInfo();
 
+    let myKeyID = recipientKeyId;
+    let remoteKeyID = senderKeyId;
+
+    if (senderID == userinfo.ID) {
+        myKeyID = senderKeyId;
+        remoteKeyID = recipientKeyId;
+        console.log("Sender is you")
+    }
+
+    const myKeys = (await axios.get(BASEURL + "/api/v1/keyring/chatkeys/self", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.keys as any[];
+    const remoteKey = (await axios.get(BASEURL + "/api/v1/keyring/chatkeys/key/" + remoteKeyID, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.keyData as any;
+
+
+
+
+    // ecdh keys
+    const myEncryptedKey = (myKeys.filter((key) => key.keyID == myKeyID))[0].encryptedPrivKey; // encrypted json
+    const remotePubKey = remoteKey.pubKey; // base64 exported
+
+    console.log("==============================")
+    console.log("my key id: ", myKeyID);
+    console.log("remote key id: ", remoteKeyID)
+    console.log("==============================")
+
+    const pubKey = await importECDHPublicKeyFromBase64(remotePubKey);
+    const privKey = await importECDHPrivateKeyFromBase64(await masterDecrypt(myEncryptedKey, masterKey));
+
+    const shared = await deriveSharedKey(privKey, pubKey);
+
+    return shared
 }
 
-const getPubRsaKey = (userID: number) => { }
+const getNewMessageEncryptionKey = async (recipientID: number, masterKey: CryptoKey) => {
+    const myKeys = (await axios.get(BASEURL + "/api/v1/keyring/chatkeys/self", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.keys as any[];
+    const remoteKeys = (await axios.get(BASEURL + "/api/v1/keyring/chatkeys/user/" + recipientID, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.keys as any[];
 
+    // ecdh keys
+    const myActiveEncryptedKey = (myKeys.filter((key) => key.status == "active"))[0]; // encrypted json
+    const remoteActivePubKey = (remoteKeys.filter((key) => key.status == "active"))[0]; // base64 exported
+
+    const pubKey = await importECDHPublicKeyFromBase64(remoteActivePubKey.pubKey);
+    const privKey = await importECDHPrivateKeyFromBase64(await masterDecrypt(myActiveEncryptedKey.encryptedPrivKey, masterKey));
+
+    const shared = await deriveSharedKey(privKey, pubKey);
+    return {
+        key: shared,
+        senderKeyId: myActiveEncryptedKey.keyID,
+        recipientKeyId: remoteActivePubKey.keyID
+    };
+}
 
 export {
     getSharedKey,
-    getRsaKeys,
-    getPubRsaKey
+    getNewMessageEncryptionKey,
+    getMessageDecryptionKey
 }

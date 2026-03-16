@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import ChatService from "../services/chatservice";
 import type { Message } from "../types/Message";
 import type { userdata } from "../types/userdata";
+import { KeyRingContext } from "../services/KeyRingProvider";
 
 const ChatPage = () => {
     const params = useParams();
@@ -11,13 +12,25 @@ const ChatPage = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [userInfo, setUserInfo] = useState<userdata>();
 
+    const krp = useContext(KeyRingContext);
+
     const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined)
 
     // Load chatservice
     useEffect(() => {
+        if (!krp) {
+            console.log("Keyring provider not loaded")
+            return;
+        }
+
+        if (!krp.masterKey) {
+            console.warn("No masterKey in krp yet")
+            return;
+        }
+
         console.log("Loading chat service for chat: ", params.id)
         const chatProvider = new ChatService();
-        chatProvider.init();
+        chatProvider.init(krp.masterKey);
         console.log("Chat service loaded")
         chatProvider.addEventListener("message", (e) => {
             const { chatID, message, senderID } = e.detail;
@@ -56,7 +69,7 @@ const ChatPage = () => {
             console.log("Unloading chat service for chat: ", params.id)
             chatProvider.unload();
         }
-    }, [])
+    }, [krp?.masterKey])
 
     const sendMsg = () => {
         sendMessageRef.current?.(message);

@@ -8,6 +8,8 @@ import submitRsaKeys from "./submitRsaKeys";
 import getRsaKeys from "./getRsaKeys";
 import getMasterKey from "./getMasterKey";
 import postMasterKey from "./postMasterKey";
+import postChatKeys from "./postChatKeys";
+import getChatKeys from "./getChatKeys";
 
 const keyringRouter = express.Router();
 
@@ -24,11 +26,15 @@ keyringRouter.get("/pubkey", getPubKey);
 
 // /chatkeys/self
 
-// post /chatkeys/self/:keyid
+keyringRouter.get("/chatkeys/self", getChatKeys);
 
-// /chatkeys/:userid
+// post /chatkeys/self
 
-// /chatkeys/:userid/:keyid
+keyringRouter.post("/chatkeys/self", body("pubKey").notEmpty().withMessage("pubKey field required"), body("encryptedPrivKey").notEmpty().withMessage("encryptedPrivKey field required"), postChatKeys)
+
+keyringRouter.get("/chatkeys/key/:keyid", getChatKeys);
+
+keyringRouter.get("/chatkeys/user/:userid", getChatKeys);
 
 
 // TODO: remove later
