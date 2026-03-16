@@ -4,6 +4,7 @@ import ChatService from "../services/chatservice";
 import type { Message } from "../types/Message";
 import type { userdata } from "../types/userdata";
 import { KeyRingContext } from "../services/KeyRingProvider";
+import getUserInfo from "../lib/auth/getUserInfo";
 
 const ChatPage = () => {
     const params = useParams();
@@ -12,6 +13,13 @@ const ChatPage = () => {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [userInfo, setUserInfo] = useState<userdata>();
+
+    // load userinfo
+    useEffect(() => {
+        getUserInfo().then((uinfo) => {
+            setUserInfo(uinfo);
+        })
+    }, [])
 
     const krp = useContext(KeyRingContext);
 
@@ -74,8 +82,12 @@ const ChatPage = () => {
     }, [krp?.masterKey])
 
     const sendMsg = () => {
+        if (!userInfo) {
+            console.log("Message sending not allowed: userinfo not loaded.")
+            return;
+        }
         sendMessageRef.current?.(message);
-        setMessages(prev => [...prev, { senderID: 0, chatID: parseInt(params.id as string), date: new Date().toISOString(), message: message, type: "text" }])
+        setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date().toISOString(), message: message, type: "text" }])
     }
 
     return <div>
