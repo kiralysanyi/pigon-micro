@@ -5,6 +5,8 @@ import getAccessToken from "../lib/auth/getAccessToken";
 import { decodeEncryptedData } from "../lib/encryption/utils";
 import { decrypt } from "../lib/encryption/ecdh";
 import { useNavigate } from "react-router";
+import getMasterKey from "../lib/encryption/getMasterKey";
+import { masterDecrypt } from "../lib/encryption/masterkey";
 
 const UnlockPage = () => {
     const [loading, setLoading] = useState(true);
@@ -18,6 +20,7 @@ const UnlockPage = () => {
 
     useEffect(() => {
         getAccessToken().then((token) => {
+            // TODO: get chat keys
             // get private key
             axios.get(BASEURL + "/api/v1/keyring/privkey", { headers: { Authorization: `Bearer ${token}` } }).then((response) => {
                 console.log("Got private key")
@@ -41,34 +44,20 @@ const UnlockPage = () => {
         setError(undefined)
         setLoading(true);
         if (encryptedPrivkey && pubkey) {
-            const epkeyData = decodeEncryptedData(encryptedPrivkey);
-            decrypt(epkeyData, kpass).then(async (decrypted) => {
-                console.log("Decrypted privkey: ", decrypted)
-                setStatusText("Unlocked keyring successfully")
+            getMasterKey(kpass).then(async (masterKey) => {
+                masterDecrypt(encryptedPrivkey, masterKey).then((decrypted) => {
+                    console.log("Decrypted privkey: ", decrypted)
+                    setStatusText("Unlocked keyring successfully")
 
-                sessionStorage.setItem("privKey", decrypted);
-                sessionStorage.setItem("pubKey", pubkey);
-
-                // get rsa keys
-
-                axios.get(BASEURL + "/api/v1/keyring/rsa/keys", { headers: { Authorization: `Bearer: ${await getAccessToken()}` } }).then(async (response) => {
-                    if (response.status == 200) {
-                        const pubRsaKey = response.data.keys.public;
-                        const privRsaKey = response.data.keys.private;
-                        const decryptedPrivateKey = await decrypt(decodeEncryptedData(privRsaKey), kpass)
-                        sessionStorage.setItem("privRsa", decryptedPrivateKey);
-                        sessionStorage.setItem("pubRsa", pubRsaKey)
-                    }
-                }).catch((err) => {
-                    console.error("Failed to get rsa keys: ", err)
+                    sessionStorage.setItem("privKey", decrypted);
+                    sessionStorage.setItem("pubKey", pubkey);
+                    navigate("/")
+                }).catch((error) => {
+                    console.error("Failed to decrypt private key: ", error)
+                    setStatusText("Unlock keyring")
+                    setError("Wrong password")
+                    setLoading(false);
                 })
-
-                navigate("/")
-            }).catch((error) => {
-                console.error("Failed to decrypt private key: ", error)
-                setStatusText("Unlock keyring")
-                setError("Wrong password")
-                setLoading(false);
             })
         } else {
             console.log("No keys: ", encryptedPrivkey, pubkey)

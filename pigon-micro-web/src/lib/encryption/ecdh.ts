@@ -103,4 +103,4 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
 
 
 
-export { generateECDHKeyPair, deriveSharedKey, encrypt, decrypt}
+export { generateECDHKeyPair, deriveSharedKey, encrypt, decrypt, deriveKey}

@@ -6,6 +6,8 @@ import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
 import { exportRsaPrivateKey, exportRsaPublicKey, generateRsaKeyPair } from "../lib/encryption/rsa";
+import { generateMasterKey, masterEncrypt } from "../lib/encryption/masterkey";
+import uploadMasterKey from "../lib/encryption/uploadMasterKey";
 
 // page for setting up keystore and other cryptographic shit
 const SetupPage = () => {
@@ -47,72 +49,59 @@ const SetupPage = () => {
 
         // TODO: error handling
 
-        generateECDHKeyPair().then(async (keypair) => {
-            setStatusText("Generating keys");
-            const pub = await exportPublicKeyToBase64(keypair.publicKey);
-            const priv = await exportPrivateKeyToBase64(keypair.privateKey);
-            setStatusText("Encrypting private key for storage");
-            const encryptedPKey = encodeEncryptedData(await encrypt(priv, kpass));
-            setStatusText("Uploading keys")
-            // send ecdh public key
-            axios.post(BASEURL + "/api/v1/keyring/pubkey",
-                { pubKey: pub },
-                { headers: { Authorization: `Bearer ${await getAccessToken()}` } }
-            ).then(async (response) => {
-                if (response.status == 201) {
-                    // send ecdh private key
-                    axios.post(BASEURL + "/api/v1/keyring/privkey", { encryptedPrivKey: encryptedPKey }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
-                        if (response.status == 201) {
-                            setStatusText("Setting up rsa keys")
-                            // set up rsa keys
-                            generateRsaKeyPair().then(async (rsakeys) => {
-                                let rsaPriv = await exportRsaPrivateKey(rsakeys.privateKey);
-                                let rsaPub = await exportRsaPublicKey(rsakeys.publicKey);
+        // generate masterKey
+        generateMasterKey().then(async (masterKey) => {
+            // upload masterkey
+            await uploadMasterKey(masterKey, kpass)
+            // generate user ecdh keypair (long lived ones)
+            generateECDHKeyPair().then(async (keypair) => {
+                setStatusText("Generating keys");
+                const pub = await exportPublicKeyToBase64(keypair.publicKey);
+                const priv = await exportPrivateKeyToBase64(keypair.privateKey);
+                setStatusText("Encrypting private key for storage");
+                const encryptedPKey = await masterEncrypt(priv, masterKey)
+                setStatusText("Uploading keys")
+                // send ecdh public key
+                axios.post(BASEURL + "/api/v1/keyring/pubkey",
+                    { pubKey: pub },
+                    { headers: { Authorization: `Bearer ${await getAccessToken()}` } }
+                ).then(async (response) => {
+                    if (response.status == 201) {
+                        // send ecdh private key
+                        axios.post(BASEURL + "/api/v1/keyring/privkey", { encryptedPrivKey: encryptedPKey }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
+                            if (response.status == 201) {
+                                setStatusText("Setting up initial chat keys")
+                                // set up first shared chat keypair (ecdh)
+                                // TODO: implement
 
-                                // encrypt rsa private key too
-                                rsaPriv = encodeEncryptedData(await encrypt(rsaPriv, kpass));
-
-                                // send keys
-                                axios.post(BASEURL + "/api/v1/keyring/rsa/keys", {
-                                    public: rsaPub,
-                                    private: rsaPriv
-                                }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
-                                    if (response.status == 201) {
-                                        console.log("Rsa keys uploaded")
-                                        navigate("/unlock");
-                                    } else {
-                                        console.log("Unhandled status from server: ", response.status)
-                                    }
-                                }).catch((err) => {
-                                    console.error("Failed to upload rsa keys: ", err)
-                                })
-                            })
-
-                        } else {
+                            } else {
+                                setStatusText("Failed to upload private key")
+                                setCreating(false)
+                                console.log(response.data)
+                            }
+                        }).catch((error) => {
+                            console.error("Failed to upload private key", error)
                             setStatusText("Failed to upload private key")
                             setCreating(false)
-                            console.log(response.data)
-                        }
-                    }).catch((error) => {
-                        console.error("Failed to upload private key", error)
-                        setStatusText("Failed to upload private key")
+                        })
+                    } else {
+                        console.log(response.data)
+                        setStatusText("Failed to upload public key")
                         setCreating(false)
-                    })
-                } else {
-                    console.log(response.data)
+                    }
+
+
+                }).catch((error) => {
+                    console.error("Failed to upload public key: ", error);
                     setStatusText("Failed to upload public key")
                     setCreating(false)
-                }
+                })
 
 
-            }).catch((error) => {
-                console.error("Failed to upload public key: ", error);
-                setStatusText("Failed to upload public key")
-                setCreating(false)
             })
+        });
 
 
-        })
     }
 
     return <>
