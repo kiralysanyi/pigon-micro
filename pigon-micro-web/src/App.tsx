@@ -1,4 +1,3 @@
-import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import IndexPage from './pages/IndexPage'
 import LoginPage from './pages/LoginPage'

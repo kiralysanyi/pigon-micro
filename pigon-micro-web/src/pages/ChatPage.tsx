@@ -99,7 +99,7 @@ const ChatPage = () => {
         setMessage("")
     }
 
-    return <div>
+    return <>
         <div className="message-display">
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage": "message"}`}>
                 <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
@@ -113,7 +113,7 @@ const ChatPage = () => {
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>
         </div>}
-    </div>
+    </>
 }
 
 export default ChatPage;
