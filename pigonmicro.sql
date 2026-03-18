@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 16. 14:32
+-- Létrehozás ideje: 2026. Már 18. 12:55
 -- Kiszolgáló verziója: 10.6.21-MariaDB-ubu2004
 -- PHP verzió: 8.2.27
 
@@ -107,7 +107,8 @@ CREATE TABLE `session` (
 CREATE TABLE `user-chats` (
   `cId` int(11) NOT NULL,
   `chatId` int(11) NOT NULL,
-  `userId` int(11) NOT NULL
+  `userId` int(11) NOT NULL,
+  `lastRead` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
