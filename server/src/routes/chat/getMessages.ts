@@ -15,7 +15,7 @@ const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     // get messages
-    pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, created_at AS date FROM messages WHERE chatID = ? LIMIT 50", [chatID], (err, result) => {
+    pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT 50", [chatID], (err, result) => {
         if (err) {
             console.error("Failed to get messages for chat: ", chatID);
             console.error(err)
@@ -23,6 +23,8 @@ const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
                 message: "Internal server error"
             })
         }
+
+        result.reverse();
 
         return res.json({
             messages: result
