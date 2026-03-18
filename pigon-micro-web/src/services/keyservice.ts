@@ -5,6 +5,7 @@ import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import getUserInfo from "../lib/auth/getUserInfo";
 import { masterDecrypt } from "../lib/encryption/masterkey";
+import type { DKeyWrapper } from "../types/DKeyWrapper";
 
 // get shared "key" for a specific chat, if its a private chat we use ecdh, if group then we get it from the encrypted blob with rsa decrypt,
 // or if its saved we use that, but with ecdh we always calculate.
@@ -47,12 +48,21 @@ const getSharedKey = (chatID: number): Promise<string> => {
     })
 }
 
+const loadedKeys: DKeyWrapper[] = []
+
 const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: number, senderID: number, masterKey: CryptoKey): Promise<CryptoKey> => {
     const startTime = new Date();
     const userinfo = await getUserInfo();
 
     let myKeyID = recipientKeyId;
     let remoteKeyID = senderKeyId;
+
+    const loaded = loadedKeys.filter((k) => (k.idA == senderKeyId && k.idB == recipientKeyId) || (k.idA == recipientKeyId && k.idB == senderKeyId))[0]
+
+    if (loaded) {
+        console.log("Loaded shared key from cache")
+        return loaded.dkey;
+    }
 
     if (senderID == userinfo.ID) {
         myKeyID = senderKeyId;
@@ -76,6 +86,13 @@ const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: numb
     const endTime = new Date();
 
     console.log("Shared key derivation took: ", `${endTime.getTime() - startTime.getTime()}ms`);
+    if (!loaded) {
+        loadedKeys.push({
+            dkey: shared,
+            idA: senderKeyId,
+            idB: recipientKeyId
+        })
+    }
     return shared
 }
 
