@@ -75,7 +75,7 @@ const IndexPage = () => {
         <div className="sidebar">
             {/* Chat list render */}
             <div className="chatlist">
-                {chats && chats.map((chat) => <div onClick={() => navigate("/chat/" + chat.chatID)}>
+                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => navigate("/chat/" + chat.chatID)}>
                     <span>{chat.name}</span>
                 </div>)}
             </div>

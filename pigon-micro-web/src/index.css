@@ -233,9 +233,18 @@ button:focus-visible {
   position: relative;
   width: 100%;
   height: 3rem;
-  background-color: rgb(68, 68, 68);
+  background-color: rgb(50, 50, 50);
   line-height: 3rem;
   cursor: pointer;
+  transition: 200ms;
+}
+
+.chatlist div:hover {
+  background-color: rgb(92, 92, 92);
+}
+
+.chatlist .focused {
+  background-color: rgb(92, 92, 92);
 }
 
 /* Chat stuff */
