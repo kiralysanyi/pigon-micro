@@ -58,9 +58,8 @@ const getMessageDecryptionKey = async (senderKeyId: number, recipientKeyId: numb
     let remoteKeyID = senderKeyId;
 
     const loaded = loadedKeys.filter((k) => (k.idA == senderKeyId && k.idB == recipientKeyId) || (k.idA == recipientKeyId && k.idB == senderKeyId))[0]
-
     if (loaded) {
-        console.log("Loaded shared key from cache")
+        console.log("keyservice: Key loaded from cache")
         return loaded.dkey;
     }
 

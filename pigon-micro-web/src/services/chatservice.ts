@@ -9,7 +9,6 @@ import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
-import type { DKeyWrapper } from "../types/DKeyWrapper";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
@@ -32,7 +31,6 @@ class ChatService extends EventTarget {
 
     socket: Socket | undefined;
     masterKey: CryptoKey | undefined;
-    loadedKeys: DKeyWrapper[] = [];
 
     private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
         if (!this.masterKey) {
@@ -42,17 +40,9 @@ class ChatService extends EventTarget {
 
         const startTime = new Date();
 
-        const loaded = this.loadedKeys.filter((k) => (k.idA == senderKeyId && k.idB == recipientKeyId) || (k.idA == recipientKeyId && k.idB == senderKeyId))[0]
 
-        const dKey = loaded ? loaded.dkey : await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey);
+        const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey);
 
-        if (!loaded) {
-            this.loadedKeys.push({
-                dkey: dKey,
-                idA: senderKeyId,
-                idB: recipientKeyId
-            })
-        }
 
         decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
             this.dispatchEvent(new CustomEvent("message", {
@@ -117,18 +107,7 @@ class ChatService extends EventTarget {
                             if (!this.masterKey) {
                                 return reject("Failed to process message: masterKey not loaded")
                             }
-
-                            const loaded = this.loadedKeys.filter((k) => (k.idA == msg.senderKeyId && k.idB == msg.recipientKeyId) || (k.idA == msg.recipientKeyId && k.idB == msg.senderKeyId))[0]
-
-                            const dkey = loaded ? loaded.dkey : await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
-
-                            if (!loaded) {
-                                this.loadedKeys.push({
-                                    dkey: dkey,
-                                    idA: msg.senderKeyId,
-                                    idB: msg.recipientKeyId
-                                })
-                            }
+                            const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
 
                             // TODO: improve speed by throwing out this base64 bullshit
                             decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
