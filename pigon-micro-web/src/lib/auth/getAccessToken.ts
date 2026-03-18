@@ -24,15 +24,19 @@ const getAccessToken = (): Promise<string> => {
             if (expired || nearExpire) {
                 try {
                     lock = true;
-                    const newToken = await refreshAccessToken();
+                    const newToken = await refreshAccessToken().catch((err) => {
+                        throw err;
+                    });
                     atoken = newToken.token;
                     localStorage.setItem("atoken", newToken.token);
                     localStorage.setItem("atokenExpire", newToken.tokenExpire);
                     lock = false;
                     resolved(atoken);
                 } catch (error) {
+                    lock = false;
                     console.error("Failed to get new access token: ", error)
-                    rejected();
+                    rejected(error);
+                    throw error
                 }
             } else {
                 resolved(atoken)

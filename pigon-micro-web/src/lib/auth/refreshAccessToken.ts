@@ -17,6 +17,10 @@ const refreshAccessToken = (): Promise<{ token: string, tokenExpire: string }> =
                 token,
                 tokenExpire
             })
+        }).catch((err) => {
+            console.error("Failed to refresh access token: ", err)
+            rejected(err)
+            throw err;
         })
     })
 }

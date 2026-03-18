@@ -7,6 +7,8 @@ import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
 import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
+import type { Socket } from "socket.io-client";
+import { getSocket } from "../lib/socket";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -15,9 +17,18 @@ const IndexPage = () => {
 
     const navigate = useNavigate();
     const params = useParams();
-
+    const [connected, setConnected] = useState(false)
     useEffect(() => {
-        getAccessToken().then((token) => {
+        let socket: Socket | undefined;
+        const onConnect = () => {
+            setConnected(true)
+        }
+
+        const onDisconnect = () => {
+            setConnected(false)
+        }
+
+        getAccessToken().then(async (token) => {
             // get userinfo
             axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
                 setUserdata(response.data.data)
@@ -37,8 +48,18 @@ const IndexPage = () => {
             }).catch((err) => {
                 console.error("Failed to get chats: ", err)
             })
-        }).catch(() => {
-            console.error("Failed to get access token")
+
+            // set socket
+            const socket = await getSocket();
+            setConnected(socket.connected);
+
+            socket.on("connect", onConnect);
+            socket.on("disconnect", onDisconnect);
+        }).catch((err) => {
+            console.error("Failed to initialize main page");
+            if (err.response == undefined) {
+                console.error("Network error")
+            }
         })
 
         const k = {
@@ -48,6 +69,13 @@ const IndexPage = () => {
 
         if (k.privKey == null) {
             navigate("/unlock")
+        }
+
+        return () => {
+            if (socket) {
+                socket.off("connect", onConnect);
+                socket.off("disconnect", onDisconnect)
+            }
         }
 
 
@@ -61,11 +89,11 @@ const IndexPage = () => {
         }
     }, [params])
 
-    return <>
+    return (userdata && connected == true) ? <>
         <div className="header">
             <div className="user-display">
                 <span>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => {logout().then(() => {navigate("/login")})}} />
+                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
             </div>
             <div className="chat-header">
                 <span>Chat: {chatName}</span>
@@ -83,7 +111,7 @@ const IndexPage = () => {
         <div className="chat-main-container">
             <Outlet />
         </div>
-    </>
+    </> : ""
 }
 
 export default IndexPage;
