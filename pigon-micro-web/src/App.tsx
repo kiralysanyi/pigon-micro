@@ -1,7 +1,6 @@
 import './App.css'
 import { createBrowserRouter, RouterProvider } from 'react-router'
 import IndexPage from './pages/IndexPage'
-import TestPage from './pages/TestPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import SetupPage from './pages/SetupPage'
@@ -42,10 +41,6 @@ const router = createBrowserRouter([
   {
     path: "/unlock",
     Component: UnlockPage
-  },
-  {
-    path: "/test",
-    Component: TestPage
   },
   {
     path: "/newchat",

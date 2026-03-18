@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
-import { encrypt, generateECDHKeyPair } from "../lib/encryption/ecdh";
-import { encodeEncryptedData, exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
+import { generateECDHKeyPair } from "../lib/encryption/ecdh";
+import { exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
 import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
-import { exportRsaPrivateKey, exportRsaPublicKey, generateRsaKeyPair } from "../lib/encryption/rsa";
 import { generateMasterKey, masterEncrypt } from "../lib/encryption/masterkey";
 import uploadMasterKey from "../lib/encryption/uploadMasterKey";
 import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";

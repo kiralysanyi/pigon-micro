@@ -2,8 +2,6 @@ import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
-import { decodeEncryptedData } from "../lib/encryption/utils";
-import { decrypt } from "../lib/encryption/ecdh";
 import { useNavigate } from "react-router";
 import getMasterKey from "../lib/encryption/getMasterKey";
 import { masterDecrypt } from "../lib/encryption/masterkey";

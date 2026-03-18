@@ -30,40 +30,31 @@ async function deriveKey(password: string, salt: BufferSource) {
     );
 }
 
-// Encrypt text
-async function encrypt(message: string, password: string) {
-    const salt = crypto.getRandomValues(new Uint8Array(16));
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveKey(password, salt);
+// encrypt text with ecdh key
+async function encryptMsg(message: string, key: CryptoKey): Promise<encryptedData> {
+    const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV for AES-GCM
+    const encoded = new TextEncoder().encode(message);
 
-    const cipherBuffer = await crypto.subtle.encrypt(
+    const ciphertext = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         key,
-        enc.encode(message)
+        encoded
     );
 
     return {
-        salt: btoa(String.fromCharCode(...salt)),
-        iv: btoa(String.fromCharCode(...iv)),
-        ciphertext: btoa(String.fromCharCode(...new Uint8Array(cipherBuffer)))
+        iv: btoa(String.fromCharCode(... new Uint8Array(iv))),
+        ciphertext: btoa(String.fromCharCode(... new Uint8Array(ciphertext)))
     };
 }
 
-// Decrypt text
-async function decrypt({ salt, iv, ciphertext }: encryptedData, password: string) {
-    const saltBytes = Uint8Array.from(atob(salt), c => c.charCodeAt(0));
-    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
-    const cipherBytes = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
-
-    const key = await deriveKey(password, saltBytes);
-
-    const plainBuffer = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: ivBytes },
+async function decryptMsg(data: encryptedData, key: CryptoKey): Promise<string> {
+    const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: Uint8Array.from(atob(data.iv), c => c.charCodeAt(0)) },
         key,
-        cipherBytes
+        Uint8Array.from(atob(data.ciphertext), c => c.charCodeAt(0))
     );
 
-    return dec.decode(plainBuffer);
+    return new TextDecoder().decode(decrypted);
 }
 
 // encryption code end
@@ -103,4 +94,4 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
 
 
 
-export { generateECDHKeyPair, deriveSharedKey, encrypt, decrypt, deriveKey}
+export { generateECDHKeyPair, deriveSharedKey, deriveKey, encryptMsg, decryptMsg }

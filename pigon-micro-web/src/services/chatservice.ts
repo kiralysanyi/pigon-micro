@@ -1,8 +1,7 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import { getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
-import { decrypt, encrypt } from "../lib/encryption/ecdh";
-import { decodeEncryptedData, encodeEncryptedData, exportKeyToBase64 } from "../lib/encryption/utils";
+import { encryptMsg, decryptMsg } from "../lib/encryption/ecdh";
 import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
@@ -33,6 +32,7 @@ class ChatService extends EventTarget {
 
     socket: Socket | undefined;
     masterKey: CryptoKey | undefined;
+    loadedKeys: DKeyWrapper[] = [];
 
     private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
         if (!this.masterKey) {
@@ -40,12 +40,20 @@ class ChatService extends EventTarget {
             return;
         }
 
-        const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey)
+        const startTime = new Date();
 
-        decrypt(decodeEncryptedData(payload), await exportKeyToBase64(dKey)).then(async (message) => {
+        const loaded = this.loadedKeys.filter((k) => (k.idA == senderKeyId && k.idB == recipientKeyId) || (k.idA == recipientKeyId && k.idB == senderKeyId))[0]
+
+        const dKey = loaded ? loaded.dkey : await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey);
+
+
+        decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
             this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: message, chatID, senderID, senderName: await getUsernameById(senderID) }
             }))
+
+            console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
+
         }).catch((err) => {
             console.error("Failed to decrypt message: ", err)
             console.error("MSGINFO: ", payload, chatID, senderID)
@@ -54,6 +62,7 @@ class ChatService extends EventTarget {
 
     // TODO: make this group chat compatible
     sendMessage = async (message: string, chatID: number) => {
+        const startTime = new Date();
         axios.get(BASEURL + "/api/v1/chat/" + chatID, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
             if (this.masterKey == undefined) {
                 console.error("Chatservice not inited properly");
@@ -66,10 +75,11 @@ class ChatService extends EventTarget {
             const sharedKey = await getNewMessageEncryptionKey(recipientID, this.masterKey)
 
             // TODO: improve speed by throwing out this base64 bullshit
-            let encrypted = await encrypt(message, await exportKeyToBase64(sharedKey.key))
+            let encrypted = await encryptMsg(message, sharedKey.key)
             // todo: add ack
             console.log("Sending message: ", encrypted, chatID, this.socket)
-            this.socket?.emit("message", { payload: encodeEncryptedData(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
+            this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
+            console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
         })
     }
 
@@ -89,7 +99,7 @@ class ChatService extends EventTarget {
                     let decrypted: Message[] = []
 
                     // decrypt handler
-                    const loadedKeys: DKeyWrapper[] = []
+
                     const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
                         return new Promise(async (resolve, reject) => {
                             if (!msg.senderKeyId || !msg.recipientKeyId) {
@@ -101,12 +111,12 @@ class ChatService extends EventTarget {
                                 return reject("Failed to process message: masterKey not loaded")
                             }
 
-                            const loaded = loadedKeys.filter((k) => (k.idA == msg.senderKeyId && k.idB == msg.recipientKeyId) || (k.idA == msg.recipientKeyId && k.idB == msg.senderKeyId))[0]
+                            const loaded = this.loadedKeys.filter((k) => (k.idA == msg.senderKeyId && k.idB == msg.recipientKeyId) || (k.idA == msg.recipientKeyId && k.idB == msg.senderKeyId))[0]
 
                             const dkey = loaded ? loaded.dkey : await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
 
                             if (!loaded) {
-                                loadedKeys.push({
+                                this.loadedKeys.push({
                                     dkey: dkey,
                                     idA: msg.senderKeyId,
                                     idB: msg.recipientKeyId
@@ -114,7 +124,7 @@ class ChatService extends EventTarget {
                             }
 
                             // TODO: improve speed by throwing out this base64 bullshit
-                            decrypt(decodeEncryptedData(msg.payload), await exportKeyToBase64(dkey)).then(async (message) => {
+                            decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
                                 decrypted.push({
                                     chatID: msg.chatID,
                                     date: msg.date,
