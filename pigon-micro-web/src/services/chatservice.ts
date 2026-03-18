@@ -46,6 +46,13 @@ class ChatService extends EventTarget {
 
         const dKey = loaded ? loaded.dkey : await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey);
 
+        if (!loaded) {
+            this.loadedKeys.push({
+                dkey: dKey,
+                idA: senderKeyId,
+                idB: recipientKeyId
+            })
+        }
 
         decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
             this.dispatchEvent(new CustomEvent("message", {
