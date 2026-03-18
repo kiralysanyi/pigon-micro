@@ -78,8 +78,18 @@ const ChatPage = () => {
             console.error("Failed to get message history: ", err)
         })
 
+
+        // TODO: move key rotation to a different place in the code
+        // rotate keys every 10 minutes
+        const rotateInterval = setInterval(() => {
+            chatProvider.rotateKeys();
+        }, 1000 * 60 * 10);
+
+        (window as any).chpr = chatProvider
+
         return () => {
             console.log("Unloading chat service for chat: ", params.id)
+            clearInterval(rotateInterval)
             chatProvider.unload();
         }
     }, [krp?.masterKey, params])
@@ -101,7 +111,7 @@ const ChatPage = () => {
 
     return <>
         <div className="message-display">
-            {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage": "message"}`}>
+            {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"}`}>
                 <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
             </div>)}
         </div>

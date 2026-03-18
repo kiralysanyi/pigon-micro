@@ -9,6 +9,7 @@ import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
+import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
@@ -78,6 +79,12 @@ class ChatService extends EventTarget {
             this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
             console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
         })
+    }
+
+    rotateKeys = () => {
+        if (this.masterKey) {
+            uploadChatKeyPair(this.masterKey);
+        }
     }
 
     unload = () => {
