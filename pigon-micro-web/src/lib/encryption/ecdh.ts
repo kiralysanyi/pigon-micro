@@ -4,7 +4,6 @@ import type { encryptedData } from "../../types/encryptedData";
 
 // Convert string helpers
 const enc = new TextEncoder();
-const dec = new TextDecoder();
 
 // Derive a crypto key from the password
 async function deriveKey(password: string, salt: BufferSource) {

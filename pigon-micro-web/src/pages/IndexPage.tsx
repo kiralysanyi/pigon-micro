@@ -5,7 +5,6 @@ import getAccessToken from "../lib/auth/getAccessToken";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
-import getUsernameById from "../lib/auth/getUsernameById";
 import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 
