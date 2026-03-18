@@ -82,9 +82,27 @@ class ChatService extends EventTarget {
     }
 
     rotateKeys = () => {
-        if (this.masterKey) {
-            uploadChatKeyPair(this.masterKey);
+        const rotate = () => {
+            if (this.masterKey) {
+                console.log("Key rotating")
+                uploadChatKeyPair(this.masterKey);
+                const nrd = new Date();
+                nrd.setMinutes(nrd.getMinutes() + 10)
+                localStorage.setItem("nextRotate", nrd.toISOString())
+                return;
+            }
         }
+
+        const nextRotate = localStorage.getItem("nextRotate");
+        if (nextRotate == null) {
+            rotate();
+        } else {
+            const nr = new Date(nextRotate);
+            if (nr < new Date()) {
+                rotate();
+            }
+        }
+
     }
 
     unload = () => {

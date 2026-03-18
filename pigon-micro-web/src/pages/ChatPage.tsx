@@ -80,10 +80,12 @@ const ChatPage = () => {
 
 
         // TODO: move key rotation to a different place in the code
-        // rotate keys every 10 minutes
+        // rotate keys
+        chatProvider.rotateKeys();
+        // Call rotatekeys every minute, the function will only rotate if required
         const rotateInterval = setInterval(() => {
             chatProvider.rotateKeys();
-        }, 1000 * 60 * 10);
+        }, 1000 * 60);
 
         (window as any).chpr = chatProvider
 
