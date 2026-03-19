@@ -1,9 +1,9 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { validationResult } from "express-validator";
-import { createPrivateChat } from "../../utils/db/chat";
+import { checkChatConflict, createPrivateChat } from "../../utils/db/chat";
 
-const createChat: RequestHandler = (req: reqWithUserinfo, res) => {
+const createChat: RequestHandler = async (req: reqWithUserinfo, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
         return res.status(400).json({
@@ -15,6 +15,11 @@ const createChat: RequestHandler = (req: reqWithUserinfo, res) => {
     const { targetID } = req.body;
 
     // TODO: do not allow duplicate chats (only private chats ofc)
+    if (await checkChatConflict(req.userinfo.ID, targetID)) {
+        return res.status(409).json({
+            message: "Chat already exists"
+        })
+    }
 
     createPrivateChat(req.userinfo.ID, parseInt(targetID)).then((chatID) => {
         return res.status(201).json({

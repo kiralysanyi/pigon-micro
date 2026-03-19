@@ -58,8 +58,28 @@ const createPrivateChat = (creatorID: number, targetID: number): Promise<number>
             })
         })
     })
-    
+
 }
 
 
-export { getParticipants, checkUserInChat, createPrivateChat };
+const checkChatConflict = (creatorID: number, targetID: number): Promise<boolean> => {
+    return new Promise((resolve, reject) => {
+        pool.query<RowDataPacket[]>(
+            `SELECT ch.ID
+             FROM chats ch
+             JOIN \`user-chats\` uc ON uc.chatId = ch.ID
+             WHERE (uc.userId = ? OR uc.userId = ?)
+               AND ch.type = 'direct'
+             GROUP BY ch.ID
+             HAVING COUNT(DISTINCT uc.userId) = 2`,
+            [creatorID, targetID],
+            (err, result) => {
+                if (err) return reject(err);
+                resolve(result.length > 0);
+            }
+        );
+    });
+};
+
+
+export { getParticipants, checkUserInChat, createPrivateChat, checkChatConflict };

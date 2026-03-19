@@ -72,7 +72,6 @@ class ChatService extends EventTarget {
 
             const sharedKey = await getNewMessageEncryptionKey(recipientID, this.masterKey)
 
-            // TODO: improve speed by throwing out this base64 bullshit
             let encrypted = await encryptMsg(message, sharedKey.key)
             // todo: add ack
             console.log("Sending message: ", encrypted, chatID, this.socket)

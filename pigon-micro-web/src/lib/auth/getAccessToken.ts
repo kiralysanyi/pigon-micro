@@ -1,6 +1,5 @@
 import refreshAccessToken from "./refreshAccessToken";
 
-// todo: fix expired token handling
 let lock = false;
 
 const getAccessToken = (): Promise<string> => {
