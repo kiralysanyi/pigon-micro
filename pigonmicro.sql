@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.2.2
+-- version 5.2.3
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 18. 12:55
--- Kiszolgáló verziója: 10.6.21-MariaDB-ubu2004
--- PHP verzió: 8.2.27
+-- Létrehozás ideje: 2026. Már 19. 17:55
+-- Kiszolgáló verziója: 10.6.25-MariaDB-ubu2204
+-- PHP verzió: 8.3.26
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -45,6 +45,22 @@ CREATE TABLE `chat_keys` (
   `userID` int(11) NOT NULL,
   `pubKey` longtext NOT NULL,
   `encryptedPrivKey` longtext NOT NULL,
+  `status` enum('active','retired') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `group_keys`
+--
+
+CREATE TABLE `group_keys` (
+  `keyId` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `creatorId` int(11) NOT NULL COMMENT 'The id of the user so you can get the pubkey part for ecdh to decrypt the key itself',
+  `chatId` int(11) NOT NULL,
+  `encryptedKey` longtext NOT NULL,
   `status` enum('active','retired') NOT NULL DEFAULT 'active',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -147,6 +163,14 @@ ALTER TABLE `chat_keys`
   ADD KEY `usr_key` (`userID`);
 
 --
+-- A tábla indexei `group_keys`
+--
+ALTER TABLE `group_keys`
+  ADD PRIMARY KEY (`keyId`),
+  ADD KEY `usr-gkey` (`userId`),
+  ADD KEY `gkey-chat` (`chatId`);
+
+--
 -- A tábla indexei `messages`
 --
 ALTER TABLE `messages`
@@ -203,6 +227,12 @@ ALTER TABLE `chat_keys`
   MODIFY `keyID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT a táblához `group_keys`
+--
+ALTER TABLE `group_keys`
+  MODIFY `keyId` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT a táblához `messages`
 --
 ALTER TABLE `messages`
@@ -247,6 +277,13 @@ ALTER TABLE `chats`
 --
 ALTER TABLE `chat_keys`
   ADD CONSTRAINT `usr_key` FOREIGN KEY (`userID`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+--
+-- Megkötések a táblához `group_keys`
+--
+ALTER TABLE `group_keys`
+  ADD CONSTRAINT `gkey-chat` FOREIGN KEY (`chatId`) REFERENCES `chats` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `usr-gkey` FOREIGN KEY (`userId`) REFERENCES `users` (`ID`) ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 --
 -- Megkötések a táblához `messages`
