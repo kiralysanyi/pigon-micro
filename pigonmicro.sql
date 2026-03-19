@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 19. 17:55
+-- Létrehozás ideje: 2026. Már 19. 17:59
 -- Kiszolgáló verziója: 10.6.25-MariaDB-ubu2204
 -- PHP verzió: 8.3.26
 
@@ -77,9 +77,9 @@ CREATE TABLE `messages` (
   `senderID` int(11) NOT NULL,
   `type` varchar(50) NOT NULL,
   `message` longtext NOT NULL COMMENT 'Encrypted message',
-  `keyID` mediumtext DEFAULT NULL,
-  `senderKeyId` int(11) DEFAULT NULL,
-  `recipientKeyId` int(11) DEFAULT NULL,
+  `keyID` int(11) DEFAULT NULL COMMENT 'Only used for group chats',
+  `senderKeyId` int(11) DEFAULT NULL COMMENT 'Only used for private chats',
+  `recipientKeyId` int(11) DEFAULT NULL COMMENT 'Only used for private chats',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
