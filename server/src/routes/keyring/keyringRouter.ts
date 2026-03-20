@@ -10,6 +10,8 @@ import getMasterKey from "./getMasterKey";
 import postMasterKey from "./postMasterKey";
 import postChatKeys from "./postChatKeys";
 import getChatKeys from "./getChatKeys";
+import postGroupKey from "./postGroupKey";
+import getGroupKey from "./getGroupKey";
 
 const keyringRouter = express.Router();
 
@@ -35,6 +37,14 @@ keyringRouter.post("/chatkeys/self", body("pubKey").notEmpty().withMessage("pubK
 keyringRouter.get("/chatkeys/key/:keyid", getChatKeys);
 
 keyringRouter.get("/chatkeys/user/:userid", getChatKeys);
+
+keyringRouter.get("/groupkeys/:chatID/:kGuid", getGroupKey);
+
+// optional body field: kGuid
+keyringRouter.post("/groupkeys/:chatID",
+    body("targetUserId").notEmpty().isNumeric().withMessage("targetUserId field is required and it should be a number"),
+    body("encryptedKey").notEmpty().withMessage("encryptedKey field is required"),
+    postGroupKey)
 
 
 // TODO: remove later

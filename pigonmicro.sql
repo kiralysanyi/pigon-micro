@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 19. 17:59
+-- Létrehozás ideje: 2026. Már 20. 21:56
 -- Kiszolgáló verziója: 10.6.25-MariaDB-ubu2204
 -- PHP verzió: 8.3.26
 
@@ -57,6 +57,7 @@ CREATE TABLE `chat_keys` (
 
 CREATE TABLE `group_keys` (
   `keyId` int(11) NOT NULL,
+  `kGuid` text NOT NULL COMMENT 'key identifier, one identifier has multiple records attached',
   `userId` int(11) NOT NULL,
   `creatorId` int(11) NOT NULL COMMENT 'The id of the user so you can get the pubkey part for ecdh to decrypt the key itself',
   `chatId` int(11) NOT NULL,
@@ -77,7 +78,7 @@ CREATE TABLE `messages` (
   `senderID` int(11) NOT NULL,
   `type` varchar(50) NOT NULL,
   `message` longtext NOT NULL COMMENT 'Encrypted message',
-  `keyID` int(11) DEFAULT NULL COMMENT 'Only used for group chats',
+  `kGuid` text DEFAULT NULL COMMENT 'Only used for group chats',
   `senderKeyId` int(11) DEFAULT NULL COMMENT 'Only used for private chats',
   `recipientKeyId` int(11) DEFAULT NULL COMMENT 'Only used for private chats',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
@@ -168,7 +169,8 @@ ALTER TABLE `chat_keys`
 ALTER TABLE `group_keys`
   ADD PRIMARY KEY (`keyId`),
   ADD KEY `usr-gkey` (`userId`),
-  ADD KEY `gkey-chat` (`chatId`);
+  ADD KEY `gkey-chat` (`chatId`),
+  ADD KEY `guid` (`kGuid`(768));
 
 --
 -- A tábla indexei `messages`

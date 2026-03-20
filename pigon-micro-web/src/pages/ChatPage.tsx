@@ -32,8 +32,8 @@ const ChatPage = () => {
             return;
         }
 
-        if (!krp.masterKey) {
-            console.warn("No masterKey in krp yet")
+        if (!krp.masterKey || !krp.privKey) {
+            console.warn("No masterKey | privkey in krp yet")
             return;
         }
 
@@ -42,7 +42,7 @@ const ChatPage = () => {
 
         console.log("Loading chat service for chat: ", params.id)
         const chatProvider = new ChatService();
-        chatProvider.init(krp.masterKey);
+        chatProvider.init(krp.masterKey, krp.privKey);
         console.log("Chat service loaded")
         chatProvider.addEventListener("message", (e) => {
             const { chatID, message, senderID, senderName } = e.detail;
@@ -94,7 +94,7 @@ const ChatPage = () => {
             clearInterval(rotateInterval)
             chatProvider.unload();
         }
-    }, [krp?.masterKey, params])
+    }, [krp?.masterKey, params, krp?.privKey])
 
     const sendMsg = () => {
         if (!userInfo) {

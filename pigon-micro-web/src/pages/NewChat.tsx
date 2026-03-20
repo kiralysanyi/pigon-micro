@@ -4,7 +4,10 @@ import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
-import { generateECDHKeyPair } from "../lib/encryption/ecdh";
+import { deriveSharedKey, ecdhEncryptKey } from "../lib/encryption/ecdh";
+import { KeyRingContext } from "../services/KeyRingProvider";
+import getUserInfo from "../lib/auth/getUserInfo";
+import { generateMasterKey } from "../lib/encryption/masterkey";
 
 const NewChat = () => {
     const [users, setUsers] = useState<userdataBrief[]>()
@@ -16,6 +19,8 @@ const NewChat = () => {
     const [error, setError] = useState<string>();
 
     const [loading, setLoading] = useState(true);
+
+    const krp = useContext(KeyRingContext);
 
     useEffect(() => {
         getAccessToken().then((token) => {
@@ -57,10 +62,36 @@ const NewChat = () => {
     const createGroup = () => {
         setLoading(true);
         getAccessToken().then((token) => {
+            if (krp == undefined || krp.privKey == undefined || krp.pubKey == undefined) {
+                setLoading(false);
+                setError("Key initialization failure")
+                return;
+            }
             axios.post(BASEURL + "/api/v1/chat/group", { chatName: chatname }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then(async (response) => {
                 console.log("Group created");
                 // create and upload initial keys
-                const keypair = await generateECDHKeyPair();
+                const chatID = response.data.chatID;
+                const user = await getUserInfo();
+
+
+                // generate chat key
+                const chatKey = await generateMasterKey();
+
+                // get the key to encrypt the chat key
+                const sharedKey = await deriveSharedKey(krp.privKey as CryptoKey, krp.pubKey as CryptoKey)
+
+                // encrypt chat key
+                const encryptedKey = await ecdhEncryptKey(chatKey, sharedKey);
+
+                // upload
+                axios.post(BASEURL + "/api/v1/keyring/groupkeys/" + chatID, { targetUserId: user.ID, encryptedKey }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then((response) => {
+                    console.log(response.data)
+                    navigate("/")
+                }).catch((err) => {
+                    console.error(err, err.response)
+                    setLoading(false);
+                    setError("Failed to create initial keys")
+                })
                 //navigate("/")
             }).catch((err) => {
                 setLoading(false);
@@ -76,6 +107,7 @@ const NewChat = () => {
 
     return <>
         <div className="modal">
+            {loading && <span>Loading...</span>}
             {error && <div className="modal-error">{error}</div>}
             {groupMode ? <>
                 <h1>Create new Group</h1>

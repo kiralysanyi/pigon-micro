@@ -10,7 +10,7 @@ interface EncryptedMessage {
     messageID: number,
     payload: string,
     senderID: number,
-    keyId?: string,
+    kGuid?: string,
     senderKeyId?: number,
     recipientKeyId?: number,
     type: "text" | "file" | "video" | "image"

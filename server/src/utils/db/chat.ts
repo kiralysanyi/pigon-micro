@@ -77,6 +77,22 @@ const getChatType = (chatID: number): Promise<"direct" | "group"> => {
     })
 }
 
+const getChatName = (chatID: number): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+        pool.query<RowDataPacket[]>("SELECT name FROM chats WHERE ID = ?", [chatID], (err, result) => {
+            if (err) {
+                return reject(err)
+            }
+
+            if (result.length == 0) {
+                return reject("not found")
+            }
+
+            resolve(result[0].name)
+        })
+    })
+}
+
 
 const checkChatConflict = (creatorID: number, targetID: number): Promise<boolean> => {
     return new Promise((resolve, reject) => {
@@ -98,4 +114,4 @@ const checkChatConflict = (creatorID: number, targetID: number): Promise<boolean
 };
 
 
-export { getParticipants, checkUserInChat, createPrivateChat, checkChatConflict, getChatType };
+export { getParticipants, checkUserInChat, createPrivateChat, checkChatConflict, getChatType, getChatName };

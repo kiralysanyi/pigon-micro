@@ -7,6 +7,9 @@ const getChatName = (chatID: number): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         const userinfo = await getUserInfo();
         axios.get(BASEURL + "/api/v1/chat/" + chatID, {headers: {"Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}`}}).then((response) => {
+            if (response.data.chat.name) {
+                return resolve(response.data.chat.name);
+            }
             const participants = response.data.chat.participants as any[];
             resolve(participants.filter((p) => p.id != userinfo.ID)[0].username)
         }).catch((err) => {

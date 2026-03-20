@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
-import { getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
+import { getGroupDecryptKey, getGroupEncryptKey, getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
 import { encryptMsg, decryptMsg } from "../lib/encryption/ecdh";
 import axios from "axios";
 import { BASEURL } from "../conf";
@@ -32,6 +32,7 @@ class ChatService extends EventTarget {
 
     socket: Socket | undefined;
     masterKey: CryptoKey | undefined;
+    privKey: CryptoKey | undefined;
 
     private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
         if (!this.masterKey) {
@@ -58,6 +59,19 @@ class ChatService extends EventTarget {
         })
     }
 
+    // send message handler for group chats
+    private sendGroupMessage = async (message: string, chatID: number) => {
+        if (!this.privKey) {
+            console.error("privKey not loaded");
+            return;
+        }
+        const { key, kGuid } = await getGroupEncryptKey(chatID, this.privKey);
+
+        const encrypted = await encryptMsg(message, key);
+
+        this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, kGuid })
+    }
+
     // TODO: make this group chat compatible
     sendMessage = async (message: string, chatID: number) => {
         const startTime = new Date();
@@ -71,6 +85,7 @@ class ChatService extends EventTarget {
             console.log(chat)
             if (chat.type == "group") {
                 console.warn("Group chats are not implemented fully yet");
+                await this.sendGroupMessage(message, chatID)
                 return;
             }
 
@@ -129,9 +144,43 @@ class ChatService extends EventTarget {
 
                     // decrypt handler
 
+                    const handleGroupMessage = (msg: EncryptedMessage): Promise<void> => {
+                        return new Promise(async (resolve, reject) => {
+                            if (!msg.kGuid) {
+                                // not a group message;
+                                console.error("Not a group message: ", msg)
+                                reject("Err: not a group message")
+                                return;
+                            }
+
+                            if (!this.privKey) {
+                                console.error("No privkey");
+                                return;
+                            }
+
+                            const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
+                            decrypted.push({
+                                chatID: chatID,
+                                date: msg.date,
+                                message: await decryptMsg(JSON.parse(msg.payload), dkey),
+                                senderID: msg.senderID,
+                                type: msg.type,
+                                senderName: await getUsernameById(msg.senderID)
+                            })
+
+                            resolve();
+                        })
+                    }
+
                     const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
                         return new Promise(async (resolve, reject) => {
                             if (!msg.senderKeyId || !msg.recipientKeyId) {
+                                if (msg.kGuid) {
+                                    // group message
+                                    await handleGroupMessage(msg);
+                                    resolve();
+                                    return;
+                                }
                                 console.log("Invalid message data: ", msg)
                                 return;
                             }
@@ -180,9 +229,10 @@ class ChatService extends EventTarget {
         })
     }
 
-    init = (masterKey: CryptoKey) => {
+    init = (masterKey: CryptoKey, privKey: CryptoKey) => {
         console.log("Chatservice init: ", masterKey)
         this.masterKey = masterKey;
+        this.privKey = privKey;
         getSocket()
             .then((sock) => {
                 console.log("Got socket")

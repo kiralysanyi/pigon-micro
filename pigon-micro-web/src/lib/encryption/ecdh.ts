@@ -32,7 +32,7 @@ async function deriveKey(password: string, salt: BufferSource) {
 async function ecdhEncryptKey(keyToEncrypt: CryptoKey, key: CryptoKey): Promise<string> {
     const iv = crypto.getRandomValues(new Uint8Array(12));
 
-    const exportedKey = await crypto.subtle.exportKey("pkcs8", keyToEncrypt);
+    const exportedKey = await crypto.subtle.exportKey("raw", keyToEncrypt);
 
     const ciphertext = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },

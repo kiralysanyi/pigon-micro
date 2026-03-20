@@ -40,7 +40,13 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected: ", socket.id, socket.authenticated)
 
-        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId }: { payload: string, chatID: number, senderKeyId: number, recipientKeyId: number }) => {
+        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string }) => {
+
+            if ((senderKeyId == undefined || recipientKeyId == undefined) && kGuid == undefined) {
+                console.log("Invalid message dropped")
+                return;
+            }
+
             console.log(payload, `${socket.userinfo.ID} -->> ${chatID}`)
 
             // get chat participants
@@ -56,18 +62,25 @@ const attachSocketio = (server: Server) => {
             // save to db
             const msgType = "text"
 
-            console.log("Inserting: ", `c${chatID}`, `ski${senderKeyId}`, `rki${recipientKeyId}`)
-            const startTime = new Date().getTime();
-            pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
-                if (err) {
-                    console.error("Failed to save message", err);
-                    return;
-                }
-
-                console.log(`Message save took: ${new Date().getTime() - startTime}ms`)
-
-                // saved message send ack or something
-            });
+            if (kGuid == undefined) {
+                // private message
+                pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
+                    if (err) {
+                        console.error("Failed to save message", err);
+                        return;
+                    }
+                    // saved message send ack or something
+                });
+            } else {
+                // group message
+                pool.query("INSERT INTO messages (chatID, senderID, type, message, kGuid) VALUES (?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, kGuid], (err) => {
+                    if (err) {
+                        console.error("Failed to save message", err);
+                        return;
+                    }
+                    // saved message send ack or something
+                });
+            }
         })
     });
 }
