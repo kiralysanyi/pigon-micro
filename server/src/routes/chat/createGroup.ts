@@ -5,7 +5,7 @@ import { pool } from "../../utils/db/db";
 // create the group, and then add the creator to the group. key creation/submission should be handled client side.
 const createGroup: RequestHandler = (req: reqWithUserinfo, res) => {
     const creatorID = req.userinfo.ID;
-    pool.query("INSERT INTO chats (type, creator) VALUES ('group', ?) RETURNING ID", [creatorID], (err, result) => {
+    pool.query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName], (err, result) => {
         if (err) {
             console.error("Group create: ", err)
             return res.status(500).json({

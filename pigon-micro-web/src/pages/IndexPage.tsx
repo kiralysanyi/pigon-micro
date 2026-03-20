@@ -95,6 +95,8 @@ const IndexPage = () => {
         if (params.id) {
             getChatName(parseInt(params.id)).then((cname) => {
                 setChatname(cname);
+            }).catch(() => {
+                // Probbably just a group
             })
         }
     }, [params])
