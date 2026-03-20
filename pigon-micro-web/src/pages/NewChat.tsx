@@ -9,6 +9,8 @@ const NewChat = () => {
     const [users, setUsers] = useState<userdataBrief[]>()
     const navigate = useNavigate();
 
+    const [error, setError] = useState<string>()
+
     useEffect(() => {
         getAccessToken().then((token) => {
             axios.get(BASEURL + "/api/v1/auth/users", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then((response) => {
@@ -35,6 +37,9 @@ const NewChat = () => {
                 navigate("/")
             }).catch((err) => {
                 console.error("Failed to create chat: ", err)
+                if (err.response) {
+                    setError(err.response.data.message)
+                }
             })
 
         })
@@ -43,6 +48,7 @@ const NewChat = () => {
     return <>
         <div className="modal">
             <h1>Start new chat</h1>
+            {error && <div className="modal-error">{error}</div>}
             <span>Select user to start new chat with</span>
             {!users && <span>Loading user list...</span>}
             <div className="modal-list">

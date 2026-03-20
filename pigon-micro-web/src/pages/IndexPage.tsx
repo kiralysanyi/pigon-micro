@@ -13,7 +13,8 @@ import { getSocket } from "../lib/socket";
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
     const [chats, setChats] = useState<any[]>();
-    const [chatName, setChatname] = useState("")
+    const [chatName, setChatname] = useState("");
+    const [netError, setNetError] = useState(false);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -28,6 +29,11 @@ const IndexPage = () => {
             setConnected(false)
         }
 
+        const onSockError = (data: any) => {
+            console.error("Socket error: ", data)
+            setNetError(true);
+        }
+
         getAccessToken().then(async (token) => {
             // get userinfo
             axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
@@ -38,6 +44,7 @@ const IndexPage = () => {
                 }
             }).catch((error) => {
                 console.error(error)
+                setNetError(true)
             })
 
             // get chats
@@ -55,10 +62,12 @@ const IndexPage = () => {
 
             socket.on("connect", onConnect);
             socket.on("disconnect", onDisconnect);
+            socket.on("connect_error", onSockError);
         }).catch((err) => {
             console.error("Failed to initialize main page");
             if (err.response == undefined) {
                 console.error("Network error")
+                setNetError(true)
             }
         })
 
@@ -74,7 +83,8 @@ const IndexPage = () => {
         return () => {
             if (socket) {
                 socket.off("connect", onConnect);
-                socket.off("disconnect", onDisconnect)
+                socket.off("disconnect", onDisconnect);
+                socket.off("connect_error", onSockError);
             }
         }
 
@@ -111,7 +121,13 @@ const IndexPage = () => {
         <div className="chat-main-container">
             <Outlet />
         </div>
-    </> : ""
+    </> : <>
+        <div className="modal">
+            {netError ? <>
+                <h1>Network error</h1>
+                <button className="btn" onClick={() => location.reload()}>Retry</button></> : <h1>Loading</h1>}
+        </div>
+    </>
 }
 
 export default IndexPage;
