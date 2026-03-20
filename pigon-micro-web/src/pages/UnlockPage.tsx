@@ -73,12 +73,14 @@ const UnlockPage = () => {
         <div className="modal">
             <h2>{statusText}</h2>
             {error && <div className="error-msg">{error}</div>}
-            {loading ? <div className="spinner" style={{ marginLeft: "auto", marginRight: "auto" }}></div> : <>
-                <div className="form-group">
-                    <label htmlFor="kpass">Keyring password</label>
-                    <input value={kpass} onChange={(e) => { setKpass(e.target.value) }} type="password" name="kpass" id="kpass" />
-                </div>
-                <button onClick={unlock}>Unlock</button></>}
+            <form onSubmit={(e) => { e.preventDefault(); unlock(); }}>
+                {loading ? <div className="spinner" style={{ marginLeft: "auto", marginRight: "auto" }}></div> : <>
+                    <div className="form-group">
+                        <label htmlFor="kpass">Keyring password</label>
+                        <input value={kpass} onChange={(e) => { setKpass(e.target.value) }} type="password" name="kpass" id="kpass" />
+                    </div>
+                    <button onClick={unlock}>Unlock</button></>}
+            </form>
         </div>
     </>
 }

@@ -7,6 +7,7 @@ import UnlockPage from './pages/UnlockPage'
 import NewChat from './pages/NewChat'
 import ChatPage from './pages/ChatPage'
 import ChatIndex from './pages/ChatIndex'
+import AccountPage from './pages/AccountPage'
 
 // TODO: add some kind of auth middleware
 const router = createBrowserRouter([
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
         Component: ChatPage
       }
     ]
+  },
+  {
+    path: "/account",
+    Component: AccountPage
   },
   {
     path: "/login",

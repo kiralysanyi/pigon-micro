@@ -4,7 +4,7 @@ import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
-import { ArrowLeftEndOnRectangleIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftEndOnRectangleIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
@@ -102,6 +102,7 @@ const IndexPage = () => {
     return (userdata && connected == true) ? <>
         <div className="header">
             <div className="user-display">
+                <Cog6ToothIcon width={24} height={24} onClick={() => navigate("/account")} style={{ cursor: "pointer" }} />
                 <span>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
             </div>

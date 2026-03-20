@@ -55,23 +55,26 @@ const RegisterPage = () => {
         <div className="modal">
             <h1>Register</h1>
             {error && <div className="error-msg">{error}</div>}
-            <div className="form-group">
-                <label htmlFor="username">Username</label>
-                <input disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
-            </div>
+            <form onSubmit={(e) => { e.preventDefault(); register(); }}>
 
-            <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input disabled={inputsDisabled} value={password} onChange={(e) => { setPassword(e.target.value) }} type="password" id="password" name="password" />
-            </div>
+                <div className="form-group">
+                    <label htmlFor="username">Username</label>
+                    <input disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
+                </div>
 
-            <div className="form-group">
-                <label htmlFor="password1">Confirm password</label>
-                <input disabled={inputsDisabled} value={password1} onChange={(e) => { setPassword1(e.target.value) }} type="password" id="password1" name="password1" />
-            </div>
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input disabled={inputsDisabled} value={password} onChange={(e) => { setPassword(e.target.value) }} type="password" id="password" name="password" />
+                </div>
 
-            <button onClick={register} disabled={inputsDisabled}>Register</button>
-            {(inputsDisabled == false) && <Link to="/login">Login instead</Link>}
+                <div className="form-group">
+                    <label htmlFor="password1">Confirm password</label>
+                    <input disabled={inputsDisabled} value={password1} onChange={(e) => { setPassword1(e.target.value) }} type="password" id="password1" name="password1" />
+                </div>
+
+                <button onClick={register} disabled={inputsDisabled}>Register</button>
+                {(inputsDisabled == false) && <Link to="/login">Login instead</Link>}
+            </form>
         </div>
     </>
 }

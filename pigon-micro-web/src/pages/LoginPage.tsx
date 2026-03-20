@@ -43,18 +43,20 @@ const LoginPage = () => {
         <div className="modal">
             <h1>Login</h1>
             {error && <div className="error-msg">{error}</div>}
-            <div className="form-group">
-                <label htmlFor="username">Username</label>
-                <input disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
-            </div>
+            <form onSubmit={(e) => {e.preventDefault(); login();}}>
+                <div className="form-group">
+                    <label htmlFor="username">Username</label>
+                    <input disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
+                </div>
 
-            <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input disabled={inputsDisabled} value={password} onChange={(e) => { setPassword(e.target.value) }} type="password" id="password" name="password" />
-            </div>
+                <div className="form-group">
+                    <label htmlFor="password">Password</label>
+                    <input disabled={inputsDisabled} value={password} onChange={(e) => { setPassword(e.target.value) }} type="password" id="password" name="password" />
+                </div>
 
-            <button disabled={inputsDisabled} onClick={login}>Login</button>
-            {(inputsDisabled == false) && <Link to="/register">Register instead</Link>}
+                <button disabled={inputsDisabled} onClick={login}>Login</button>
+                {(inputsDisabled == false) && <Link to="/register">Register instead</Link>}
+            </form>
         </div>
     </>
 }
