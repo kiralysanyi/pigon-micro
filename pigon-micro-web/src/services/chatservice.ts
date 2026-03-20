@@ -66,6 +66,14 @@ class ChatService extends EventTarget {
                 console.error("Chatservice not inited properly");
                 return;
             }
+
+            const chat = response.data.chat;
+            console.log(chat)
+            if (chat.type == "group") {
+                console.warn("Group chats are not implemented fully yet");
+                return;
+            }
+
             const participants = response.data.chat.participants as any[];
             const userInfo = await getUserInfo();
             const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id

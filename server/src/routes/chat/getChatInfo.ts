@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
-import { checkUserInChat, getParticipants } from "../../utils/db/chat";
+import { checkUserInChat, getChatType, getParticipants } from "../../utils/db/chat";
 
 const getChatInfo: RequestHandler = async (req: reqWithUserinfo, res) => {
     const chatID = parseInt(req.params.id as string);
@@ -14,13 +14,15 @@ const getChatInfo: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     // get participants
     const participants = await getParticipants(chatID);
+    const type = await getChatType(chatID)
 
     // TODO: get more info
 
     return res.json({
         chat: {
             id: chatID,
-            participants
+            participants,
+            type: type
         }
     })
 }
