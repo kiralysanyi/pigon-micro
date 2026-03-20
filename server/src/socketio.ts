@@ -56,7 +56,7 @@ const attachSocketio = (server: Server) => {
             // save to db
             const msgType = "text"
 
-            console.log("Inserting: ", chatID, senderKeyId, recipientKeyId)
+            console.log("Inserting: ", `c${chatID}`, `ski${senderKeyId}`, `rki${recipientKeyId}`)
             const startTime = new Date().getTime();
             pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
                 if (err) {

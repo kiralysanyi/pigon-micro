@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import type { userdataBrief } from "../types/userdataBrief";
 import axios from "axios";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
+import { generateECDHKeyPair } from "../lib/encryption/ecdh";
 
 const NewChat = () => {
     const [users, setUsers] = useState<userdataBrief[]>()
@@ -56,9 +57,11 @@ const NewChat = () => {
     const createGroup = () => {
         setLoading(true);
         getAccessToken().then((token) => {
-            axios.post(BASEURL + "/api/v1/chat/group", { chatName: chatname }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then((response) => {
+            axios.post(BASEURL + "/api/v1/chat/group", { chatName: chatname }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then(async (response) => {
                 console.log("Group created");
-                navigate("/")
+                // create and upload initial keys
+                const keypair = await generateECDHKeyPair();
+                //navigate("/")
             }).catch((err) => {
                 setLoading(false);
                 if (err.response) {

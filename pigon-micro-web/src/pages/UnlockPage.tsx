@@ -6,6 +6,7 @@ import { useNavigate } from "react-router";
 import getMasterKey from "../lib/encryption/getMasterKey";
 import { masterDecrypt } from "../lib/encryption/masterkey";
 import { KeyRingContext } from "../services/KeyRingProvider";
+import { importECDHPrivateKeyFromBase64, importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
 
 const UnlockPage = () => {
     const [loading, setLoading] = useState(true);
@@ -49,9 +50,11 @@ const UnlockPage = () => {
                 krp?.setMasterKey(masterKey);
 
                 // Decrypt user keys
-                masterDecrypt(encryptedPrivkey, masterKey).then((decrypted) => {
+                masterDecrypt(encryptedPrivkey, masterKey).then(async (decrypted) => {
                     console.log("Decrypted privkey: ", decrypted)
                     setStatusText("Unlocked keyring successfully")
+                    krp?.setPrivKey(await importECDHPrivateKeyFromBase64(decrypted));
+                    krp?.setPubKey(await importECDHPublicKeyFromBase64(pubkey));
 
                     sessionStorage.setItem("privKey", decrypted);
                     sessionStorage.setItem("pubKey", pubkey);

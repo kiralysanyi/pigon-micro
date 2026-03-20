@@ -29,6 +29,44 @@ async function deriveKey(password: string, salt: BufferSource) {
     );
 }
 
+async function ecdhEncryptKey(keyToEncrypt: CryptoKey, key: CryptoKey): Promise<string> {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+
+    const exportedKey = await crypto.subtle.exportKey("pkcs8", keyToEncrypt);
+
+    const ciphertext = await crypto.subtle.encrypt(
+        { name: "AES-GCM", iv },
+        key,
+        exportedKey
+    );
+
+    return JSON.stringify({
+        iv: btoa(String.fromCharCode(...iv)),
+        ciphertext: btoa(String.fromCharCode(...new Uint8Array(ciphertext)))
+    });
+}
+
+async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey): Promise<CryptoKey> {
+    const { iv, ciphertext } = JSON.parse(keyToDecrypt);
+
+    const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
+    const ciphertextBytes = Uint8Array.from(atob(ciphertext), c => c.charCodeAt(0));
+
+    const decrypted = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv: ivBytes },
+        key,
+        ciphertextBytes
+    );
+
+    return crypto.subtle.importKey(
+        "pkcs8",
+        decrypted,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveKey", "deriveBits"]
+    );
+}
+
 // encrypt text with ecdh key
 async function encryptMsg(message: string, key: CryptoKey): Promise<encryptedData> {
     const iv = crypto.getRandomValues(new Uint8Array(12)); // 96-bit IV for AES-GCM
@@ -93,4 +131,4 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
 
 
 
-export { generateECDHKeyPair, deriveSharedKey, deriveKey, encryptMsg, decryptMsg }
+export { generateECDHKeyPair, deriveSharedKey, deriveKey, encryptMsg, decryptMsg, ecdhEncryptKey, ecdhDecryptKey }
