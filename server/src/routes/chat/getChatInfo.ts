@@ -1,6 +1,8 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { checkUserInChat, getChatName, getChatType, getParticipants } from "../../utils/db/chat";
+import { pool } from "../../utils/db/db";
+import { RowDataPacket } from "mysql2";
 
 const getChatInfo: RequestHandler = async (req: reqWithUserinfo, res) => {
     const chatID = parseInt(req.params.id as string);
@@ -14,18 +16,22 @@ const getChatInfo: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     // get participants
     const participants = await getParticipants(chatID);
-    const type = await getChatType(chatID);
-    const name = await getChatName(chatID);
-
-    // TODO: get more info
-
-    return res.json({
-        chat: {
-            id: chatID,
-            participants,
-            type: type,
-            name
+    pool.query<RowDataPacket[]>("SELECT type, name, creator AS creatorId FROM chats WHERE ID = ?", [chatID], (err, result) => {
+        if (err) {
+            return res.status(500).json({
+                message: "Internal server error"
+            })
         }
+
+        return res.json({
+            chat: {
+                id: chatID,
+                participants,
+                type: result[0].type,
+                name: result[0].name,
+                creatorId: result[0].creatorId
+            }
+        })
     })
 }
 

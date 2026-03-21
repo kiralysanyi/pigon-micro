@@ -8,6 +8,7 @@ import NewChat from './pages/NewChat'
 import ChatPage from './pages/ChatPage'
 import ChatIndex from './pages/ChatIndex'
 import AccountPage from './pages/AccountPage'
+import ChatSettingsPage from './pages/ChatSettingsPage'
 
 // TODO: add some kind of auth middleware
 const router = createBrowserRouter([
@@ -25,6 +26,10 @@ const router = createBrowserRouter([
         Component: ChatPage
       }
     ]
+  },
+  {
+    path: "/settings/:id",
+    Component: ChatSettingsPage
   },
   {
     path: "/account",

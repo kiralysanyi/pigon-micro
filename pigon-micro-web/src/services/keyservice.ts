@@ -1,5 +1,5 @@
 import axios from "axios";
-import { deriveSharedKey } from "../lib/encryption/ecdh";
+import { deriveSharedKey, ecdhDecryptKey } from "../lib/encryption/ecdh";
 import { importECDHPrivateKeyFromBase64, importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
 import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
@@ -15,28 +15,30 @@ const getGroupEncryptKey = (chatID: number, privKey: CryptoKey): Promise<{ key: 
             const data = response.data.key;
             console.log(data)
             const creatorUserData = await getUserInfo(data.creatorId);
-            const pubKey = await importECDHPublicKeyFromBase64(creatorUserData.pubKey);
-            const sharedKey = await deriveSharedKey(privKey, pubKey);
-            resolve({ key: sharedKey, kGuid: data.kGuid });
+            const creatorPub = await importECDHPublicKeyFromBase64(creatorUserData.pubKey);
+            const sharedSecret = await deriveSharedKey(privKey, creatorPub);
+            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret); // decrypt the actual AES key
+            resolve({ key: groupKey, kGuid: data.kGuid })
+
         }).catch((err) => {
             reject(err)
         })
     })
 }
 
+// TODO: cache keys
+
 const getGroupDecryptKey = (chatID: number, kGuid: string, privKey: CryptoKey): Promise<CryptoKey> => {
-        return new Promise(async (resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         const token = await getAccessToken();
         axios.get(BASEURL + `/api/v1/keyring/groupkeys/${chatID}/${kGuid}`, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then(async (response) => {
             const data = response.data.key;
-            console.log(data)
             const creatorUserData = await getUserInfo(data.creatorId);
             const pubKey = await importECDHPublicKeyFromBase64(creatorUserData.pubKey);
-            const sharedKey = await deriveSharedKey(privKey, pubKey);
-            resolve(sharedKey);
-        }).catch((err) => {
-            reject(err)
-        })
+            const sharedSecret = await deriveSharedKey(privKey, pubKey);
+            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret); // <-- this line was missing
+            resolve(groupKey);
+        }).catch(reject)
     })
 }
 

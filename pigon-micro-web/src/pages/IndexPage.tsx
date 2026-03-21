@@ -108,7 +108,7 @@ const IndexPage = () => {
                 <span>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
             </div>
-            <div className="chat-header">
+            <div className="chat-header" onClick={() => navigate("/settings/" + params.id)}>
                 <span>Chat: {chatName}</span>
             </div>
         </div>

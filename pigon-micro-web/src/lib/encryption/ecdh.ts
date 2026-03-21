@@ -59,11 +59,11 @@ async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey): Promise<Cry
     );
 
     return crypto.subtle.importKey(
-        "pkcs8",
+        "raw",           // was "pkcs8" — matches exportKey("raw") in ecdhEncryptKey
         decrypted,
-        { name: "ECDH", namedCurve: "P-256" },
+        { name: "AES-GCM", length: 256 },  // was ECDH — the stored key is an AES key
         true,
-        ["deriveKey", "deriveBits"]
+        ["encrypt", "decrypt"]
     );
 }
 

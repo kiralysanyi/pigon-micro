@@ -56,7 +56,7 @@ const attachSocketio = (server: Server) => {
 
             // send message to recipient devices
             filteredParticipants.forEach((p) => {
-                io.to("usr" + p.id).emit("message", payload, chatID, socket.userinfo.ID, senderKeyId, recipientKeyId)
+                io.to("usr" + p.id).emit("message", {payload, chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid})
             })
 
             // save to db

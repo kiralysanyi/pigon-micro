@@ -1,9 +1,18 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { pool } from "../../utils/db/db";
+import { validationResult } from "express-validator";
 
 // create the group, and then add the creator to the group. key creation/submission should be handled client side.
 const createGroup: RequestHandler = (req: reqWithUserinfo, res) => {
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+        return res.status(400).json({
+            success: false,
+            validation: result.mapped()
+        })
+    }
+    
     const creatorID = req.userinfo.ID;
     pool.query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName], (err, result) => {
         if (err) {

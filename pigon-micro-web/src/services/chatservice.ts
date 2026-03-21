@@ -34,28 +34,49 @@ class ChatService extends EventTarget {
     masterKey: CryptoKey | undefined;
     privKey: CryptoKey | undefined;
 
-    private messageHandler = async (payload: string, chatID: number, senderID: number, senderKeyId: number, recipientKeyId: number) => {
+    private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined }) => {
         if (!this.masterKey) {
             console.warn("Message handling aborted: masterKey not loaded")
             return;
         }
 
         const startTime = new Date();
+        let dKey: CryptoKey | undefined;
+
+        if (this.privKey == undefined) {
+            console.error("No privkey loaded");
+            return;
+        }
+
+        if (senderKeyId == undefined || recipientKeyId == undefined) {
+            if (kGuid) {
+                dKey = await getGroupDecryptKey(chatID, kGuid, this.privKey);
+            } else {
+                console.error("Invalid message", senderKeyId, recipientKeyId, kGuid);
+                return;
+            }
+        }
 
 
-        const dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderID, this.masterKey);
+        if (senderKeyId != undefined && recipientKeyId != undefined) {
+            dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderId, this.masterKey);
+        }
 
+        if (dKey == undefined) {
+            console.error("dKey is undefined")
+            return;
+        }
 
         decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
             this.dispatchEvent(new CustomEvent("message", {
-                detail: { message: message, chatID, senderID, senderName: await getUsernameById(senderID) }
+                detail: { message: message, chatID, senderId, senderName: await getUsernameById(senderId) }
             }))
 
             console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
 
         }).catch((err) => {
             console.error("Failed to decrypt message: ", err)
-            console.error("MSGINFO: ", payload, chatID, senderID)
+            console.error("MSGINFO: ", payload, chatID, senderId)
         })
     }
 
