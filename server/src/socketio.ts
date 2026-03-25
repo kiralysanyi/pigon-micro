@@ -4,10 +4,19 @@ import { verifyAccessToken } from "./utils/db/session";
 import { ExtendedSocket } from "./types/ExtendedSocket";
 import { getParticipants } from "./utils/db/chat";
 import { pool } from "./utils/db/db";
+let io: SocketIO.Server;
+
+const getSocketIOServer = () => {
+    if (io) {
+        return io
+    } else {
+        throw new Error("Socketio server not initialized")
+    }
+}
 
 const attachSocketio = (server: Server) => {
     console.log("Attaching socket.io")
-    const io = new SocketIO.Server(server, { path: "/socket", cors: { origin: "*" } })
+    io = new SocketIO.Server(server, { path: "/socket", cors: { origin: "*" } })
 
     //auth
 
@@ -86,3 +95,4 @@ const attachSocketio = (server: Server) => {
 }
 
 export default attachSocketio;
+export {getSocketIOServer};

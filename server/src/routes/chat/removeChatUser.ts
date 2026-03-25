@@ -3,6 +3,7 @@ import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { validationResult } from "express-validator";
 import { checkUserInChat, getChatType } from "../../utils/db/chat";
 import { pool } from "../../utils/db/db";
+import { getSocketIOServer } from "../../socketio";
 
 const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
     const result = validationResult(req);
@@ -36,6 +37,13 @@ const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
             return res.status(500).json({
                 message: "Internal server error"
             })
+        }
+
+        try {
+            const io = getSocketIOServer();
+            io.to("usr" + userToRemove).emit("newchat")
+        } catch (error) {
+            console.log("Failed to notify user about new chat")
         }
 
         res.json({

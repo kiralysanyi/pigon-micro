@@ -19,6 +19,16 @@ const IndexPage = () => {
     const navigate = useNavigate();
     const params = useParams();
     const [connected, setConnected] = useState(false)
+
+    const updateChatList = async () => {
+        axios.get(BASEURL + "/api/v1/chat", { headers: { "Authorization": `Bearer ${await getAccessToken()}`, "Content-Type": "application/json" } }).then((response) => {
+            setChats(response.data.chats);
+            console.log(response.data)
+        }).catch((err) => {
+            console.error("Failed to get chats: ", err)
+        })
+    }
+
     useEffect(() => {
         let socket: Socket | undefined;
         const onConnect = () => {
@@ -32,6 +42,10 @@ const IndexPage = () => {
         const onSockError = (data: any) => {
             console.error("Socket error: ", data)
             setNetError(true);
+        }
+
+        const onNewChat = () => {
+            updateChatList();
         }
 
         getAccessToken().then(async (token) => {
@@ -48,13 +62,7 @@ const IndexPage = () => {
             })
 
             // get chats
-
-            axios.get(BASEURL + "/api/v1/chat", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
-                setChats(response.data.chats);
-                console.log(response.data)
-            }).catch((err) => {
-                console.error("Failed to get chats: ", err)
-            })
+            updateChatList();
 
             // set socket
             const socket = await getSocket();
@@ -63,6 +71,7 @@ const IndexPage = () => {
             socket.on("connect", onConnect);
             socket.on("disconnect", onDisconnect);
             socket.on("connect_error", onSockError);
+            socket.on("newchat", onNewChat);
         }).catch((err) => {
             console.error("Failed to initialize main page");
             if (err.response == undefined) {
@@ -85,6 +94,7 @@ const IndexPage = () => {
                 socket.off("connect", onConnect);
                 socket.off("disconnect", onDisconnect);
                 socket.off("connect_error", onSockError);
+                socket.off("newchat", onNewChat);
             }
         }
 

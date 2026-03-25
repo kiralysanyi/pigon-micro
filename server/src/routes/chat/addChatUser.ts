@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { checkUserInChat, getChatType } from "../../utils/db/chat";
 import { pool } from "../../utils/db/db";
+import { getSocketIOServer } from "../../socketio";
 
 const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
     const chatID = parseInt(req.params.chatID as string);
@@ -35,6 +36,13 @@ const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
             return res.status(500).json({
                 message: "Internal server error"
             })
+        }
+
+        try {
+            const io = getSocketIOServer();
+            io.to("usr" + userToAdd).emit("newchat")
+        } catch (error) {
+            console.log("Failed to notify user about new chat")
         }
 
         res.status(201).json({

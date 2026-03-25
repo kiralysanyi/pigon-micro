@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { validationResult } from "express-validator";
 import { checkChatConflict, createPrivateChat } from "../../utils/db/chat";
+import { getSocketIOServer } from "../../socketio";
 
 const createChat: RequestHandler = async (req: reqWithUserinfo, res) => {
     const result = validationResult(req);
@@ -22,6 +23,13 @@ const createChat: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     createPrivateChat(req.userinfo.ID, parseInt(targetID)).then((chatID) => {
+        try {
+            const io = getSocketIOServer();
+            io.to("usr" + targetID).emit("newchat")
+        } catch (error) {
+            console.log("Failed to notify user about new chat")
+        }
+
         return res.status(201).json({
             success: true,
             message: "Chat created with id: " + chatID
