@@ -33,14 +33,14 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        api.post(BASEURL + `/api/v1/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
+        api.post(BASEURL + `/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
             console.log("User added, adding key");
             // add key for target user
             // group chat key
             const { key, kGuid } = await getGroupEncryptKey(chat.id, krp.privKey as CryptoKey);
             console.log("Got key: ", kGuid)
             // freshly added participant's public key
-            const encodedPKey = (await api.get(`/api/v1/keyring/pubKey?userID=${id}`)).data.data.pubKey
+            const encodedPKey = (await api.get(`/keyring/pubKey?userID=${id}`)).data.data.pubKey
             console.log(encodedPKey)
 
             const remotePubKey = await importECDHPublicKeyFromBase64(encodedPKey)
@@ -50,7 +50,7 @@ const ChatSettingsPage = () => {
             // encrypted key for transit
             const encryptedKey = await ecdhEncryptKey(key, sharedKey)
 
-            api.post(`/api/v1/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid }).then(() => {
+            api.post(`/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid }).then(() => {
                 setShowApModal(false)
             }).catch((err) => {
                 console.error(err, err.response)
@@ -64,7 +64,7 @@ const ChatSettingsPage = () => {
     const getChatInfo = async () => {
         try {
             console.log(params.id)
-            const response = await api.get("/api/v1/chat/" + params.id);
+            const response = await api.get("/chat/" + params.id);
             let data = response.data.chat;
             console.log(response.data)
             if (data.name == undefined) {
@@ -84,7 +84,7 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        api.delete(`/api/v1/chat/group/${chat?.id}/user/${id}`).then(() => {
+        api.delete(`/chat/group/${chat?.id}/user/${id}`).then(() => {
             console.log("User removed");
             getChatInfo();
 
@@ -102,7 +102,7 @@ const ChatSettingsPage = () => {
         }
 
 
-        api.get("/api/v1/auth/users").then((response) => {
+        api.get("/auth/users").then((response) => {
             setUsers(response.data.users)
             console.log(response.data.users)
         }).catch((err) => {

@@ -35,7 +35,7 @@ const RegisterPage = () => {
 
         setError(undefined);
 
-        axios.post(BASEURL + "/api/v1/auth/register", {
+        axios.post(BASEURL + "/auth/register", {
             username,
             password
         }).then((response) => {

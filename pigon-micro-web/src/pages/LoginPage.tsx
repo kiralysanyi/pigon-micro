@@ -18,7 +18,7 @@ const LoginPage = () => {
             return;
         }
 
-        axios.post(BASEURL + "/api/v1/auth/login", {
+        axios.post(BASEURL + "/auth/login", {
             username,
             password
         }).then((response) => {

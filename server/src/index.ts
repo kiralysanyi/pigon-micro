@@ -14,7 +14,7 @@ const server = createServer(app);
 attachSocketio(server);
 
 // attach routers
-app.use("/api/v1", apiRouter);
+app.use("", apiRouter);
 
 // listen
 server.listen(serverConfig.PORT);

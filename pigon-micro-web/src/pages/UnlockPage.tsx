@@ -1,12 +1,10 @@
-import axios from "axios";
 import { useContext, useEffect, useState } from "react";
-import { BASEURL } from "../conf";
-import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
 import getMasterKey from "../lib/encryption/getMasterKey";
 import { masterDecrypt } from "../lib/encryption/masterkey";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import { importECDHPrivateKeyFromBase64, importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
+import api from "../services/apiservice";
 
 const UnlockPage = () => {
     const [loading, setLoading] = useState(true);
@@ -20,25 +18,31 @@ const UnlockPage = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        getAccessToken().then((token) => {
-            // TODO: get chat keys
-            // get private key
-            axios.get(BASEURL + "/api/v1/keyring/privkey", { headers: { Authorization: `Bearer ${token}` } }).then((response) => {
-                console.log("Got private key")
-                setEncryptedPrivkey(response.data.data.encryptedPrivKey);
+        // TODO: get chat keys
+        // get private key
+        api.get("/keyring/privkey").then((response) => {
+            console.log("Got private key")
+            setEncryptedPrivkey(response.data.data.encryptedPrivKey);
 
-                // get public key
-                axios.get(BASEURL + "/api/v1/keyring/pubkey", { headers: { Authorization: `Bearer ${token}` } }).then((response) => {
-                    console.log("Got public key")
-                    setPubkey(response.data.data.pubKey);
-                    setLoading(false);
-                    setStatusText("Unlock keyring")
-                })
+            // get public key
+            api.get("/keyring/pubkey").then((response) => {
+                console.log("Got public key")
+                setPubkey(response.data.data.pubKey);
+                setLoading(false);
+                setStatusText("Unlock keyring")
             })
-        }).catch(() => {
-            //access token error, redirect to login
-            navigate("/login")
+        }).catch((err) => {
+            if (err.response) {
+                if (err.response.status == 401) {
+                    navigate("/login")
+                } else {
+                    setError("Error: " + err.response.data.message)
+                }
+            } else {
+                setError("Network error")
+            }
         })
+
     }, []);
 
     const unlock = () => {

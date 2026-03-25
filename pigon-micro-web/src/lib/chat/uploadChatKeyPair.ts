@@ -18,7 +18,7 @@ const uploadChatKeyPair = async (masterKey: CryptoKey): Promise<CryptoKeyPair> =
     const encryptedPrivKey = await masterEncrypt(privKey, masterKey);
 
     const token = await getAccessToken();
-    await axios.post(BASEURL + "/api/v1/keyring/chatkeys/self", { pubKey, encryptedPrivKey }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } });
+    await axios.post(BASEURL + "/keyring/chatkeys/self", { pubKey, encryptedPrivKey }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } });
 
     return keypair;
 }

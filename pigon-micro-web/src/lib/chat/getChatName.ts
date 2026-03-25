@@ -4,7 +4,7 @@ import api from "../../services/apiservice";
 const getChatName = (chatID: number): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         const userinfo = await getUserInfo();
-        api.get("/api/v1/chat/" + chatID).then((response) => {
+        api.get("/chat/" + chatID).then((response) => {
             if (response.data.chat.name) {
                 return resolve(response.data.chat.name);
             }

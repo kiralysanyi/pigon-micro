@@ -15,7 +15,7 @@ const getUserInfo = (userID?: number): Promise<userdata> => {
             return;
         }
 
-        let url = "/api/v1/auth/info";
+        let url = "/auth/info";
         if (userID != undefined) {
             url += "?id=" + userID
         }

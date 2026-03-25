@@ -4,7 +4,7 @@ import getAccessToken from "./getAccessToken";
 
 const logout = (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
-        axios.post(BASEURL + "/api/v1/auth/logout", {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then(() => {
+        axios.post(BASEURL + "/auth/logout", {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then(() => {
             sessionStorage.clear();
             localStorage.clear();
             resolve();

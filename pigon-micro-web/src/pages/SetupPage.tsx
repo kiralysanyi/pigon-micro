@@ -62,13 +62,13 @@ const SetupPage = () => {
                 const encryptedPKey = await masterEncrypt(priv, masterKey)
                 setStatusText("Uploading keys")
                 // send ecdh public key
-                axios.post(BASEURL + "/api/v1/keyring/pubkey",
+                axios.post(BASEURL + "/keyring/pubkey",
                     { pubKey: pub },
                     { headers: { Authorization: `Bearer ${await getAccessToken()}` } }
                 ).then(async (response) => {
                     if (response.status == 201) {
                         // send ecdh private key
-                        axios.post(BASEURL + "/api/v1/keyring/privkey", { encryptedPrivKey: encryptedPKey }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
+                        axios.post(BASEURL + "/keyring/privkey", { encryptedPrivKey: encryptedPKey }, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
                             if (response.status == 201) {
                                 setStatusText("Setting up initial chat keys")
                                 // set up first shared chat keypair (ecdh)

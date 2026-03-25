@@ -21,7 +21,7 @@ const IndexPage = () => {
     const [connected, setConnected] = useState(false)
 
     const updateChatList = async () => {
-        api.get(BASEURL + "/api/v1/chat").then((response) => {
+        api.get(BASEURL + "/chat").then((response) => {
             setChats(response.data.chats);
             console.log(response.data)
         }).catch((err) => {

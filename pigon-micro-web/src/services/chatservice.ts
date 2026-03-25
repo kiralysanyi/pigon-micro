@@ -2,14 +2,12 @@ import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import { getGroupDecryptKey, getGroupEncryptKey, getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
 import { encryptMsg, decryptMsg } from "../lib/encryption/ecdh";
-import axios from "axios";
-import { BASEURL } from "../conf";
-import getAccessToken from "../lib/auth/getAccessToken";
 import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
 import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";
+import api from "./apiservice";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
@@ -96,7 +94,7 @@ class ChatService extends EventTarget {
     // TODO: make this group chat compatible
     sendMessage = async (message: string, chatID: number) => {
         const startTime = new Date();
-        axios.get(BASEURL + "/api/v1/chat/" + chatID, { headers: { Authorization: `Bearer ${await getAccessToken()}` } }).then(async (response) => {
+        api.get("/chat/" + chatID).then(async (response) => {
             if (this.masterKey == undefined) {
                 console.error("Chatservice not inited properly");
                 return;
@@ -158,95 +156,93 @@ class ChatService extends EventTarget {
             // get decryption key
 
             // get messages
-            getAccessToken().then((token) => {
-                axios.get(`${BASEURL}/api/v1/chat/${chatID}/messages`, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then(async (response) => {
-                    const messages: EncryptedMessage[] = response.data.messages;
-                    let decrypted: Message[] = []
+            api.get(`/chat/${chatID}/messages`).then(async (response) => {
+                const messages: EncryptedMessage[] = response.data.messages;
+                let decrypted: Message[] = []
 
-                    // decrypt handler
+                // decrypt handler
 
-                    const handleGroupMessage = (msg: EncryptedMessage): Promise<void> => {
-                        return new Promise(async (resolve, reject) => {
-                            if (!msg.kGuid) {
-                                // not a group message;
-                                console.error("Not a group message: ", msg)
-                                reject("Err: not a group message")
+                const handleGroupMessage = (msg: EncryptedMessage): Promise<void> => {
+                    return new Promise(async (resolve, reject) => {
+                        if (!msg.kGuid) {
+                            // not a group message;
+                            console.error("Not a group message: ", msg)
+                            reject("Err: not a group message")
+                            return;
+                        }
+
+                        if (!this.privKey) {
+                            console.error("No privkey");
+                            return;
+                        }
+
+                        const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
+                        decrypted.push({
+                            chatID: chatID,
+                            date: msg.date,
+                            message: await decryptMsg(JSON.parse(msg.payload), dkey),
+                            senderID: msg.senderID,
+                            type: msg.type,
+                            senderName: await getUsernameById(msg.senderID)
+                        })
+
+                        resolve();
+                    })
+                }
+
+                const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
+                    return new Promise(async (resolve, reject) => {
+                        if (!msg.senderKeyId || !msg.recipientKeyId) {
+                            if (msg.kGuid) {
+                                // group message
+                                await handleGroupMessage(msg);
+                                resolve();
                                 return;
                             }
+                            console.log("Invalid message data: ", msg)
+                            return;
+                        }
 
-                            if (!this.privKey) {
-                                console.error("No privkey");
-                                return;
-                            }
+                        if (!this.masterKey) {
+                            return reject("Failed to process message: masterKey not loaded")
+                        }
+                        const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
 
-                            const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
+                        decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
                             decrypted.push({
-                                chatID: chatID,
+                                chatID: msg.chatID,
                                 date: msg.date,
-                                message: await decryptMsg(JSON.parse(msg.payload), dkey),
+                                message: message,
                                 senderID: msg.senderID,
                                 type: msg.type,
                                 senderName: await getUsernameById(msg.senderID)
                             })
-
                             resolve();
+                        }).catch((err) => {
+                            console.error("Failed to decrypt message: ", err)
+                            console.error("MSGINFO-H: ", msg.payload, chatID, msg.senderID);
+                            reject(err)
                         })
-                    }
+                    })
 
-                    const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
-                        return new Promise(async (resolve, reject) => {
-                            if (!msg.senderKeyId || !msg.recipientKeyId) {
-                                if (msg.kGuid) {
-                                    // group message
-                                    await handleGroupMessage(msg);
-                                    resolve();
-                                    return;
-                                }
-                                console.log("Invalid message data: ", msg)
-                                return;
-                            }
+                }
 
-                            if (!this.masterKey) {
-                                return reject("Failed to process message: masterKey not loaded")
-                            }
-                            const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
+                // decrypt messages
+                const startTime = new Date().getTime();
+                for (let i in messages) {
+                    await decryptMessage(messages[i])
+                }
 
-                            // TODO: improve speed by throwing out this base64 bullshit
-                            decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
-                                decrypted.push({
-                                    chatID: msg.chatID,
-                                    date: msg.date,
-                                    message: message,
-                                    senderID: msg.senderID,
-                                    type: msg.type,
-                                    senderName: await getUsernameById(msg.senderID)
-                                })
-                                resolve();
-                            }).catch((err) => {
-                                console.error("Failed to decrypt message: ", err)
-                                console.error("MSGINFO-H: ", msg.payload, chatID, msg.senderID);
-                                reject(err)
-                            })
-                        })
+                const endTime = new Date().getTime();
 
-                    }
+                console.log("Message history decryption took: ", `${endTime - startTime}ms`)
 
-                    // decrypt messages
-                    const startTime = new Date().getTime();
-                    for (let i in messages) {
-                        await decryptMessage(messages[i])
-                    }
-
-                    const endTime = new Date().getTime();
-
-                    console.log("Message history decryption took: ", `${endTime - startTime}ms`)
-
-                    resolve(decrypted);
-                }).catch((err) => {
-                    console.error("Failed to fetch messages: ", err)
-                    reject(err);
-                })
+                resolve(decrypted);
+            }).catch((err) => {
+                console.error("Failed to fetch messages: ", err)
+                reject(err);
             })
+
         })
     }
 

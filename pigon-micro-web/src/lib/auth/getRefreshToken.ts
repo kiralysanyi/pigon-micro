@@ -22,7 +22,7 @@ const getRefreshToken = (): Promise<string> => {
         }
 
         if (nearExpire) {
-            const response = await axios.get(BASEURL + "/api/v1/auth/refreshtoken", { headers: { Authorization: `Bearer ${rtoken}` } })
+            const response = await axios.get(BASEURL + "/auth/refreshtoken", { headers: { Authorization: `Bearer ${rtoken}` } })
             if (response.status !== 200) {
                 return rejected();
             }
