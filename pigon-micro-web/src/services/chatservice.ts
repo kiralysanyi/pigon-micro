@@ -179,7 +179,7 @@ class ChatService extends EventTarget {
                         const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
                         decrypted.push({
                             chatID: chatID,
-                            date: msg.date,
+                            date: new Date(msg.date),
                             message: await decryptMsg(JSON.parse(msg.payload), dkey),
                             senderID: msg.senderID,
                             type: msg.type,
@@ -211,7 +211,7 @@ class ChatService extends EventTarget {
                         decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
                             decrypted.push({
                                 chatID: msg.chatID,
-                                date: msg.date,
+                                date: new Date(msg.date),
                                 message: message,
                                 senderID: msg.senderID,
                                 type: msg.type,

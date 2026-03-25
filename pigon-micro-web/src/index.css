@@ -328,6 +328,8 @@ button:focus-visible {
   max-width: 50%;
   text-align: left;
   overflow-wrap: anywhere;
+  display: flex;
+  flex-direction: column;
 }
 
 .message-display .message {
@@ -344,6 +346,10 @@ button:focus-visible {
   padding: 1rem;
   margin-left: auto;
   align-self: flex-start;
+}
+
+.sname, .mdate {
+  color: rgba(255, 255, 255, 0.486);
 }
 
 .loading-popup {

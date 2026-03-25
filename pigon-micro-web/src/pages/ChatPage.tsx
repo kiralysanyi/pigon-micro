@@ -55,7 +55,7 @@ const ChatPage = () => {
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date().toISOString(), message: message, type: "text" }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: "text" }]);
         })
 
         console.log(chatProvider.sendMessage)
@@ -107,14 +107,16 @@ const ChatPage = () => {
         }
 
         sendMessageRef.current?.(message);
-        setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date().toISOString(), message: message, type: "text" }])
+        setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: message, type: "text" }])
         setMessage("")
     }
 
     return <>
         <div className="message-display">
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"}`}>
-                <span>{msg.senderName ? msg.senderName : msg.senderID}: {msg.message}</span>
+                <span className="sname">{msg.senderName}</span>
+                <span className="msg">{msg.message}</span>
+                <span className="mdate">{msg.date.getHours()}:{msg.date.getMinutes()}</span>
             </div>)}
         </div>
 

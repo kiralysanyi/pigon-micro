@@ -10,7 +10,8 @@ const pool = createPool({
     connectionLimit: 10,
     maxIdle: 10,
     idleTimeout: 60000,
-    queueLimit: 0
+    queueLimit: 0,
+    timezone: "Z"
 })
 
 const exists = (table: string, column: string, value: string | number): Promise<boolean> => {
