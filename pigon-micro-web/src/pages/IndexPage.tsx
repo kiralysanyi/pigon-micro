@@ -1,7 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import { BASEURL } from "../conf";
-import getAccessToken from "../lib/auth/getAccessToken";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
@@ -9,6 +7,8 @@ import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
+import api from "../services/apiservice";
+import getUserInfo from "../lib/auth/getUserInfo";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -21,7 +21,7 @@ const IndexPage = () => {
     const [connected, setConnected] = useState(false)
 
     const updateChatList = async () => {
-        axios.get(BASEURL + "/api/v1/chat", { headers: { "Authorization": `Bearer ${await getAccessToken()}`, "Content-Type": "application/json" } }).then((response) => {
+        api.get(BASEURL + "/api/v1/chat").then((response) => {
             setChats(response.data.chats);
             console.log(response.data)
         }).catch((err) => {
@@ -32,10 +32,12 @@ const IndexPage = () => {
     useEffect(() => {
         let socket: Socket | undefined;
         const onConnect = () => {
+            console.log("Connected")
             setConnected(true)
         }
 
         const onDisconnect = () => {
+            console.log("Disconnected")
             setConnected(false)
         }
 
@@ -47,17 +49,12 @@ const IndexPage = () => {
         const onNewChat = () => {
             updateChatList();
         }
+        (async () => {
 
-        getAccessToken().then(async (token) => {
             // get userinfo
-            axios.get(BASEURL + "/api/v1/auth/info", { headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" } }).then((response) => {
-                setUserdata(response.data.data)
-                console.log("Got user data: ", response.data.data)
-                if (response.data.data.pubKey == null) {
-                    navigate("/setup")
-                }
-            }).catch((error) => {
-                console.error(error)
+            getUserInfo().then((info) => {
+                setUserdata(info);
+            }).catch(() => {
                 setNetError(true)
             })
 
@@ -65,30 +62,25 @@ const IndexPage = () => {
             updateChatList();
 
             // set socket
-            const socket = await getSocket();
+            socket = await getSocket();
             setConnected(socket.connected);
 
             socket.on("connect", onConnect);
             socket.on("disconnect", onDisconnect);
             socket.on("connect_error", onSockError);
             socket.on("newchat", onNewChat);
-        }).catch((err) => {
-            console.error("Failed to initialize main page");
-            if (err.response == undefined) {
-                console.error("Network error")
-                setNetError(true)
+            setConnected(true)
+
+
+            const k = {
+                pubKey: sessionStorage.getItem("pubKey"),
+                privKey: sessionStorage.getItem("privKey")
             }
-        })
 
-        const k = {
-            pubKey: sessionStorage.getItem("pubKey"),
-            privKey: sessionStorage.getItem("privKey")
-        }
-
-        if (k.privKey == null) {
-            navigate("/unlock")
-        }
-
+            if (k.privKey == null) {
+                navigate("/unlock")
+            }
+        })()
         return () => {
             if (socket) {
                 socket.off("connect", onConnect);

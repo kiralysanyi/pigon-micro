@@ -1,12 +1,9 @@
-import axios from "axios";
-import { BASEURL } from "../../conf";
-import getAccessToken from "../auth/getAccessToken";
 import { unwrapMasterKey } from "./masterkey";
+import api from "../../services/apiservice";
 
 const getMasterKey = (kpass: string): Promise<CryptoKey> => {
     return new Promise(async (resolve, reject) => {
-        const token = await getAccessToken();
-        axios.get(BASEURL + "/api/v1/keyring/masterkey", {headers: {"Content-Type": "application/json", Authorization: `Bearer: ${token}`}}).then((response) => {
+        api.get("/api/v1/keyring/masterkey").then((response) => {
             const encrypted = response.data.masterKey;
             unwrapMasterKey(encrypted, kpass).then((masterKey) => {
                 resolve(masterKey)

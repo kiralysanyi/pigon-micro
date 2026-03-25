@@ -1,12 +1,10 @@
-import axios from "axios";
-import { BASEURL } from "../../conf";
-import getAccessToken from "../auth/getAccessToken";
 import getUserInfo from "../auth/getUserInfo";
+import api from "../../services/apiservice";
 
 const getChatName = (chatID: number): Promise<string> => {
     return new Promise(async (resolve, reject) => {
         const userinfo = await getUserInfo();
-        axios.get(BASEURL + "/api/v1/chat/" + chatID, {headers: {"Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}`}}).then((response) => {
+        api.get("/api/v1/chat/" + chatID).then((response) => {
             if (response.data.chat.name) {
                 return resolve(response.data.chat.name);
             }

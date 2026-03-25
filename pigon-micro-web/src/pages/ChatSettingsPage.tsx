@@ -1,9 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import type { chatinfo } from "../types/chatinfo";
-import axios from "axios";
 import { BASEURL } from "../conf";
 import { useNavigate, useParams } from "react-router";
-import getAccessToken from "../lib/auth/getAccessToken";
 import getChatName from "../lib/chat/getChatName";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import type { userdata } from "../types/userdata";
@@ -13,6 +11,7 @@ import { getGroupEncryptKey } from "../services/keyservice";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import { deriveSharedKey, ecdhEncryptKey } from "../lib/encryption/ecdh";
 import { importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
+import api from "../services/apiservice";
 
 const ChatSettingsPage = () => {
     const [chat, setChat] = useState<chatinfo>();
@@ -34,16 +33,16 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        axios.post(BASEURL + `/api/v1/chat/group/${chat?.id}/user/${id}`, {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then(async () => {
+        api.post(BASEURL + `/api/v1/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
             console.log("User added, adding key");
             // add key for target user
             // group chat key
             const { key, kGuid } = await getGroupEncryptKey(chat.id, krp.privKey as CryptoKey);
             console.log("Got key: ", kGuid)
             // freshly added participant's public key
-            const encodedPKey = (await axios.get(BASEURL + `/api/v1/keyring/pubKey?userID=${id}`, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } })).data.data.pubKey
+            const encodedPKey = (await api.get(`/api/v1/keyring/pubKey?userID=${id}`)).data.data.pubKey
             console.log(encodedPKey)
-            
+
             const remotePubKey = await importECDHPublicKeyFromBase64(encodedPKey)
             // key to encrypt group key
             const sharedKey = await deriveSharedKey(krp.privKey as CryptoKey, remotePubKey);
@@ -51,7 +50,7 @@ const ChatSettingsPage = () => {
             // encrypted key for transit
             const encryptedKey = await ecdhEncryptKey(key, sharedKey)
 
-            axios.post(BASEURL + `/api/v1/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then(() => {
+            api.post(`/api/v1/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid }).then(() => {
                 setShowApModal(false)
             }).catch((err) => {
                 console.error(err, err.response)
@@ -65,7 +64,7 @@ const ChatSettingsPage = () => {
     const getChatInfo = async () => {
         try {
             console.log(params.id)
-            const response = await axios.get(BASEURL + "/api/v1/chat/" + params.id, { headers: { "Content-Type": "application/json", Authorization: `Bearer: ${await getAccessToken()}` } });
+            const response = await api.get("/api/v1/chat/" + params.id);
             let data = response.data.chat;
             console.log(response.data)
             if (data.name == undefined) {
@@ -85,7 +84,7 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        axios.delete(BASEURL + `/api/v1/chat/group/${chat?.id}/user/${id}`, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then((response) => {
+        api.delete(`/api/v1/chat/group/${chat?.id}/user/${id}`).then(() => {
             console.log("User removed");
             getChatInfo();
 
@@ -102,20 +101,19 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        getAccessToken().then((token) => {
-            axios.get(BASEURL + "/api/v1/auth/users", { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }).then((response) => {
-                setUsers(response.data.users)
-                console.log(response.data.users)
-            }).catch((err) => {
-                console.error("Failed to fetch users")
-                if (err.response) {
-                    console.error(err.response.data)
-                    if (err.response.status == 401) {
-                        console.error("Unauthorized")
-                        navigate("/login")
-                    }
+
+        api.get("/api/v1/auth/users").then((response) => {
+            setUsers(response.data.users)
+            console.log(response.data.users)
+        }).catch((err) => {
+            console.error("Failed to fetch users")
+            if (err.response) {
+                console.error(err.response.data)
+                if (err.response.status == 401) {
+                    console.error("Unauthorized")
+                    navigate("/login")
                 }
-            })
+            }
         })
     }, [showApModal])
 
