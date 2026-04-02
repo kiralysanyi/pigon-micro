@@ -348,7 +348,8 @@ button:focus-visible {
   align-self: flex-start;
 }
 
-.sname, .mdate {
+.sname,
+.mdate {
   color: rgba(255, 255, 255, 0.486);
 }
 
@@ -374,4 +375,10 @@ button:focus-visible {
   border-radius: 1rem;
   width: fit-content;
   background-color: #1a1a1a;
+  cursor: pointer;
+  transition: 200ms;
+}
+
+.chat-header:hover {
+  background-color: #363636;
 }
