@@ -25,6 +25,8 @@ const postGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
         })
     }
 
+    // TODO check target user in chat
+
     // retire old keys
 
     await pool.promise().query("UPDATE group_keys SET status = 'retired' WHERE chatId = ? AND status = 'active' AND userId = ?", [chatID, targetUserId]);

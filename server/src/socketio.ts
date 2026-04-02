@@ -56,6 +56,8 @@ const attachSocketio = (server: Server) => {
                 return;
             }
 
+            //TODO: verify user in chat
+
             console.log(payload, `${socket.userinfo.ID} -->> ${chatID}`)
 
             // get chat participants

@@ -120,7 +120,7 @@ const ChatPage = () => {
             </div>)}
         </div>
 
-        <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg }}>
+        <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
             <button onClick={sendMsg}>Send</button>
         </form>

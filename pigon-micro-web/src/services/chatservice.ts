@@ -103,7 +103,6 @@ class ChatService extends EventTarget {
             const chat = response.data.chat;
             console.log(chat)
             if (chat.type == "group") {
-                console.warn("Group chats are not implemented fully yet");
                 await this.sendGroupMessage(message, chatID)
                 return;
             }

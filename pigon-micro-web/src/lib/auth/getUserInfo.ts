@@ -24,7 +24,7 @@ const getUserInfo = (userID?: number): Promise<userdata> => {
             if (userID == undefined) {
                 userInfoCache[0] = response.data.data;
             } else {
-                userInfoCache[userID] == response.data.data
+                userInfoCache[userID] = response.data.data
             }
             resolve(response.data.data)
         }).catch((error) => {
