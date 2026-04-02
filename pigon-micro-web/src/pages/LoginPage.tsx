@@ -46,7 +46,7 @@ const LoginPage = () => {
             <form onSubmit={(e) => {e.preventDefault(); login();}}>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
-                    <input disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
+                    <input autoFocus disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
                 </div>
 
                 <div className="form-group">
