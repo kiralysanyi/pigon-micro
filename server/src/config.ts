@@ -8,6 +8,7 @@ const serverConfig = {
     DB_USER: process.env.DB_USER,
     DB_PASS: process.env.DB_PASS,
     REGISTER_ENABLED: (process.env.REGISTER_ENABLED == "true"),
+    USERFILES: process.env.USERFILES,
     REFRESH_EXPIRE: 128, // hours
     ACCESS_EXPIRE: 5 // minutes
 }

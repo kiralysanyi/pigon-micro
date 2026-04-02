@@ -411,3 +411,12 @@ input:hover, input:focus {
 .menuicon {
   display: none;
 }
+
+.ap-pfp {
+  width: 256px;
+  height: 256px;
+  border-radius: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  object-fit: cover;
+}

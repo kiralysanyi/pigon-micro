@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Már 20. 21:56
+-- Létrehozás ideje: 2026. Ápr 02. 16:47
 -- Kiszolgáló verziója: 10.6.25-MariaDB-ubu2204
 -- PHP verzió: 8.3.26
 
@@ -101,6 +101,18 @@ CREATE TABLE `messageSpool` (
 -- --------------------------------------------------------
 
 --
+-- Tábla szerkezet ehhez a táblához `profile_picture`
+--
+
+CREATE TABLE `profile_picture` (
+  `id` int(11) NOT NULL,
+  `userId` int(11) NOT NULL,
+  `filename` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Tábla szerkezet ehhez a táblához `session`
 --
 
@@ -189,6 +201,13 @@ ALTER TABLE `messageSpool`
   ADD KEY `receiver-user` (`receiver`);
 
 --
+-- A tábla indexei `profile_picture`
+--
+ALTER TABLE `profile_picture`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `usr-pfp` (`userId`);
+
+--
 -- A tábla indexei `session`
 --
 ALTER TABLE `session`
@@ -247,6 +266,12 @@ ALTER TABLE `messageSpool`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT a táblához `profile_picture`
+--
+ALTER TABLE `profile_picture`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT a táblához `session`
 --
 ALTER TABLE `session`
@@ -300,6 +325,12 @@ ALTER TABLE `messages`
 ALTER TABLE `messageSpool`
   ADD CONSTRAINT `receiver-user` FOREIGN KEY (`receiver`) REFERENCES `users` (`ID`) ON DELETE CASCADE,
   ADD CONSTRAINT `sender-user` FOREIGN KEY (`sender`) REFERENCES `users` (`ID`) ON DELETE CASCADE;
+
+--
+-- Megkötések a táblához `profile_picture`
+--
+ALTER TABLE `profile_picture`
+  ADD CONSTRAINT `usr-pfp` FOREIGN KEY (`userId`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Megkötések a táblához `session`
