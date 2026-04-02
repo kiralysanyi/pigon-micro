@@ -15,7 +15,7 @@ const createChat: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     const { targetID } = req.body;
 
-    // TODO: do not allow duplicate chats (only private chats ofc)
+    // do not allow duplicate chats (only private chats ofc)
     if (await checkChatConflict(req.userinfo.ID, targetID)) {
         return res.status(409).json({
             message: "Chat already exists"

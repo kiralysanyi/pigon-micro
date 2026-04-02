@@ -25,7 +25,12 @@ const postGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
         })
     }
 
-    // TODO check target user in chat
+    // check target user in chat
+    if (!await checkUserInChat(targetUserId, chatID)) {
+        return res.status(403).json({
+            message: "Target user is not in this chat"
+        })
+    }
 
     // retire old keys
 

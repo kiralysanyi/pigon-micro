@@ -4,8 +4,6 @@ import submitPubKey from "./submitPubKey";
 import submitPrivKey from "./submitPrivKey";
 import getPrivKey from "./getPrivKey";
 import getPubKey from "./getPubKey";
-import submitRsaKeys from "./submitRsaKeys";
-import getRsaKeys from "./getRsaKeys";
 import getMasterKey from "./getMasterKey";
 import postMasterKey from "./postMasterKey";
 import postChatKeys from "./postChatKeys";
@@ -46,15 +44,5 @@ keyringRouter.post("/groupkeys/:chatID",
     body("encryptedKey").notEmpty().withMessage("encryptedKey field is required"),
     postGroupKey)
 
-
-// TODO: remove later
-keyringRouter.post("/rsa/keys",
-    body("public").notEmpty().withMessage("public field required"),
-    body("private").notEmpty().withMessage("private field required"),
-    submitRsaKeys
-)
-
-// TODO: remove later
-keyringRouter.get("/rsa/keys", getRsaKeys)
 
 export default keyringRouter;
