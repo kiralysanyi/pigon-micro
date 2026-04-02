@@ -1,0 +1,28 @@
+@media (max-width: 720px) {
+    .chat-main-container {
+        width: 100%;
+        left: 0px;
+    }
+
+    .sidebar {
+        z-index: 10;
+        width: 100%;
+        transition: 300ms;
+    }
+
+    .sidebar-hidden {
+        margin-left: -110%;
+    }
+
+    .menuicon {
+        display: block;
+    }
+
+    .mobilehidden {
+        display: none;
+    }
+
+    .chat-header {
+        transform: translate(-50%, 0%);
+    }
+}

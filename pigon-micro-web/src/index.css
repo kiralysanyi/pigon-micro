@@ -191,14 +191,14 @@ button:focus-visible {
   font-weight: bolder;
 }
 
-.logout {
+.icon {
   transition: 200ms;
   padding: 0.5rem;
   border-radius: 100%;
   cursor: pointer;
 }
 
-.logout:hover {
+.icon:hover {
   background-color: rgba(255, 255, 255, 0.255);
 }
 
@@ -381,4 +381,8 @@ button:focus-visible {
 
 .chat-header:hover {
   background-color: #363636;
+}
+
+.menuicon {
+  display: none;
 }

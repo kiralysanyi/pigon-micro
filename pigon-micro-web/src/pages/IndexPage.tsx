@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
-import { ArrowLeftEndOnRectangleIcon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon } from "@heroicons/react/24/outline";
 import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
@@ -18,7 +18,8 @@ const IndexPage = () => {
 
     const navigate = useNavigate();
     const params = useParams();
-    const [connected, setConnected] = useState(false)
+    const [connected, setConnected] = useState(false);
+    const [hideSidebar, setHideSidebar] = useState(true);
 
     const updateChatList = async () => {
         api.get(BASEURL + "/chat").then((response) => {
@@ -107,18 +108,19 @@ const IndexPage = () => {
     return (userdata && connected == true) ? <>
         <div className="header">
             <div className="user-display">
-                <Cog6ToothIcon width={24} height={24} onClick={() => navigate("/account")} style={{ cursor: "pointer" }} />
-                <span>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className="logout" width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
+                <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
+                <Cog6ToothIcon className={hideSidebar? "mobilehidden": "icon"} width={24} height={24} onClick={() => navigate("/account")} style={{ cursor: "pointer" }} />
+                <span className={hideSidebar? "mobilehidden": ""}>{userdata?.username}</span>
+                <ArrowLeftEndOnRectangleIcon className={hideSidebar? "mobilehidden": "icon"} width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
             </div>
-            <div className="chat-header" onClick={() => navigate("/settings/" + params.id)}>
+            <div className={`chat-header ${hideSidebar? "": "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id)}>
                 <span>Chat: {chatName}</span>
             </div>
         </div>
-        <div className="sidebar">
+        <div className={`sidebar ${hideSidebar ? "sidebar-hidden": ""}`}>
             {/* Chat list render */}
             <div className="chatlist">
-                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => navigate("/chat/" + chat.chatID)}>
+                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => {navigate("/chat/" + chat.chatID); setHideSidebar(true)}}>
                     <span>{chat.name}</span>
                 </div>)}
             </div>
