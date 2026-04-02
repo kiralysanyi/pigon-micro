@@ -25,4 +25,20 @@
     .chat-header {
         transform: translate(-50%, 0%);
     }
+
+    .modal {
+        box-sizing: border-box;
+        width: 100%;
+        height: 100%;
+        border-radius: 0px;
+    }
+
+    .modal h1 {
+        text-align: center;
+    }
+
+    .message-display .message,
+    .message-display .mymessage {
+        max-width: 70%;
+    }
 }
