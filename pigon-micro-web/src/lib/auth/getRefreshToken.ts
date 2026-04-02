@@ -18,13 +18,13 @@ const getRefreshToken = (): Promise<string> => {
         const nearExpire = diffHours < 24;
 
         if (expired) {
-            return rejected();
+            return rejected("EXPIRED");
         }
 
         if (nearExpire) {
             const response = await axios.get(BASEURL + "/auth/refreshtoken", { headers: { Authorization: `Bearer ${rtoken}` } })
             if (response.status !== 200) {
-                return rejected();
+                return rejected("NET_ERROR");
             }
 
             localStorage.setItem("rtoken", response.data.refreshToken);

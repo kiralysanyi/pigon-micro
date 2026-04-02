@@ -54,7 +54,8 @@ const IndexPage = () => {
             // get userinfo
             getUserInfo().then((info) => {
                 setUserdata(info);
-            }).catch(() => {
+            }).catch((err) => {
+                console.log(err)
                 setNetError(true)
             })
 

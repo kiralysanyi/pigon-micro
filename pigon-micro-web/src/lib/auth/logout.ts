@@ -1,10 +1,9 @@
-import axios from "axios";
 import { BASEURL } from "../../conf";
-import getAccessToken from "./getAccessToken";
+import api from "../../services/apiservice";
 
 const logout = (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
-        axios.post(BASEURL + "/auth/logout", {}, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${await getAccessToken()}` } }).then(() => {
+        api.post(BASEURL + "/auth/logout", {}).then(() => {
             sessionStorage.clear();
             localStorage.clear();
             resolve();

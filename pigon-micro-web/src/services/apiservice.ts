@@ -7,6 +7,19 @@ const api = axios.create({
     headers: { "Content-Type": "application/json" }
 })
 
+api.interceptors.response.use((res) => res, (error) => {
+    console.log("401 watcher: ", error)
+    let res = error.response;
+    if (res) {
+        if (res.status == 401) {
+            location.replace("/login");
+            return res;
+        }
+    }
+
+    return error;
+})
+
 api.interceptors.request.use(async (req) => {
     try {
         const token = await getAccessToken();

@@ -1,9 +1,8 @@
-import axios from "axios";
 import { generateECDHKeyPair } from "../encryption/ecdh"
 import { masterEncrypt } from "../encryption/masterkey";
 import { exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../encryption/utils";
 import { BASEURL } from "../../conf";
-import getAccessToken from "../auth/getAccessToken";
+import api from "../../services/apiservice";
 
 /**
  * Create and upload a chat keypair and return the created keypair
@@ -17,8 +16,7 @@ const uploadChatKeyPair = async (masterKey: CryptoKey): Promise<CryptoKeyPair> =
 
     const encryptedPrivKey = await masterEncrypt(privKey, masterKey);
 
-    const token = await getAccessToken();
-    await axios.post(BASEURL + "/keyring/chatkeys/self", { pubKey, encryptedPrivKey }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } });
+    await api.post(BASEURL + "/keyring/chatkeys/self", { pubKey, encryptedPrivKey });
 
     return keypair;
 }
