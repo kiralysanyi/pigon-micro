@@ -8,6 +8,7 @@ import verifyAccessMiddleware from "../../middlewares/verifyAccess";
 import infoHandler from "./info";
 import getUsers from "./getUsers";
 import logout from "./logout";
+import getPfp from "./getPfp";
 
 const authRouter = express.Router();
 
@@ -29,6 +30,8 @@ authRouter.get("/info", verifyAccessMiddleware, infoHandler);
 authRouter.get("/users", verifyAccessMiddleware, getUsers);
 
 authRouter.post("/logout", verifyAccessMiddleware, logout);
+
+authRouter.get("/pfp/:id", getPfp);
 
 
 export default authRouter;
