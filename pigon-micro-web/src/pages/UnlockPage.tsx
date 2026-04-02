@@ -68,6 +68,11 @@ const UnlockPage = () => {
                     setError("Wrong password")
                     setLoading(false);
                 })
+            }).catch((err) => {
+                console.error(err);
+                setStatusText("Unlock keyring")
+                setError("Wrong password")
+                setLoading(false);
             })
         } else {
             console.log("No keys: ", encryptedPrivkey, pubkey)
