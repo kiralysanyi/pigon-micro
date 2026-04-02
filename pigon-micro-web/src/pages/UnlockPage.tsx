@@ -18,7 +18,6 @@ const UnlockPage = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        // TODO: get chat keys
         // get private key
         api.get("/keyring/privkey").then((response) => {
             console.log("Got private key")

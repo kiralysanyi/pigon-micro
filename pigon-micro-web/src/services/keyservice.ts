@@ -23,7 +23,6 @@ const getGroupEncryptKey = (chatID: number, privKey: CryptoKey): Promise<{ key: 
     })
 }
 
-// TODO: cache keys
 
 const GKeys: Record<string, CryptoKey> = {}
 

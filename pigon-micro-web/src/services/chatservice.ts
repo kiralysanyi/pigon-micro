@@ -91,7 +91,6 @@ class ChatService extends EventTarget {
         this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, kGuid })
     }
 
-    // TODO: make this group chat compatible
     sendMessage = async (message: string, chatID: number) => {
         const startTime = new Date();
         api.get("/chat/" + chatID).then(async (response) => {

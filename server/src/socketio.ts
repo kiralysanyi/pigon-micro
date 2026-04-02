@@ -2,7 +2,7 @@ import { Server } from "http";
 import * as SocketIO from "socket.io"
 import { verifyAccessToken } from "./utils/db/session";
 import { ExtendedSocket } from "./types/ExtendedSocket";
-import { getParticipants } from "./utils/db/chat";
+import { checkUserInChat, getParticipants } from "./utils/db/chat";
 import { pool } from "./utils/db/db";
 let io: SocketIO.Server;
 
@@ -56,7 +56,11 @@ const attachSocketio = (server: Server) => {
                 return;
             }
 
-            //TODO: verify user in chat
+            //verify user in chat
+            if (!await checkUserInChat(socket.userinfo.ID, chatID)) {
+                socket.emit("error", "You are not authorized to send messages to this chat")
+                return;
+            }
 
             console.log(payload, `${socket.userinfo.ID} -->> ${chatID}`)
 
