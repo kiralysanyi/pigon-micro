@@ -121,6 +121,7 @@ const IndexPage = () => {
             {/* Chat list render */}
             <div className="chatlist">
                 {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => {navigate("/chat/" + chat.chatID); setHideSidebar(true)}}>
+                    {chat.type == "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.filter((p: any) => p.id != userdata.ID)[0].id}`}/>}
                     <span>{chat.name}</span>
                 </div>)}
             </div>

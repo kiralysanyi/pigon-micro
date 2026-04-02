@@ -274,6 +274,20 @@ button:focus-visible {
   line-height: 3rem;
   cursor: pointer;
   transition: 200ms;
+  display: flex;
+  gap: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  box-sizing: border-box;
+  flex-direction: row;
+  align-items: center;
+}
+
+.chatlist img {
+  width: 2.5rem;
+  height: 2.5rem;
+  object-fit: cover;
+  border-radius: 100%;
 }
 
 .chatlist div:hover {
