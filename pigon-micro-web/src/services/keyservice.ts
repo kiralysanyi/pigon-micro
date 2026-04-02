@@ -25,14 +25,20 @@ const getGroupEncryptKey = (chatID: number, privKey: CryptoKey): Promise<{ key: 
 
 // TODO: cache keys
 
+const GKeys: Record<string, CryptoKey> = {}
+
 const getGroupDecryptKey = (chatID: number, kGuid: string, privKey: CryptoKey): Promise<CryptoKey> => {
     return new Promise(async (resolve, reject) => {
+        if (GKeys[kGuid]) {
+            return resolve(GKeys[kGuid])
+        }
         api.get(`/keyring/groupkeys/${chatID}/${kGuid}`).then(async (response) => {
             const data = response.data.key;
             const creatorUserData = await getUserInfo(data.creatorId);
             const pubKey = await importECDHPublicKeyFromBase64(creatorUserData.pubKey);
             const sharedSecret = await deriveSharedKey(privKey, pubKey);
-            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret); // <-- this line was missing
+            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret);
+            GKeys[kGuid] = groupKey;
             resolve(groupKey);
         }).catch(reject)
     })
