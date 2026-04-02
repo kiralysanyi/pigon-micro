@@ -109,9 +109,9 @@ const IndexPage = () => {
         <div className="header">
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
-                <Cog6ToothIcon className={hideSidebar? "mobilehidden": "icon"} width={24} height={24} onClick={() => navigate("/account")} style={{ cursor: "pointer" }} />
+                <Cog6ToothIcon className={`${hideSidebar? "mobilehidden": ""} icon`} width={24} height={24} onClick={() => navigate("/account")} style={{ cursor: "pointer" }} />
                 <span className={hideSidebar? "mobilehidden": ""}>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className={hideSidebar? "mobilehidden": "icon"} width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
+                <ArrowLeftEndOnRectangleIcon className={`${hideSidebar? "mobilehidden": ""} icon`} width={24} height={24} onClick={() => { logout().then(() => { navigate("/login") }) }} />
             </div>
             <div className={`chat-header ${hideSidebar? "": "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id)}>
                 <span>Chat: {chatName}</span>
