@@ -111,7 +111,7 @@ const ChatSettingsPage = () => {
                 console.error(err.response.data)
                 if (err.response.status == 401) {
                     console.error("Unauthorized")
-                    navigate("/login", {viewTransition: true})
+                    navigate("/login", { viewTransition: true })
                 }
             }
         })
@@ -129,16 +129,16 @@ const ChatSettingsPage = () => {
         </div> : <div className="modal">
             <button onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /> Go back</button>
             <h1>Chat settings</h1>
-            <h2>{chat?.type}:{chat?.name}</h2>
+            <h2>{chat?.type}:{chat?.name} | {chat?.creatorId}:{userInfo?.ID}</h2>
             {chat?.type == "group" && <>
                 <span>Participants</span>
                 <div className="modal-list">
                     {chat?.participants.map((p) => <div className="list-element">
                         <span style={{ marginRight: "auto" }}>{p.username}</span>
-                        {userInfo?.ID != p.id ? <button onClick={(e) => { e.stopPropagation(); removeUser(p.id) }} style={{ marginLeft: "auto" }}>Remove</button> : <span style={{ fontSize: "1.3rem", fontWeight: "bold", color: "gray" }}>You</span>}
+                        {userInfo?.ID != p.id ? userInfo?.ID == chat?.creatorId && <button onClick={(e) => { e.stopPropagation(); removeUser(p.id) }} style={{ marginLeft: "auto" }}>Remove</button> : <span style={{ fontSize: "1.3rem", fontWeight: "bold", color: "gray" }}>You</span>}
                     </div>)}
                 </div>
-                <button onClick={() => setShowApModal(true)}>Add participant</button>
+                {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
                 {userInfo?.ID == chat?.creatorId && <button style={{ backgroundColor: "rgb(50,0,0)" }}>Delete group</button>}
             </>}
         </div>}
