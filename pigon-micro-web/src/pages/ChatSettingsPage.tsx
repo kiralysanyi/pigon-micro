@@ -125,6 +125,7 @@ const ChatSettingsPage = () => {
         })
     }, [showApModal])
 
+    // TODO: if chat type is direct then show the user's info
     return <>
         {showApModal ? <div className="modal">
             <button onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /> Go back</button>
