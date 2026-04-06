@@ -8,6 +8,7 @@ import getUsernameById from "../lib/auth/getUsernameById";
 import getUserInfo from "../lib/auth/getUserInfo";
 import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";
 import api from "./apiservice";
+import sendFile from "../lib/chat/sendFile";
 
 interface ChatServiceEventMap {
     "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
@@ -117,6 +118,38 @@ class ChatService extends EventTarget {
             console.log("Sending message: ", encrypted, chatID, this.socket)
             this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
             console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
+        })
+    }
+
+    sendFile = async (chatID: number): Promise<{type: "image" | "video", url: string}> => {
+        return new Promise((resolve, reject) => {
+            api.get("/chat/" + chatID).then(async (response) => {
+                if (this.masterKey == undefined) {
+                    console.error("Chatservice not inited properly");
+                    return;
+                }
+
+                const chat = response.data.chat;
+                console.log(chat)
+                if (chat.type == "group") {
+                    //await this.sendGroupMessage(message, chatID)
+                    return;
+                }
+
+                const participants = response.data.chat.participants as any[];
+                const userInfo = await getUserInfo();
+                const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
+
+                const sharedKey = await getNewMessageEncryptionKey(recipientID, this.masterKey)
+
+                // sendFile function handles upload
+                try {
+                    const data = await sendFile(chatID, sharedKey.key);
+                    resolve(data)
+                } catch (error) {
+                    reject(error);
+                }
+            })
         })
     }
 

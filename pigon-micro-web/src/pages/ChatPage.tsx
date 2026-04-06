@@ -23,7 +23,8 @@ const ChatPage = () => {
 
     const krp = useContext(KeyRingContext);
 
-    const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined)
+    const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined);
+    const sendFileRef = useRef<(() => void) | undefined>(undefined);
 
     // Load chatservice
     useEffect(() => {
@@ -67,6 +68,18 @@ const ChatPage = () => {
         }
 
         sendMessageRef.current = smsg;
+        sendFileRef.current = async () => {
+            try {
+                const data = await chatProvider.sendFile(parseInt(params.id as string))
+                if (!userInfo) {
+                    return;
+                }
+                setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: data.url, type: data.type }])
+            } catch (error) {
+                console.error(error);
+                window.alert(error);
+            }
+        }
 
         // get message history
 
@@ -115,13 +128,16 @@ const ChatPage = () => {
         <div className="message-display">
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"}`}>
                 <span className="sname">{msg.senderName}</span>
-                <span className="msg">{msg.message}</span>
+                {msg.type == "text" && <span className="msg">{msg.message}</span>}
+                {msg.type == "image" && <img src={msg.message}></img>}
+                {msg.type == "video" && <video src={msg.message} controls></video>}
                 <span className="mdate">{msg.date.getHours()}:{msg.date.getMinutes()}</span>
             </div>)}
         </div>
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
+            <button onClick={sendFileRef.current}>Send file</button>
             <button onClick={sendMsg}>Send</button>
         </form>
         {loading && <div className="loading-popup">
