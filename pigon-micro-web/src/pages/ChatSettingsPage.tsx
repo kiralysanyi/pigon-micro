@@ -93,6 +93,14 @@ const ChatSettingsPage = () => {
         })
     }
 
+    const deleteChat = () => {
+        api.delete("/chat/" + chat?.id).then(() => {
+            navigate("/")
+        }).catch((err) => {
+            console.error(err)
+        })
+    }
+
 
     useEffect(() => {
         if (!showApModal) {
@@ -139,7 +147,7 @@ const ChatSettingsPage = () => {
                     </div>)}
                 </div>
                 {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
-                {userInfo?.ID == chat?.creatorId && <button style={{ backgroundColor: "rgb(50,0,0)" }}>Delete group</button>}
+                {userInfo?.ID == chat?.creatorId && <button style={{ backgroundColor: "rgb(50,0,0)" }} onClick={() => deleteChat()}>Delete group</button>}
             </>}
         </div>}
     </>

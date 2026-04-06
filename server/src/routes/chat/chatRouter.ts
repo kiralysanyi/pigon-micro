@@ -7,6 +7,7 @@ import getMessages from "./getMessages";
 import createGroup from "./createGroup";
 import addChatUser from "./addChatUser";
 import removeChatUser from "./removeChatUser";
+import deleteGroup from "./deleteGroup";
 
 const chatRouter = express.Router();
 
@@ -17,5 +18,6 @@ chatRouter.post("/group/:chatID/user/:userId", addChatUser)
 chatRouter.delete("/group/:chatID/user/:userId", removeChatUser)
 
 chatRouter.get("/:id", getChatInfo);
+chatRouter.delete("/:id", deleteGroup);
 chatRouter.get("/:chatID/messages", getMessages);
 export default chatRouter;
