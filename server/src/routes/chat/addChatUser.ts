@@ -1,6 +1,6 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
-import { checkUserInChat, getChatType } from "../../utils/db/chat";
+import { checkCreator, checkUserInChat, getChatType } from "../../utils/db/chat";
 import { pool } from "../../utils/db/db";
 import { getSocketIOServer } from "../../socketio";
 
@@ -27,6 +27,14 @@ const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
     if (await checkUserInChat(userToAdd, chatID)) {
         return res.status(409).json({
             message: "User already in chat"
+        })
+    }
+
+    // verify if owner a.k.a creator
+
+    if (!await checkCreator(req.userinfo.ID, chatID)) {
+        return res.status(403).json({
+            message: "You do not have permission for this operation"
         })
     }
 

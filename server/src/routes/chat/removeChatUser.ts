@@ -1,7 +1,7 @@
 import { RequestHandler } from "express";
 import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { validationResult } from "express-validator";
-import { checkUserInChat, getChatType } from "../../utils/db/chat";
+import { checkCreator, checkUserInChat, getChatType } from "../../utils/db/chat";
 import { pool } from "../../utils/db/db";
 import { getSocketIOServer } from "../../socketio";
 
@@ -30,6 +30,25 @@ const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
             message: "You cannot remove users from a private chat"
         })
     }
+
+    // verify if owner a.k.a creator
+
+    if (!await checkCreator(req.userinfo.ID, chatID)) {
+        // requester is not the creator
+        return res.status(403).json({
+            message: "You do not have permission for this operation"
+        })
+    } else {
+        // requester is the creator
+        // do not allow the removal of the creator
+        if (req.userinfo.ID == userToRemove) {
+            return res.status(403).json({
+                message: "You do not have permission for this operation"
+            })
+        }
+    }
+
+
 
     pool.query("DELETE FROM `user-chats` WHERE userId = ? AND chatId = ?", [userToRemove, chatID], (err) => {
         if (err) {

@@ -113,5 +113,19 @@ const checkChatConflict = (creatorID: number, targetID: number): Promise<boolean
     });
 };
 
+// only used for group chats
+const checkCreator = async (userID: number, chatID: number) => {
+    const [result] = await pool.promise().query<RowDataPacket[]>("SELECT creator FROM chats WHERE ID = ?", [chatID])
 
-export { getParticipants, checkUserInChat, createPrivateChat, checkChatConflict, getChatType, getChatName };
+    if (result.length == 0) {
+        return false;
+    }
+
+    if (result[0].creator == userID) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+export { getParticipants, checkUserInChat, createPrivateChat, checkChatConflict, getChatType, getChatName, checkCreator };
