@@ -11,7 +11,6 @@ import AccountPage from './pages/AccountPage'
 import ChatSettingsPage from './pages/ChatSettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 
-// TODO: add some kind of auth middleware
 const router = createBrowserRouter([
   {
     path: "/",

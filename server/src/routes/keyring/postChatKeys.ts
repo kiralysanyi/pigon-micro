@@ -15,7 +15,6 @@ const postChatKeys: RequestHandler = async (req: reqWithUserinfo, res) => {
     const userID = req.userinfo.ID;
     const { pubKey, encryptedPrivKey } = req.body;
 
-    // TODO: retire older keys if any
 
     await pool.promise().query("UPDATE chat_keys SET status = 'retired' WHERE status = 'active' AND userID = ?", [userID])
 

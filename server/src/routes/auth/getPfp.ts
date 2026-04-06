@@ -6,7 +6,6 @@ import { pfpPath } from "../../utils/multer";
 import * as fs from "fs";
 
 const getPfp: RequestHandler = (req, res) => {
-    // TODO: make this actually working
     const userId = parseInt(req.params.id as string)
     let src = path.join(__dirname, "../../assets/default_pfp.png")
     console.log(src, isNaN(userId))
