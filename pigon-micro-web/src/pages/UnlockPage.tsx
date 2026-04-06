@@ -33,7 +33,7 @@ const UnlockPage = () => {
         }).catch((err) => {
             if (err.response) {
                 if (err.response.status == 401) {
-                    navigate("/login")
+                    navigate("/login", {viewTransition: true})
                 } else {
                     setError("Error: " + err.response.data.message)
                 }
@@ -61,7 +61,7 @@ const UnlockPage = () => {
 
                     sessionStorage.setItem("privKey", decrypted);
                     sessionStorage.setItem("pubKey", pubkey);
-                    navigate("/")
+                    navigate("/", {viewTransition: true})
                 }).catch((error) => {
                     console.error("Failed to decrypt private key: ", error)
                     setStatusText("Unlock keyring")

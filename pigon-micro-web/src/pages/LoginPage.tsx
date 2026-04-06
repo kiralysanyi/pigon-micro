@@ -28,7 +28,7 @@ const LoginPage = () => {
                 localStorage.setItem("rtoken", response.data.refreshToken);
                 localStorage.setItem("rtokenExpire", response.data.refreshTokenExpire);
                 console.log("Logged in successfully: ", response.data);
-                navigate("/")
+                navigate("/", {viewTransition: true})
             } else {
                 console.log(response.status)
             }

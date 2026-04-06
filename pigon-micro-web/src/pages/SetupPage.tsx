@@ -24,7 +24,7 @@ const SetupPage = () => {
     // check auth
     useEffect(() => {
         getAccessToken().catch(() => {
-            navigate("/login")
+            navigate("/login", {viewTransition: true})
         })
     }, [])
 
@@ -72,7 +72,7 @@ const SetupPage = () => {
                                 setStatusText("Setting up initial chat keys")
                                 // set up first shared chat keypair (ecdh)
                                 uploadChatKeyPair(masterKey).then(() => {
-                                    navigate("/unlock")
+                                    navigate("/unlock", {viewTransition: true})
                                 }).catch((err) => {
                                     console.error("Failed to set up chat keys: ", err);
                                     setCreating(false);

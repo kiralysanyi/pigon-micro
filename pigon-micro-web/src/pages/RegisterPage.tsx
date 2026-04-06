@@ -42,7 +42,7 @@ const RegisterPage = () => {
             if (response.status == 201) {
                 setError(undefined);
                 console.log("Created user, navigating");
-                navigate("/login");
+                navigate("/login", {viewTransition: true});
             }
         }).catch((error) => {
             console.error(error);

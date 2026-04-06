@@ -19,7 +19,7 @@ const AccountPage = () => {
 
     return <>
         <div className="modal">
-            <button onClick={() => navigate("/")}>
+            <button onClick={() => navigate("/", {viewTransition: true})}>
                 <ArrowLeftCircleIcon width={24} height={24} />
                 <span>Go back</span>
             </button>

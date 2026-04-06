@@ -31,7 +31,7 @@ const NewChat = () => {
                 console.error(err.response.data)
                 if (err.response.status == 401) {
                     console.error("Unauthorized")
-                    navigate("/login")
+                    navigate("/login", {viewTransition: true})
                 }
             }
         })
@@ -44,7 +44,7 @@ const NewChat = () => {
         console.log("Start new chat with user: ", userId)
         api.post("/chat", { targetID: userId }).then((response) => {
             console.log(response.data)
-            navigate("/")
+            navigate("/", {viewTransition: true})
         }).catch((err) => {
             setLoading(false);
             console.error("Failed to create chat: ", err)
@@ -82,7 +82,7 @@ const NewChat = () => {
             // upload
             api.post("/keyring/groupkeys/" + chatID, { targetUserId: user.ID, encryptedKey }).then((response) => {
                 console.log(response.data)
-                navigate("/")
+                navigate("/", {viewTransition: true})
             }).catch((err) => {
                 console.error(err, err.response)
                 setLoading(false);
@@ -123,7 +123,7 @@ const NewChat = () => {
                 </div>
             </>}
             <button onClick={() => setGroupMode(!groupMode)}>{groupMode ? "Start private chat instead" : "Create new group instead"}</button>
-            <button onClick={() => navigate("/")}>Cancel</button>
+            <button onClick={() => navigate("/", {viewTransition: true})}>Cancel</button>
         </div>
     </>
 }

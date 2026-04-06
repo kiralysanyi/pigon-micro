@@ -111,7 +111,7 @@ const ChatSettingsPage = () => {
                 console.error(err.response.data)
                 if (err.response.status == 401) {
                     console.error("Unauthorized")
-                    navigate("/login")
+                    navigate("/login", {viewTransition: true})
                 }
             }
         })
