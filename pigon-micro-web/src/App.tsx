@@ -9,6 +9,7 @@ import ChatPage from './pages/ChatPage'
 import ChatIndex from './pages/ChatIndex'
 import AccountPage from './pages/AccountPage'
 import ChatSettingsPage from './pages/ChatSettingsPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 // TODO: add some kind of auth middleware
 const router = createBrowserRouter([
@@ -54,6 +55,10 @@ const router = createBrowserRouter([
   {
     path: "/newchat",
     Component: NewChat
+  },
+  {
+    path: "*",
+    Component: NotFoundPage
   }
 ])
 
