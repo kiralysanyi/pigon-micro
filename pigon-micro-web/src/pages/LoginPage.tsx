@@ -28,14 +28,19 @@ const LoginPage = () => {
                 localStorage.setItem("rtoken", response.data.refreshToken);
                 localStorage.setItem("rtokenExpire", response.data.refreshTokenExpire);
                 console.log("Logged in successfully: ", response.data);
-                navigate("/", {viewTransition: true})
+                navigate("/", { viewTransition: true })
             } else {
                 console.log(response.status)
             }
         }).catch((error) => {
+            console.error("Login fail: ", error.response)
             setInputsDisabled(false);
-            console.error(error.response.data.error);
-            setError(error.response.data.error)
+            if (typeof error.response.data.error == "string") {
+                setError(error.response.data.error)
+            } else {
+                console.log(error.response)
+                setError("Unknown error, try again later")
+            }
         })
     }
 
@@ -43,7 +48,7 @@ const LoginPage = () => {
         <div className="modal">
             <h1>Login</h1>
             {error && <div className="error-msg">{error}</div>}
-            <form onSubmit={(e) => {e.preventDefault(); login();}}>
+            <form onSubmit={(e) => { e.preventDefault(); login(); }}>
                 <div className="form-group">
                     <label htmlFor="username">Username</label>
                     <input autoFocus disabled={inputsDisabled} value={username} onChange={(e) => { setUsername(e.target.value) }} type="text" id="username" name="username" />
