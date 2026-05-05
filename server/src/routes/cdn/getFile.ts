@@ -10,6 +10,12 @@ const getFile: RequestHandler = async (req: reqWithUserinfo, res) => {
     // TODO: verify access
     const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM chat_files WHERE uuid = ?", [assetId]);
 
+    if (result.length == 0) {
+        return res.status(404).json({
+            message: "Asset not found"
+        })
+    }
+
     const chatId = result[0].chatId
 
     console.log(req.userinfo.ID, chatId)
