@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Gép: mariadb:3306
--- Létrehozás ideje: 2026. Ápr 02. 16:47
+-- Létrehozás ideje: 2026. Máj 05. 19:51
 -- Kiszolgáló verziója: 10.6.25-MariaDB-ubu2204
 -- PHP verzió: 8.3.26
 
@@ -32,6 +32,19 @@ CREATE TABLE `chats` (
   `type` enum('direct','group') NOT NULL,
   `name` text DEFAULT NULL,
   `creator` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Tábla szerkezet ehhez a táblához `chat_files`
+--
+
+CREATE TABLE `chat_files` (
+  `id` int(11) NOT NULL,
+  `uuid` varchar(255) NOT NULL,
+  `type` enum('image','video','file','') NOT NULL,
+  `chatId` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -169,6 +182,14 @@ ALTER TABLE `chats`
   ADD KEY `creator` (`creator`);
 
 --
+-- A tábla indexei `chat_files`
+--
+ALTER TABLE `chat_files`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `uuid` (`uuid`),
+  ADD KEY `file_chat` (`chatId`);
+
+--
 -- A tábla indexei `chat_keys`
 --
 ALTER TABLE `chat_keys`
@@ -242,6 +263,12 @@ ALTER TABLE `chats`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT a táblához `chat_files`
+--
+ALTER TABLE `chat_files`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT a táblához `chat_keys`
 --
 ALTER TABLE `chat_keys`
@@ -298,6 +325,12 @@ ALTER TABLE `users`
 --
 ALTER TABLE `chats`
   ADD CONSTRAINT `creator` FOREIGN KEY (`creator`) REFERENCES `users` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Megkötések a táblához `chat_files`
+--
+ALTER TABLE `chat_files`
+  ADD CONSTRAINT `file_chat` FOREIGN KEY (`chatId`) REFERENCES `chats` (`ID`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Megkötések a táblához `chat_keys`
