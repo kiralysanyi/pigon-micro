@@ -33,6 +33,8 @@ class ChatService extends EventTarget {
     masterKey: CryptoKey | undefined;
     privKey: CryptoKey | undefined;
 
+    // handler for incoming messages
+
     private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined, type: "text" | "image" | "video" | "file" }) => {
         if (!this.masterKey) {
             console.warn("Message handling aborted: masterKey not loaded")
@@ -47,7 +49,9 @@ class ChatService extends EventTarget {
             return;
         }
 
+        // determine decryption key
         if (senderKeyId == undefined || recipientKeyId == undefined) {
+            // group message, kGuid must be defined
             if (kGuid) {
                 dKey = await getGroupDecryptKey(chatID, kGuid, this.privKey);
             } else {
@@ -56,7 +60,7 @@ class ChatService extends EventTarget {
             }
         }
 
-
+        // private message
         if (senderKeyId != undefined && recipientKeyId != undefined) {
             dKey = await getMessageDecryptionKey(senderKeyId, recipientKeyId, senderId, this.masterKey);
         }
@@ -66,6 +70,7 @@ class ChatService extends EventTarget {
             return;
         }
         console.log(type)
+        // handle text messages
         if (type == "text") {
             decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
                 this.dispatchEvent(new CustomEvent("message", {
@@ -79,6 +84,7 @@ class ChatService extends EventTarget {
                 console.error("MSGINFO: ", payload, chatID, senderId)
             })
         } else {
+            // handle file messages
             const assetId = JSON.parse(payload).assetId;
 
             const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
@@ -105,6 +111,7 @@ class ChatService extends EventTarget {
         this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, kGuid, type: "text" })
     }
 
+    // send message handler for private chats
     sendMessage = async (message: string, chatID: number) => {
         const startTime = new Date();
         api.get("/chat/" + chatID).then(async (response) => {
@@ -134,6 +141,7 @@ class ChatService extends EventTarget {
         })
     }
 
+    // send file handler, works for both group and private chats
     sendFile = async (chatID: number): Promise<{ type: "image" | "video", url: string }> => {
         return new Promise((resolve, reject) => {
             api.get("/chat/" + chatID).then(async (response) => {
@@ -184,6 +192,7 @@ class ChatService extends EventTarget {
         })
     }
 
+    // key rotation function, checks if keys need to be rotated and rotates if necessary (should be called every minute or so)
     rotateKeys = () => {
         const rotate = () => {
             if (this.masterKey) {
@@ -208,6 +217,7 @@ class ChatService extends EventTarget {
 
     }
 
+    // unload function to remove event listeners when chat page is closed
     unload = () => {
         this.socket?.off("message", this.messageHandler)
     }
@@ -349,6 +359,7 @@ class ChatService extends EventTarget {
         })
     }
 
+    // init function to set masterKey and privKey, also initializes socket connection and event listeners
     init = (masterKey: CryptoKey, privKey: CryptoKey) => {
         console.log("Chatservice init: ", masterKey)
         this.masterKey = masterKey;
