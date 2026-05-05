@@ -69,15 +69,16 @@ const attachSocketio = (server: Server) => {
 
             const filteredParticipants = participants.filter((p) => p.id != socket.userinfo.ID);
 
+            if (type != "text") {
+                payload = JSON.stringify(payload)
+            }
+
             // send message to recipient devices
             filteredParticipants.forEach((p) => {
-                io.to("usr" + p.id).emit("message", { payload: JSON.stringify(payload), chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid, type: msgType })
+                io.to("usr" + p.id).emit("message", { payload: payload, chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid, type: msgType })
             })
 
             // save to db
-            if (typeof payload == "object") {
-                payload = JSON.stringify(payload)
-            }
 
             if (kGuid == undefined) {
                 // private message
