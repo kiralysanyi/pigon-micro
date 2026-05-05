@@ -96,7 +96,7 @@ class ChatService extends EventTarget {
 
         const encrypted = await encryptMsg(message, key);
 
-        this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, kGuid })
+        this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, kGuid, type: "text" })
     }
 
     sendMessage = async (message: string, chatID: number) => {
@@ -136,11 +136,25 @@ class ChatService extends EventTarget {
                     return;
                 }
 
+                if (!this.privKey) {
+                    console.error("privKey not loaded");
+                    return;
+                }
+
                 const chat = response.data.chat;
-                console.log(chat)
+                console.log(chat);
                 if (chat.type == "group") {
-                    //await this.sendGroupMessage(message, chatID)
-                    console.warn("File sending for group chats are not implemented yet")
+                    const { key, kGuid } = await getGroupEncryptKey(chatID, this.privKey);
+                    try {
+                        const data = await sendFile(chatID, key);
+                        console.log("File uploaded: ", data)
+                        this.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, kGuid, type: data.type })
+                        console.log("Control message sent")
+                        resolve(data)
+                    } catch (error) {
+                        reject(error);
+                    }
+
                     return;
                 }
 
@@ -204,6 +218,7 @@ class ChatService extends EventTarget {
 
                 // decrypt handler
 
+                // group message handler
                 const handleGroupMessage = (msg: EncryptedMessage): Promise<void> => {
                     return new Promise(async (resolve, reject) => {
                         if (!msg.kGuid) {
@@ -219,19 +234,40 @@ class ChatService extends EventTarget {
                         }
 
                         const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
-                        decrypted.push({
-                            chatID: chatID,
-                            date: new Date(msg.date),
-                            message: await decryptMsg(JSON.parse(msg.payload), dkey),
-                            senderID: msg.senderID,
-                            type: msg.type,
-                            senderName: await getUsernameById(msg.senderID)
-                        })
+                        if (msg.type == "text") {
+                            decrypted.push({
+                                chatID: chatID,
+                                date: new Date(msg.date),
+                                message: await decryptMsg(JSON.parse(msg.payload), dkey),
+                                senderID: msg.senderID,
+                                type: msg.type,
+                                senderName: await getUsernameById(msg.senderID)
+                            })
 
-                        resolve();
+                            resolve();
+                        } else {
+                            // handle file messages
+                            const assetId = JSON.parse(msg.payload).assetId;
+
+                            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
+
+                            const decryptedFile: File = await decryptFile(response.data, dkey, msg.type);
+                            const bUrl: string = URL.createObjectURL(decryptedFile);
+                            decrypted.push({
+                                chatID: msg.chatID,
+                                date: new Date(msg.date),
+                                message: bUrl,
+                                senderID: msg.senderID,
+                                type: msg.type,
+                                senderName: await getUsernameById(msg.senderID)
+                            })
+                            resolve();
+                        }
+
                     })
                 }
 
+                // private chat message handler
                 const decryptMessage = (msg: EncryptedMessage): Promise<void> => {
                     return new Promise(async (resolve, reject) => {
                         if (!msg.senderKeyId || !msg.recipientKeyId) {
