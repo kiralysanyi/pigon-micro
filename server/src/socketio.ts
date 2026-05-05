@@ -49,8 +49,8 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected: ", socket.id, socket.authenticated)
 
-        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string }) => {
-
+        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string, type: "text" | "video" | "image" | "file" }) => {
+            const msgType = type;
             if ((senderKeyId == undefined || recipientKeyId == undefined) && kGuid == undefined) {
                 console.log("Invalid message dropped")
                 return;
@@ -71,14 +71,17 @@ const attachSocketio = (server: Server) => {
 
             // send message to recipient devices
             filteredParticipants.forEach((p) => {
-                io.to("usr" + p.id).emit("message", {payload, chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid})
+                io.to("usr" + p.id).emit("message", { payload: JSON.stringify(payload), chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid, msgType })
             })
 
             // save to db
-            const msgType = "text"
+            if (typeof payload == "object") {
+                payload = JSON.stringify(payload)
+            }
 
             if (kGuid == undefined) {
                 // private message
+
                 pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
                     if (err) {
                         console.error("Failed to save message", err);
@@ -101,4 +104,4 @@ const attachSocketio = (server: Server) => {
 }
 
 export default attachSocketio;
-export {getSocketIOServer};
+export { getSocketIOServer };

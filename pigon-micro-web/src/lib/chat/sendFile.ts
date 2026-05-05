@@ -1,3 +1,4 @@
+import api from "../../services/apiservice";
 import { encryptFile, packEncryptedFile } from "../encryption/ecdh";
 
 const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "video", url: string, assetId: string }> => {
@@ -37,11 +38,20 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
 
             // TODO: send file to server
 
-            resolve({
-                url: URL.createObjectURL(file),
-                type: type,
-                assetId: ""
-            });
+            const formData = new FormData();
+            formData.append("file", packed);
+            formData.append("type", type)
+
+            try {
+                const response = await api.postForm(`/cdn/${chatId}`, formData);
+                resolve({
+                    url: URL.createObjectURL(file),
+                    type: type,
+                    assetId: response.data.assetId
+                });
+            } catch (error) {
+                console.error("Upload error: ", error)
+            }
         })
 
         input.click();

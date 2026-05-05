@@ -1,7 +1,7 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import { getGroupDecryptKey, getGroupEncryptKey, getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
-import { encryptMsg, decryptMsg } from "../lib/encryption/ecdh";
+import { encryptMsg, decryptMsg, decryptFile } from "../lib/encryption/ecdh";
 import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
@@ -11,7 +11,7 @@ import api from "./apiservice";
 import sendFile from "../lib/chat/sendFile";
 
 interface ChatServiceEventMap {
-    "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string }>;
+    "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string, type: "text" | "image" | "video" | "file" }>;
 }
 
 class ChatService extends EventTarget {
@@ -33,7 +33,7 @@ class ChatService extends EventTarget {
     masterKey: CryptoKey | undefined;
     privKey: CryptoKey | undefined;
 
-    private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined }) => {
+    private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined, type: "text" | "image" | "video" | "file" }) => {
         if (!this.masterKey) {
             console.warn("Message handling aborted: masterKey not loaded")
             return;
@@ -65,18 +65,25 @@ class ChatService extends EventTarget {
             console.error("dKey is undefined")
             return;
         }
+        console.log(type)
+        if (type == "text") {
+            decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
+                this.dispatchEvent(new CustomEvent("message", {
+                    detail: { message: message, chatID, senderId, senderName: await getUsernameById(senderId), type: "text" }
+                }))
 
-        decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
+                console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
+
+            }).catch((err) => {
+                console.error("Failed to decrypt message: ", err)
+                console.error("MSGINFO: ", payload, chatID, senderId)
+            })
+        } else {
+
             this.dispatchEvent(new CustomEvent("message", {
-                detail: { message: message, chatID, senderId, senderName: await getUsernameById(senderId) }
+                detail: { message: JSON.parse(payload).assetId, chatID, senderId, senderName: await getUsernameById(senderId), type: "text" }
             }))
-
-            console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
-
-        }).catch((err) => {
-            console.error("Failed to decrypt message: ", err)
-            console.error("MSGINFO: ", payload, chatID, senderId)
-        })
+        }
     }
 
     // send message handler for group chats
@@ -116,12 +123,12 @@ class ChatService extends EventTarget {
             let encrypted = await encryptMsg(message, sharedKey.key)
             // todo: add ack
             console.log("Sending message: ", encrypted, chatID, this.socket)
-            this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId })
+            this.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: "text" })
             console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
         })
     }
 
-    sendFile = async (chatID: number): Promise<{type: "image" | "video", url: string}> => {
+    sendFile = async (chatID: number): Promise<{ type: "image" | "video", url: string }> => {
         return new Promise((resolve, reject) => {
             api.get("/chat/" + chatID).then(async (response) => {
                 if (this.masterKey == undefined) {
@@ -133,6 +140,7 @@ class ChatService extends EventTarget {
                 console.log(chat)
                 if (chat.type == "group") {
                     //await this.sendGroupMessage(message, chatID)
+                    console.warn("File sending for group chats are not implemented yet")
                     return;
                 }
 
@@ -145,6 +153,9 @@ class ChatService extends EventTarget {
                 // sendFile function handles upload
                 try {
                     const data = await sendFile(chatID, sharedKey.key);
+                    console.log("File uploaded: ", data)
+                    this.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: data.type })
+                    console.log("Control message sent")
                     resolve(data)
                 } catch (error) {
                     reject(error);
@@ -238,22 +249,41 @@ class ChatService extends EventTarget {
                             return reject("Failed to process message: masterKey not loaded")
                         }
                         const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
+                        // handle text messages
+                        if (msg.type == "text") {
+                            decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
+                                decrypted.push({
+                                    chatID: msg.chatID,
+                                    date: new Date(msg.date),
+                                    message: message,
+                                    senderID: msg.senderID,
+                                    type: msg.type,
+                                    senderName: await getUsernameById(msg.senderID)
+                                })
+                                resolve();
+                            }).catch((err) => {
+                                console.error("Failed to decrypt message: ", err)
+                                console.error("MSGINFO-H: ", msg.payload, chatID, msg.senderID);
+                                reject(err)
+                            })
+                        } else {
+                            // handle file messages
+                            const assetId = JSON.parse(msg.payload).assetId;
 
-                        decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
+                            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
+
+                            const decryptedFile: File = await decryptFile(response.data, dkey, msg.type);
+                            const bUrl: string = URL.createObjectURL(decryptedFile);
                             decrypted.push({
                                 chatID: msg.chatID,
                                 date: new Date(msg.date),
-                                message: message,
+                                message: bUrl,
                                 senderID: msg.senderID,
                                 type: msg.type,
                                 senderName: await getUsernameById(msg.senderID)
                             })
                             resolve();
-                        }).catch((err) => {
-                            console.error("Failed to decrypt message: ", err)
-                            console.error("MSGINFO-H: ", msg.payload, chatID, msg.senderID);
-                            reject(err)
-                        })
+                        }
                     })
 
                 }

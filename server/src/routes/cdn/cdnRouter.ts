@@ -4,7 +4,7 @@ import postFile from "./postFile";
 // TODO: implement
 const cdnRouter = express.Router();
 
-cdnRouter.get("/:id", getFile);
-cdnRouter.post("/:id", postFile);
+cdnRouter.get("/:assetId", getFile);
+cdnRouter.post("/:chatId", postFile);
 
 export default cdnRouter;
