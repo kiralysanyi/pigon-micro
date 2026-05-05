@@ -46,7 +46,7 @@ const ChatPage = () => {
         chatProvider.init(krp.masterKey, krp.privKey);
         console.log("Chat service loaded")
         chatProvider.addEventListener("message", (e) => {
-            const { chatID, message, senderID, senderName } = e.detail;
+            const { chatID, message, senderID, senderName, type } = e.detail;
 
             // message not related to this chat so we simply ignore it
             if (chatID.toString() != params.id) {
@@ -56,7 +56,7 @@ const ChatPage = () => {
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: "text" }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type }]);
         })
 
         console.log(chatProvider.sendMessage)

@@ -79,9 +79,15 @@ class ChatService extends EventTarget {
                 console.error("MSGINFO: ", payload, chatID, senderId)
             })
         } else {
+            const assetId = JSON.parse(payload).assetId;
+
+            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
+
+            const decryptedFile: File = await decryptFile(response.data, dKey, type);
+            const bUrl: string = URL.createObjectURL(decryptedFile);
 
             this.dispatchEvent(new CustomEvent("message", {
-                detail: { message: JSON.parse(payload).assetId, chatID, senderId, senderName: await getUsernameById(senderId), type: "text" }
+                detail: { message: bUrl, chatID, senderId, senderName: await getUsernameById(senderId), type: type }
             }))
         }
     }
