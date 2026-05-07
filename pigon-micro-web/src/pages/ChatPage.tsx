@@ -29,6 +29,11 @@ const ChatPage = () => {
 
     // Load chatservice
     useEffect(() => {
+        if (!userInfo) {
+            console.log("Userinfo not loaded yet");
+            return;
+        }
+
         if (!krp) {
             console.log("Keyring provider not loaded")
             return;
@@ -57,10 +62,13 @@ const ChatPage = () => {
         sendMessageRef.current = smsg;
         sendFileRef.current = async () => {
             try {
-                const data = await chatProvider.sendFile(parseInt(params.id as string))
                 if (!userInfo) {
                     return;
                 }
+
+                const data = await chatProvider.sendFile(parseInt(params.id as string));
+                console.log("File sent, got url: ", data.url);
+
                 setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: data.url, type: data.type }])
             } catch (error) {
                 console.error(error);
@@ -88,7 +96,7 @@ const ChatPage = () => {
             clearInterval(rotateInterval)
             chatProvider.unload();
         }
-    }, [krp?.masterKey, params, krp?.privKey])
+    }, [krp?.masterKey, params, krp?.privKey, userInfo])
 
     const sendMsg = () => {
         if (!userInfo) {
