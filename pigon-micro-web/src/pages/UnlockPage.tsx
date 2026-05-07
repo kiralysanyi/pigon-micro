@@ -59,8 +59,6 @@ const UnlockPage = () => {
                     krp?.setPrivKey(await importECDHPrivateKeyFromBase64(decrypted));
                     krp?.setPubKey(await importECDHPublicKeyFromBase64(pubkey));
 
-                    sessionStorage.setItem("privKey", decrypted);
-                    sessionStorage.setItem("pubKey", pubkey);
                     navigate("/", {viewTransition: true})
                 }).catch((error) => {
                     console.error("Failed to decrypt private key: ", error)

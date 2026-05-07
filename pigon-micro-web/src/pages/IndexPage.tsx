@@ -72,16 +72,6 @@ const IndexPage = () => {
             socket.on("connect_error", onSockError);
             socket.on("newchat", onNewChat);
             setConnected(true)
-
-
-            const k = {
-                pubKey: sessionStorage.getItem("pubKey"),
-                privKey: sessionStorage.getItem("privKey")
-            }
-
-            if (k.privKey == null) {
-                navigate("/unlock", {viewTransition: true})
-            }
         })()
         return () => {
             if (socket) {

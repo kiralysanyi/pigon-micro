@@ -6,6 +6,7 @@ const logout = (): Promise<void> => {
         api.post(BASEURL + "/auth/logout", {}).then(() => {
             sessionStorage.clear();
             localStorage.clear();
+            // TODO: Clear keys from context and indexedDB
             resolve();
         }).catch((err) => {
             console.error("Failed to log out: ", err)
