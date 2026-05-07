@@ -21,6 +21,9 @@ const UnlockPage = () => {
         // get private key
         api.get("/keyring/privkey").then((response) => {
             console.log("Got private key")
+            if (response.data.data.encryptedPrivKey == null) {
+                return navigate("/setup", {viewTransition: true})
+            }
             setEncryptedPrivkey(response.data.data.encryptedPrivKey);
 
             // get public key
