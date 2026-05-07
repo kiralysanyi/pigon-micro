@@ -1,7 +1,7 @@
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import { getGroupDecryptKey, getGroupEncryptKey, getMessageDecryptionKey, getNewMessageEncryptionKey } from "./keyservice";
-import { encryptMsg, decryptMsg, decryptFile } from "../lib/encryption/ecdh";
+import { encryptMsg, decryptMsg } from "../lib/encryption/ecdh";
 import type { Message } from "../types/Message";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
 import getUsernameById from "../lib/auth/getUsernameById";
@@ -86,9 +86,7 @@ class ChatService extends EventTarget {
             })
         } else {
             // handle file messages
-            const assetId = JSON.parse(payload).assetId;
-
-            
+            const assetId = JSON.parse(payload).assetId;            
 
             this.dispatchEvent(new CustomEvent("message", {
                 detail: { message: undefined, chatID, senderId, senderName: await getUsernameById(senderId), type: type, toLoad: assetId, dKey: dKey }
