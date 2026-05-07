@@ -47,7 +47,7 @@ async function ecdhEncryptKey(keyToEncrypt: CryptoKey, key: CryptoKey): Promise<
     });
 }
 
-async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey): Promise<CryptoKey> {
+async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey, extractable = false): Promise<CryptoKey> {
     const { iv, ciphertext } = JSON.parse(keyToDecrypt);
 
     const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
@@ -63,7 +63,7 @@ async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey): Promise<Cry
         "raw",           // was "pkcs8" — matches exportKey("raw") in ecdhEncryptKey
         decrypted,
         { name: "AES-GCM", length: 256 },  // was ECDH — the stored key is an AES key
-        false,
+        extractable,
         ["encrypt", "decrypt"]
     );
 }
@@ -154,7 +154,7 @@ async function generateECDHKeyPair() {
 }
 
 // Derive a shared AES-GCM key using your private key and their public key
-async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
+async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey, extractable = false) {
     return crypto.subtle.deriveKey(
         {
             name: "ECDH",
@@ -165,7 +165,7 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
             name: "AES-GCM",
             length: 256
         },
-        false,
+        extractable,
         ["encrypt", "decrypt"]
     );
 }

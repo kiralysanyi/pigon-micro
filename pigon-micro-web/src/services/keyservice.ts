@@ -6,7 +6,10 @@ import type { DKeyWrapper } from "../types/DKeyWrapper";
 import api from "./apiservice";
 
 
-const getGroupEncryptKey = (chatID: number, privKey: CryptoKey): Promise<{ key: CryptoKey, kGuid: string }> => {
+const getGroupEncryptKey = (chatID: number, privKey: CryptoKey, extractable?: boolean): Promise<{ key: CryptoKey, kGuid: string }> => {
+    if (extractable == undefined) {
+        extractable = false;
+    }
     return new Promise(async (resolve, reject) => {
         api.get(`/keyring/groupkeys/${chatID}/0`).then(async (response) => {
             const data = response.data.key;
@@ -14,7 +17,7 @@ const getGroupEncryptKey = (chatID: number, privKey: CryptoKey): Promise<{ key: 
             const creatorUserData = await getUserInfo(data.creatorId);
             const creatorPub = await importECDHPublicKeyFromBase64(creatorUserData.pubKey);
             const sharedSecret = await deriveSharedKey(privKey, creatorPub);
-            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret); // decrypt the actual AES key
+            const groupKey = await ecdhDecryptKey(data.encryptedKey, sharedSecret, extractable); // decrypt the actual AES key
             resolve({ key: groupKey, kGuid: data.kGuid })
 
         }).catch((err) => {

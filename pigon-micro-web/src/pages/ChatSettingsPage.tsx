@@ -37,7 +37,7 @@ const ChatSettingsPage = () => {
             console.log("User added, adding key");
             // add key for target user
             // group chat key
-            const { key, kGuid } = await getGroupEncryptKey(chat.id, krp.privKey as CryptoKey);
+            const { key, kGuid } = await getGroupEncryptKey(chat.id, krp.privKey as CryptoKey, true);
             console.log("Got key: ", kGuid)
             // freshly added participant's public key
             const encodedPKey = (await api.get(`/keyring/pubKey?userID=${id}`)).data.data.pubKey
