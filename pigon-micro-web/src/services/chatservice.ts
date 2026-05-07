@@ -32,6 +32,7 @@ class ChatService extends EventTarget {
     socket: Socket | undefined;
     masterKey: CryptoKey | undefined;
     privKey: CryptoKey | undefined;
+    initialized: boolean = false;
 
     // handler for incoming messages
 
@@ -230,7 +231,8 @@ class ChatService extends EventTarget {
             // get messages
             api.get(`/chat/${chatID}/messages`).then(async (response) => {
                 const messages: EncryptedMessage[] = response.data.messages;
-                let decrypted: Message[] = []
+                let decrypted: Message[] = [];
+                let dkey: CryptoKey | undefined;
 
                 // decrypt handler
 
@@ -249,7 +251,7 @@ class ChatService extends EventTarget {
                             return;
                         }
 
-                        const dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
+                        dkey = await getGroupDecryptKey(chatID, msg.kGuid, this.privKey);
                         if (msg.type == "text") {
                             decrypted.push({
                                 chatID: chatID,
@@ -263,18 +265,17 @@ class ChatService extends EventTarget {
                             resolve();
                         } else {
                             // handle file messages
+                            // TODO: avoid code duplication with private message handler
+                            // TODO: implement new render pipeline
                             const assetId = JSON.parse(msg.payload).assetId;
-
-                            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
-
-                            const decryptedFile: File = await decryptFile(response.data, dkey, msg.type);
-                            const bUrl: string = URL.createObjectURL(decryptedFile);
                             decrypted.push({
                                 chatID: msg.chatID,
                                 date: new Date(msg.date),
-                                message: bUrl,
+                                message: undefined,
+                                toLoad: assetId,
                                 senderID: msg.senderID,
                                 type: msg.type,
+                                dKey: dkey,
                                 senderName: await getUsernameById(msg.senderID)
                             })
                             resolve();
@@ -300,7 +301,7 @@ class ChatService extends EventTarget {
                         if (!this.masterKey) {
                             return reject("Failed to process message: masterKey not loaded")
                         }
-                        const dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
+                        dkey = await getMessageDecryptionKey(msg.senderKeyId, msg.recipientKeyId, msg.senderID, this.masterKey);
                         // handle text messages
                         if (msg.type == "text") {
                             decryptMsg(JSON.parse(msg.payload), dkey).then(async (message) => {
@@ -320,18 +321,18 @@ class ChatService extends EventTarget {
                             })
                         } else {
                             // handle file messages
+                            // TODO: avoid code duplication with group message handler
+                            // TODO: implement new render pipeline
                             const assetId = JSON.parse(msg.payload).assetId;
 
-                            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
-
-                            const decryptedFile: File = await decryptFile(response.data, dkey, msg.type);
-                            const bUrl: string = URL.createObjectURL(decryptedFile);
                             decrypted.push({
                                 chatID: msg.chatID,
                                 date: new Date(msg.date),
-                                message: bUrl,
+                                message: undefined,
+                                toLoad: assetId,
                                 senderID: msg.senderID,
                                 type: msg.type,
+                                dKey: dkey,
                                 senderName: await getUsernameById(msg.senderID)
                             })
                             resolve();
@@ -361,6 +362,10 @@ class ChatService extends EventTarget {
 
     // init function to set masterKey and privKey, also initializes socket connection and event listeners
     init = (masterKey: CryptoKey, privKey: CryptoKey) => {
+        if (this.initialized == true) {
+            console.warn("ChatService already initialized, skipping init");
+            return;
+        }
         console.log("Chatservice init: ", masterKey)
         this.masterKey = masterKey;
         this.privKey = privKey;
@@ -377,6 +382,8 @@ class ChatService extends EventTarget {
             .catch((err) => {
                 console.error("Failed to get socket: ", err);
             });
+
+        this.initialized = true;
     }
 }
 

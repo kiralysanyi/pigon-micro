@@ -1,17 +1,18 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
 import ChatService from "../services/chatservice";
-import type { Message } from "../types/Message";
 import type { userdata } from "../types/userdata";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import getUserInfo from "../lib/auth/getUserInfo";
+import useMessageRenderer from "../hooks/useMessageRenderer";
+
 
 const ChatPage = () => {
     const params = useParams();
     const [message, setMessage] = useState("");
-    const [loading, setLoading] = useState(true);
+    const [chatProvider, setChatProvider] = useState<ChatService>();
 
-    const [messages, setMessages] = useState<Message[]>([]);
+    const { messages, setMessages, loading } = useMessageRenderer(chatProvider, parseInt(params.id as string));
     const [userInfo, setUserInfo] = useState<userdata>();
 
     // load userinfo
@@ -38,26 +39,12 @@ const ChatPage = () => {
             return;
         }
 
-        setLoading(true);
-        setMessages([]);
 
         console.log("Loading chat service for chat: ", params.id)
         const chatProvider = new ChatService();
         chatProvider.init(krp.masterKey, krp.privKey);
-        console.log("Chat service loaded")
-        chatProvider.addEventListener("message", (e) => {
-            const { chatID, message, senderID, senderName, type } = e.detail;
-
-            // message not related to this chat so we simply ignore it
-            if (chatID.toString() != params.id) {
-                return;
-            }
-
-
-            // message related to this chat
-            console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type }]);
-        })
+        console.log("Chat service loaded");
+        setChatProvider(chatProvider)
 
         console.log(chatProvider.sendMessage)
 
@@ -83,13 +70,7 @@ const ChatPage = () => {
 
         // get message history
 
-        chatProvider.getMessageHistory(parseInt(params.id as string)).then((pastMessages) => {
-            console.log("Got decrypted message history: ", pastMessages)
-            setMessages(pastMessages)
-            setLoading(false);
-        }).catch((err) => {
-            console.error("Failed to get message history: ", err)
-        })
+
 
 
         // TODO: move key rotation to a different place in the code
@@ -128,9 +109,11 @@ const ChatPage = () => {
         <div className="message-display">
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"}`}>
                 <span className="sname">{msg.senderName}</span>
-                {msg.type == "text" && <span className="msg">{msg.message}</span>}
-                {msg.type == "image" && <img src={msg.message}></img>}
-                {msg.type == "video" && <video src={msg.message} controls></video>}
+                {msg.message ? <>
+                    {msg.type == "text" && <span className="msg">{msg.message}</span>}
+                    {msg.type == "image" && <img src={msg.message}></img>}
+                    {msg.type == "video" && <video src={msg.message} controls></video>}
+                </> : <div className="spinner"></div>}
                 <span className="mdate">{msg.date.getHours()}:{msg.date.getMinutes()}</span>
             </div>)}
         </div>
