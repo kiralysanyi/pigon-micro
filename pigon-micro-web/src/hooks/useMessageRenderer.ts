@@ -4,6 +4,17 @@ import type { Message } from "../types/Message";
 import api from "../services/apiservice";
 import { decryptFile } from "../lib/encryption/ecdh";
 
+// TODO: move file fetching and decryption logic to a separate hook or utility function, this will make the code cleaner and more reusable
+// helper function to fetch and decrypt file, returns a blob url
+const getDecryptedFile = async (toLoad: string, type: string, dKey: CryptoKey): Promise<string> => {
+    const response = await api.get(`/cdn/${toLoad}`, { responseType: "arraybuffer" });
+
+    const decryptedFile: File = await decryptFile(response.data, dKey, type);
+    const bUrl: string = URL.createObjectURL(decryptedFile);
+
+    return bUrl;
+}
+
 const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
@@ -29,10 +40,7 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
             setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type, toLoad }]);
 
             if (toLoad && dKey) {
-                const response = await api.get(`/cdn/${toLoad}`, { responseType: "arraybuffer" });
-
-                const decryptedFile: File = await decryptFile(response.data, dKey, type);
-                const bUrl: string = URL.createObjectURL(decryptedFile);
+                const bUrl = await getDecryptedFile(toLoad, type, dKey);
                 setMessages(prev => prev.map(msg => {
                     if (msg.toLoad == toLoad) {
                         return { ...msg, message: bUrl, dKey: undefined, toLoad: undefined }
@@ -50,10 +58,7 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
             // dynamically load files for messages with toLoad field
             pastMessages.forEach(async (msg, i) => {
                 if (msg.toLoad && msg.dKey) {
-                    const response = await api.get(`/cdn/${msg.toLoad}`, { responseType: "arraybuffer" });
-
-                    const decryptedFile: File = await decryptFile(response.data, msg.dKey, msg.type);
-                    const bUrl: string = URL.createObjectURL(decryptedFile);
+                    const bUrl = await getDecryptedFile(msg.toLoad, msg.type, msg.dKey);
                     pastMessages[i].message = bUrl;
                     pastMessages[i].dKey = undefined; // free memory
                     pastMessages[i].toLoad = undefined; // free memory
