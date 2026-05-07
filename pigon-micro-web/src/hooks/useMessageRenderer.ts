@@ -15,8 +15,8 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
         setLoading(true);
         setMessages([]);
 
-        chatProvider.addEventListener("message", (e) => {
-            const { chatID, message, senderID, senderName, type } = e.detail;
+        chatProvider.addEventListener("message", async (e) => {
+            const { chatID, message, senderID, senderName, type, toLoad, dKey } = e.detail;
 
             // message not related to this chat so we simply ignore it
             if (chatID != cID) {
@@ -26,7 +26,20 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type, toLoad }]);
+
+            if (toLoad && dKey) {
+                const response = await api.get(`/cdn/${toLoad}`, { responseType: "arraybuffer" });
+
+                const decryptedFile: File = await decryptFile(response.data, dKey, type);
+                const bUrl: string = URL.createObjectURL(decryptedFile);
+                setMessages(prev => prev.map(msg => {
+                    if (msg.toLoad == toLoad) {
+                        return { ...msg, message: bUrl, dKey: undefined, toLoad: undefined }
+                    }
+                    return msg;
+                }));
+            }
         })
 
         // get message history

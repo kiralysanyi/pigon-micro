@@ -11,7 +11,7 @@ import api from "./apiservice";
 import sendFile from "../lib/chat/sendFile";
 
 interface ChatServiceEventMap {
-    "message": CustomEvent<{ message: string; chatID: number; senderID: number, senderName: string, type: "text" | "image" | "video" | "file" }>;
+    "message": CustomEvent<Message>;
 }
 
 class ChatService extends EventTarget {
@@ -88,13 +88,10 @@ class ChatService extends EventTarget {
             // handle file messages
             const assetId = JSON.parse(payload).assetId;
 
-            const response = await api.get(`/cdn/${assetId}`, { responseType: "arraybuffer" });
-
-            const decryptedFile: File = await decryptFile(response.data, dKey, type);
-            const bUrl: string = URL.createObjectURL(decryptedFile);
+            
 
             this.dispatchEvent(new CustomEvent("message", {
-                detail: { message: bUrl, chatID, senderId, senderName: await getUsernameById(senderId), type: type }
+                detail: { message: undefined, chatID, senderId, senderName: await getUsernameById(senderId), type: type, toLoad: assetId, dKey: dKey }
             }))
         }
     }
