@@ -54,7 +54,7 @@ async function importECDHPublicKeyFromBase64(b64: string): Promise<CryptoKey> {
             name: "ECDH",
             namedCurve: "P-256"
         },
-        true,
+        false,
         []
     );
 }
@@ -66,9 +66,9 @@ async function importECDHPrivateKeyFromBase64(b64: string): Promise<CryptoKey> {
         pkcs8,
         {
             name: "ECDH",
-            namedCurve: "P-256"
+            namedCurve: "P-256",
         },
-        true,
+        false,
         ["deriveKey"]
     );
 }

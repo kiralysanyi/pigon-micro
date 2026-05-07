@@ -63,7 +63,7 @@ async function ecdhDecryptKey(keyToDecrypt: string, key: CryptoKey): Promise<Cry
         "raw",           // was "pkcs8" — matches exportKey("raw") in ecdhEncryptKey
         decrypted,
         { name: "AES-GCM", length: 256 },  // was ECDH — the stored key is an AES key
-        true,
+        false,
         ["encrypt", "decrypt"]
     );
 }
@@ -148,7 +148,7 @@ async function generateECDHKeyPair() {
             name: "ECDH",
             namedCurve: "P-256"
         },
-        true, // extractable
+        true, // extractable, only because we need to export it at account creation
         ["deriveKey"]
     );
 }
@@ -165,7 +165,7 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey) {
             name: "AES-GCM",
             length: 256
         },
-        true,
+        false,
         ["encrypt", "decrypt"]
     );
 }
