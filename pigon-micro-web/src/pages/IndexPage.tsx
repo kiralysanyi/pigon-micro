@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
@@ -9,6 +9,7 @@ import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import api from "../services/apiservice";
 import getUserInfo from "../lib/auth/getUserInfo";
+import { KeyRingContext } from "../services/KeyRingProvider";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -20,6 +21,7 @@ const IndexPage = () => {
     const params = useParams();
     const [connected, setConnected] = useState(false);
     const [hideSidebar, setHideSidebar] = useState(true);
+    const krp = useContext(KeyRingContext)
 
     const updateChatList = async () => {
         api.get(BASEURL + "/chat").then((response) => {
@@ -99,23 +101,32 @@ const IndexPage = () => {
         <div className="header">
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
-                <Cog6ToothIcon className={`${hideSidebar? "mobilehidden": ""} icon`} width={24} height={24} onClick={() => navigate("/account", {viewTransition: true})} style={{ cursor: "pointer" }} />
-                <span className={hideSidebar? "mobilehidden": ""}>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className={`${hideSidebar? "mobilehidden": ""} icon`} width={24} height={24} onClick={() => { logout().then(() => { navigate("/login", {viewTransition: true}) }) }} />
+                <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
+                <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
+                <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
+                    // TODO: move this to a hook
+                    logout().then(() => {
+                        // Clear keys then navigate to login
+                        krp?.setMasterKey(undefined);
+                        krp?.setPrivKey(undefined);
+                        krp?.setPubKey(undefined);
+                        navigate("/login", { viewTransition: true })
+                    })
+                }} />
             </div>
-            <div className={`chat-header ${hideSidebar? "": "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, {viewTransition: true})}>
+            <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
                 <span>Chat: {chatName}</span>
             </div>
         </div>
-        <div className={`sidebar ${hideSidebar ? "sidebar-hidden": ""}`}>
+        <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
             <div className="chatlist">
-                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => {navigate("/chat/" + chat.chatID, {viewTransition: true}); setHideSidebar(true)}}>
-                    {chat.type == "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.filter((p: any) => p.id != userdata.ID)[0].id}`}/>}
+                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                    {chat.type == "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.filter((p: any) => p.id != userdata.ID)[0].id}`} />}
                     <span>{chat.name}</span>
                 </div>)}
             </div>
-            <div className="newchat" onClick={() => navigate("/newchat", {viewTransition: true})}>Start new chat</div>
+            <div className="newchat" onClick={() => navigate("/newchat", { viewTransition: true })}>Start new chat</div>
         </div>
         <div className="chat-main-container">
             <Outlet />
