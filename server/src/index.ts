@@ -16,6 +16,8 @@ attachSocketio(server);
 // attach routers
 app.use("/api/v1", apiRouter);
 
+// TODO: add webui host
+
 // listen
 server.listen(serverConfig.PORT);
 console.log("Listening on port: ", serverConfig.PORT)
