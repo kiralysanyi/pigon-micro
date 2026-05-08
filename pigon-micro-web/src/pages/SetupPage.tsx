@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { generateECDHKeyPair } from "../lib/encryption/ecdh";
 import { exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../lib/encryption/utils";
-import { BASEURL } from "../conf";
 import getAccessToken from "../lib/auth/getAccessToken";
 import { useNavigate } from "react-router";
 import { generateMasterKey, masterEncrypt } from "../lib/encryption/masterkey";
@@ -62,12 +61,12 @@ const SetupPage = () => {
                 const encryptedPKey = await masterEncrypt(priv, masterKey)
                 setStatusText("Uploading keys")
                 // send ecdh public key
-                api.post(BASEURL + "/keyring/pubkey",
+                api.post("/keyring/pubkey",
                     { pubKey: pub }
                 ).then(async (response) => {
                     if (response.status == 201) {
                         // send ecdh private key
-                        api.post(BASEURL + "/keyring/privkey", { encryptedPrivKey: encryptedPKey }).then((response) => {
+                        api.post("/keyring/privkey", { encryptedPrivKey: encryptedPKey }).then((response) => {
                             if (response.status == 201) {
                                 setStatusText("Setting up initial chat keys")
                                 // set up first shared chat keypair (ecdh)

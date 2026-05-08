@@ -1,6 +1,5 @@
 import { useContext, useEffect, useState } from "react";
 import type { chatinfo } from "../types/chatinfo";
-import { BASEURL } from "../conf";
 import { useNavigate, useParams } from "react-router";
 import getChatName from "../lib/chat/getChatName";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
@@ -33,7 +32,7 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        api.post(BASEURL + `/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
+        api.post(`/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
             console.log("User added, adding key");
             // add key for target user
             // group chat key

@@ -24,7 +24,7 @@ const IndexPage = () => {
     const krp = useContext(KeyRingContext)
 
     const updateChatList = async () => {
-        api.get(BASEURL + "/chat").then((response) => {
+        api.get("/chat").then((response) => {
             setChats(response.data.chats);
             console.log(response.data)
         }).catch((err) => {
