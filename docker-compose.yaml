@@ -1,0 +1,35 @@
+name: vchat
+
+services:
+  server:
+    container_name: pigon-micro
+    image: ghcr.io/kiralysanyi/pigon-micro:testing
+    restart: unless-stopped
+    healthcheck:
+      disable: false
+    environment:
+      - PORT=8080
+      - DB_DATABASE=pigon
+      - DB_USER=pigon
+      - DB_PASS=pigon
+      - DB_HOST=db
+      - REGISTER_ENABLED=true
+      - USERFILES=/data
+    volumes:
+      - ./data:/data
+    ports:
+      - "8080:8080"
+
+  db:
+    container_name: db
+    image: mariadb:lts
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=pigon
+      - MYSQL_DATABASE=pigon
+      - MYSQL_USER=pigon
+      - MYSQL_PASSWORD=pigon
+    volumes:
+      - pigon_db_data:/var/lib/mysql
+      - ./pigonmicro.sql:/docker-entrypoint-initdb.d/init.sql # DO NOT CHANGE THIS, AND INCLUDE THE SQL FILE IN THE ROOT OF THE PROJECT
+      
