@@ -8,7 +8,7 @@
   "main": "index.js",
   "scripts": {
     "start": "ts-node src/index.ts",
-    "start-build": "node dist/index.js",
+    "start-prod": "node index.js",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

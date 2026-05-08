@@ -4,6 +4,7 @@ import attachSocketio from "./socketio";
 import serverConfig from "./config";
 import { apiRouter } from "./routes/router";
 import cors from "cors"
+import webuiHost from "./webuihost/webuiHost";
 
 const app = express();
 
@@ -16,7 +17,8 @@ attachSocketio(server);
 // attach routers
 app.use("/api/v1", apiRouter);
 
-// TODO: add webui host
+// host webui if available
+webuiHost(app);
 
 // listen
 server.listen(serverConfig.PORT);
