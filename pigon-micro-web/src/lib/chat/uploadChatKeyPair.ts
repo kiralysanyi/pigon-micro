@@ -1,7 +1,6 @@
 import { generateECDHKeyPair } from "../encryption/ecdh"
 import { masterEncrypt } from "../encryption/masterkey";
 import { exportPrivateKeyToBase64, exportPublicKeyToBase64 } from "../encryption/utils";
-import { BASEURL } from "../../conf";
 import api from "../../services/apiservice";
 
 /**
@@ -16,7 +15,7 @@ const uploadChatKeyPair = async (masterKey: CryptoKey): Promise<CryptoKeyPair> =
 
     const encryptedPrivKey = await masterEncrypt(privKey, masterKey);
 
-    await api.post(BASEURL + "/keyring/chatkeys/self", { pubKey, encryptedPrivKey });
+    await api.post("/keyring/chatkeys/self", { pubKey, encryptedPrivKey });
 
     return keypair;
 }
