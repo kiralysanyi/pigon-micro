@@ -11,7 +11,8 @@ const getSocket = (): Promise<Socket> => {
             resolve(socket);
         } else {
             getAccessToken().then(async (token: string) => {
-                socket = io(new URL(BASEURL).hostname + `${new URL(BASEURL).port ? `:${new URL(BASEURL).port}` : ''}`, { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
+                const urlObj = new URL(BASEURL);
+                socket = io(urlObj.protocol + "//" + urlObj.hostname + `${urlObj.port ? `:${urlObj.port}` : ''}`, { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
                 socket.on("connect_error", (err) => {
                     console.error(err);
                 });
