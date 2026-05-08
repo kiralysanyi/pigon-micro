@@ -10,4 +10,4 @@ RUN npm install --production
 
 COPY . .
 
-CMD ["node", "main.js"]
+CMD ["node", "index.js"]
