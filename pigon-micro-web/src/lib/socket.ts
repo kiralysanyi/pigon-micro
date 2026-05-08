@@ -26,7 +26,8 @@ const getSocket = (): Promise<Socket> => {
                 })
 
                 resolve(socket)
-            }).catch(() => {
+            }).catch((error) => {
+                console.error("Socket initialization failed: ", error)
                 reject("Failed to initialize socket connection, probabbly no token")
             })
         }
