@@ -10,6 +10,9 @@ import uploadChatKeyPair from "../lib/chat/uploadChatKeyPair";
 import api from "./apiservice";
 import sendFile from "../lib/chat/sendFile";
 
+// TODO: refactor, separate functions into smaller parts, add better error handling, add more comments, clean up code,
+// TODO: implement new render pipeline for file messages to avoid code duplication, optimize key retrieval for message history (currently retrieves key for each message, can be optimized by caching keys or retrieving all necessary keys at once)
+
 interface ChatServiceEventMap {
     "message": CustomEvent<Message>;
 }
