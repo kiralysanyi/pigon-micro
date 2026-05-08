@@ -12,8 +12,11 @@ api.interceptors.response.use((res) => res, (error) => {
     let res = error.response;
     if (res) {
         if (res.status == 401) {
-            location.replace("/login");
-            return res;
+            const path = window.location.pathname;
+            if (path !== "/login" && path !== "/unlock" && path !== "/setup") {
+                location.replace("/login");
+            }
+            return Promise.reject(error);
         }
     }
 
