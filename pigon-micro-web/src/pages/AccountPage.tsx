@@ -15,7 +15,7 @@ const AccountPage = () => {
         getUserInfo().then((info) => {
             setUserInfo(info)
         })
-    })
+    }, [])
 
     return <>
         <div className="modal">
