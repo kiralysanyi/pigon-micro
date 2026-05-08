@@ -1,4 +1,4 @@
-name: vchat
+name: pigon-micro
 
 services:
   server:
