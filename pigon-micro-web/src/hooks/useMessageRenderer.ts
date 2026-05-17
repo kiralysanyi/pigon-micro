@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type ChatService from "../services/chatservice";
+import type ChatService from "../services/chatservice/chatservice";
 import type { Message } from "../types/Message";
 import api from "../services/apiservice";
 import { decryptFile } from "../lib/encryption/ecdh";

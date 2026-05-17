@@ -1,6 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router";
-import ChatService from "../services/chatservice";
+import ChatService from "../services/chatservice/chatservice";
 import type { userdata } from "../types/userdata";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import getUserInfo from "../lib/auth/getUserInfo";
