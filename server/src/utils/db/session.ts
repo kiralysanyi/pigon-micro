@@ -1,9 +1,9 @@
 import { randomUUID } from "node:crypto"
-import md5 from "../md5"
 import { exists, pool } from "./db"
 import { RowDataPacket } from "mysql2"
 import serverConfig from "../../config"
 import { userdata } from "../../types/userdata"
+import sha256 from "../sha256"
 
 const createSession = (userID: number, tokenHash: string, refreshTokenHash: string, tokenExpire: Date, refreshTokenExpire: Date): Promise<boolean> => {
     return new Promise((resolve, reject) => {
@@ -20,9 +20,9 @@ const createSession = (userID: number, tokenHash: string, refreshTokenHash: stri
 
 const getNewToken = (refreshToken: string): Promise<{ token: string, tokenExpire: Date }> => {
     return new Promise(async (resolve, reject) => {
-        const hashed = md5(refreshToken);
+        const hashed = sha256(refreshToken);
         const newToken = randomUUID();
-        const newTokenHash = md5(newToken)
+        const newTokenHash = sha256(newToken);
 
         const recordExists = await exists("session", "refreshTokenHash", hashed);
         if (!recordExists) {
@@ -63,9 +63,9 @@ const getNewToken = (refreshToken: string): Promise<{ token: string, tokenExpire
 
 const getNewRefreshToken = (refreshToken: string): Promise<{ refreshToken: string, refreshTokenExpire: Date }> => {
     return new Promise(async (resolve, reject) => {
-        const hashed = md5(refreshToken);
+        const hashed = sha256(refreshToken);
         const newToken = randomUUID();
-        const newTokenHash = md5(newToken);
+        const newTokenHash = sha256(newToken);
 
         const recordExists = await exists("session", "refreshTokenHash", hashed);
         if (!recordExists) {
@@ -104,7 +104,7 @@ const getNewRefreshToken = (refreshToken: string): Promise<{ refreshToken: strin
 
 const verifyAccessToken = (token: string): Promise<userdata> => {
     return new Promise((resolve, reject) => {
-        const hashed = md5(token);
+        const hashed = sha256(token);
 
         pool.query<RowDataPacket[]>("SELECT userID, tokenExpire FROM session WHERE tokenHash = ?", [hashed], (err, result) => {
             if (err) {

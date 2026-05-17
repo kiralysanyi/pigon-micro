@@ -3,9 +3,9 @@ import { hashPass, verifyPass } from "../password";
 import { exists, pool } from "./db";
 import { userdata } from "../../types/userdata";
 import { randomUUID } from "node:crypto";
-import md5 from "../md5";
 import { createSession } from "./session";
 import { userdataBrief } from "../../types/userdataBrief";
+import sha256 from "../sha256";
 
 const createUser = (username: string, password: string): Promise<boolean> => {
     return new Promise(async (resolve, reject) => {
@@ -48,9 +48,9 @@ const loginUser = (username: string, password: string): Promise<{ token: string,
             verifyPass(password, userData.password).then((success) => {
                 if (success == true) {
                     const token = randomUUID();
-                    const tokenHash = md5(token);
+                    const tokenHash = sha256(token);
                     const refreshToken = randomUUID();
-                    const refreshTokenHash = md5(refreshToken);
+                    const refreshTokenHash = sha256(refreshToken);
 
                     console.log(tokenHash);
                     // save token hash

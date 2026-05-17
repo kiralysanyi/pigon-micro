@@ -1,11 +1,11 @@
 import { RequestHandler } from "express";
-import md5 from "../../utils/md5";
 import { pool } from "../../utils/db/db";
+import sha256 from "../../utils/sha256";
 
 const logout: RequestHandler = (req, res) => {
     const token = req.headers.authorization.split(' ')[1] as string;
 
-    const hashed = md5(token);
+    const hashed = sha256(token);
 
     pool.query("DELETE FROM session WHERE tokenHash = ? ", [hashed], (err) => {
         if (err) {

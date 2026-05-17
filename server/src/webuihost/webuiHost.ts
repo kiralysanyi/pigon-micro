@@ -6,7 +6,6 @@ const webuiHost = (app: Application) => {
         console.log("Hosting client")
         app.use(express.static("./public"))
         
-        // Csak nem-API kérésekre küldd vissza az index.html-t
         app.use((req, res, next) => {
             if (req.path.startsWith("/api/") || req.path.startsWith("/socket")) {
                 return next();
