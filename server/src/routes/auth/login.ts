@@ -2,6 +2,7 @@ import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import { loginUser } from "../../utils/db/user";
 
+// TODO: add rate limiter to prevent brute force attacks, e.g. express-rate-limit
 const loginHandler: RequestHandler = (req, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
