@@ -33,6 +33,7 @@ const historyHandler = (cs: ChatService, chatID: number): Promise<Message[]> => 
                 })
             }
 
+            // helper function for pushing file messages to decrypted array
             const pushFileMessage = async (msg: EncryptedMessage) => {
                 if (dkey == undefined) {
                     console.error("dKey is undefined")
