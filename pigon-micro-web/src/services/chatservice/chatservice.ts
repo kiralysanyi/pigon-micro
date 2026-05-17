@@ -5,10 +5,12 @@ import uploadChatKeyPair from "../../lib/chat/uploadChatKeyPair";
 import historyHandler from "./historyHandler";
 import { handleMessageEvent, sendFileMessage, sendMessage } from "./messageHelper";
 
+// event map for chatservice, used for typing event listeners
 interface ChatServiceEventMap {
     "message": CustomEvent<Message>;
 }
 
+// ChatService is responsible for handling all chat related functionality, including sending and receiving messages, key management, and message history retrieval.
 class ChatService extends EventTarget {
     addEventListener<K extends keyof ChatServiceEventMap>(
         type: K,
