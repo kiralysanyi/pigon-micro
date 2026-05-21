@@ -32,23 +32,24 @@ const postGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
         })
     }
 
-    // retire old keys
+    try {
+        // retire old keys
+        await pool.promise().query("UPDATE group_keys SET status = 'retired' WHERE chatId = ? AND status = 'active' AND userId = ?", [chatID, targetUserId]);
 
-    await pool.promise().query("UPDATE group_keys SET status = 'retired' WHERE chatId = ? AND status = 'active' AND userId = ?", [chatID, targetUserId]);
+        // insert new key
+        await pool.promise().query("INSERT INTO group_keys (kGuid, userId, creatorId, chatId, encryptedKey) VALUES (?,?,?,?,?)", [kGuid, targetUserId, req.userinfo.ID, chatID, encryptedKey])
 
-    // insert new key
-    pool.query("INSERT INTO group_keys (kGuid, userId, creatorId, chatId, encryptedKey) VALUES (?,?,?,?,?)", [kGuid, targetUserId, req.userinfo.ID, chatID, encryptedKey], (err) => {
-        if (err) {
-            console.error(err)
-            return res.status(500).json({
-                message: "Internal server error"
-            })
-        }
 
         return res.status(201).json({
             message: "Key added successfully"
         })
-    })
+    } catch (err) {
+        console.error(err)
+        return res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+
 }
 
 export default postGroupKey;
