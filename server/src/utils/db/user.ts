@@ -51,7 +51,7 @@ const loginUser = async (username: string, password: string): Promise<{ token: s
             tokenExpire.setMinutes(tokenExpire.getMinutes() + 5);
             refreshTokenExpire.setHours(refreshTokenExpire.getHours() + 128);
 
-            createSession(userData.ID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire)
+            await createSession(userData.ID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire)
 
             return {
                 token: token,

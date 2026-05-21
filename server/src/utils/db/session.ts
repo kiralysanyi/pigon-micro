@@ -77,6 +77,7 @@ const getNewRefreshToken = async (refreshToken: string): Promise<{ refreshToken:
     }
 }
 
+// TODO: use one joined query or smth
 const verifyAccessToken = async (token: string): Promise<userdata> => {
     try {
         const hashed = sha256(token);
