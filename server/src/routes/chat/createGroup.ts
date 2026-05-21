@@ -4,7 +4,7 @@ import { pool } from "../../utils/db/db";
 import { validationResult } from "express-validator";
 
 // create the group, and then add the creator to the group. key creation/submission should be handled client side.
-const createGroup: RequestHandler = (req: reqWithUserinfo, res) => {
+const createGroup: RequestHandler = async (req: reqWithUserinfo, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
         return res.status(400).json({
@@ -12,34 +12,26 @@ const createGroup: RequestHandler = (req: reqWithUserinfo, res) => {
             validation: result.mapped()
         })
     }
-    
+
     const creatorID = req.userinfo.ID;
-    pool.query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName], (err, result) => {
-        if (err) {
-            console.error("Group create: ", err)
-            return res.status(500).json({
-                message: "Internal server error"
-            })
-        }
-
-        // attach creator to chat
+    try {
+        const [result] = await pool.promise().query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName])
         const chatID = result[0].ID
+        await pool.promise().query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, creatorID]);
 
-        pool.query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, creatorID], (err, result) => {
-            if (err) {
-                console.error("Group create: ", err)
-                return res.status(500).json({
-                    message: "Internal server error"
-                })
-            }
-
-            return res.status(201).json({
-                success: true,
-                message: "Group created with id: " + chatID,
-                chatID
-            })
+        return res.status(201).json({
+            success: true,
+            message: "Group created with id: " + chatID,
+            chatID
         })
-    })
+    } catch (error) {
+        console.error("Group create: ", error)
+        return res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+
+
 }
 
 export default createGroup;

@@ -6,9 +6,9 @@ import multer from "multer";
 
 const upload = pfpUpload.single("image");
 
-const postPfp: RequestHandler = (req: reqWithUserinfo, res) => {
+const postPfp: RequestHandler = async (req: reqWithUserinfo, res) => {
     // upload handler
-    upload(req, res, (err) => {
+    upload(req, res, async (err) => {
         // error handling
         if (err instanceof multer.MulterError) {
             // A Multer error occurred when uploading (e.g., file too large)
@@ -25,26 +25,16 @@ const postPfp: RequestHandler = (req: reqWithUserinfo, res) => {
         }
 
         // save to db, return
-
-        pool.query("DELETE FROM profile_picture WHERE userId = ?", [req.userinfo.ID], (err) => {
-            if (err) {
-                console.error("Failed to index pfp: ", err);
-                return res.status(500).json(
-                    { message: "Internal server error" }
-                )
-            }
-
-            pool.query("INSERT INTO profile_picture (userId, filename) VALUES (?,?)", [req.userinfo.ID, req.file.filename], (err) => {
-                if (err) {
-                    console.error("Failed to index pfp: ", err);
-                    return res.status(500).json(
-                        { message: "Internal server error" }
-                    )
-                }
-
-                return res.json({ message: "Uploaded pfp" });
-            })
-        })
+        try {
+            await pool.promise().query("DELETE FROM profile_picture WHERE userId = ?", [req.userinfo.ID]);
+            await pool.promise().query("INSERT INTO profile_picture (userId, filename) VALUES (?,?)", [req.userinfo.ID, req.file.filename]);
+            return res.json({ message: "Uploaded pfp" });
+        } catch (error) {
+            console.error("Failed to index pfp: ", error);
+            return res.status(500).json(
+                { message: "Internal server error" }
+            )
+        }
     })
 
 

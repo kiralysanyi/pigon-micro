@@ -38,15 +38,10 @@ const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
         })
     }
 
-    pool.query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, userToAdd], (err) => {
-        if (err) {
-            console.error("Useradd error: ", err)
-            return res.status(500).json({
-                message: "Internal server error"
-            })
-        }
+    try {
 
         try {
+            await pool.promise().query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, userToAdd])
             const io = getSocketIOServer();
             io.to("usr" + userToAdd).emit("newchat")
         } catch (error) {
@@ -56,7 +51,13 @@ const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
         res.status(201).json({
             message: "User added, please add a key for this user too."
         })
-    })
+    } catch (error) {
+        console.error("Useradd error: ", error);
+        return res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+
 }
 
 export default addChatUser;
