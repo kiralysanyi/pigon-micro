@@ -14,22 +14,17 @@ const pool = createPool({
     timezone: "Z"
 })
 
-const exists = (table: string, column: string, value: string | number): Promise<boolean> => {
-    return new Promise((resolve, reject) => {
-        pool.query<RowDataPacket[]>(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value], (err, result) => {
-            if (err) {
-                console.error("SQL error: ", err)
-                return reject(err);
-            }
-
-            console.log(result);
-            if (result.length > 0) {
-                resolve(true)
-            } else {
-                resolve(false)
-            }
-        })
-    })
+const exists = async (table: string, column: string, value: string | number): Promise<boolean> => {
+    try {
+        const [result] = await pool.promise().query<RowDataPacket[]>(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value]);
+        if (result.length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    } catch (error) {
+        throw error;
+    }
 }
 
 export { pool, exists };
