@@ -2,7 +2,6 @@ import { RequestHandler } from "express";
 import { validationResult } from "express-validator";
 import { createUser } from "../../utils/db/user";
 
-// TODO: add rate limiter to prevent abuse, e.g. express-rate-limit
 const registerHandler: RequestHandler = (req, res) => {
     const result = validationResult(req);
     if (!result.isEmpty()) {
