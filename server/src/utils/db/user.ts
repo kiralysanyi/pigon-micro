@@ -3,109 +3,93 @@ import { hashPass, verifyPass } from "../password";
 import { exists, pool } from "./db";
 import { userdata } from "../../types/userdata";
 import { randomUUID } from "node:crypto";
-import md5 from "../md5";
 import { createSession } from "./session";
 import { userdataBrief } from "../../types/userdataBrief";
+import sha256 from "../sha256";
 
-const createUser = (username: string, password: string): Promise<boolean> => {
-    return new Promise(async (resolve, reject) => {
-        const userExists = await exists("users", "username", username);
+const createUser = async (username: string, password: string): Promise<boolean> => {
+    const userExists = await exists("users", "username", username);
 
-        if (userExists) {
-            return resolve(false)
+    if (userExists) {
+        return false;
+    }
+
+    try {
+        const passwordHash = await hashPass(password);
+        await pool.promise().query("INSERT INTO users (username, password) VALUES (?,?)", [username, passwordHash])
+        return true;
+    } catch (error) {
+        throw error;
+    }
+}
+
+const loginUser = async (username: string, password: string): Promise<{ token: string, refreshToken: string, tokenExpire: Date, refreshTokenExpire: Date }> => {
+    try {
+        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM users WHERE username = ?", [username])
+
+        if (result.length == 0) {
+            console.log("User does not exist: ", username);
+            throw ("User does not exist");
         }
 
+        const userData: userdata = result[0] as userdata;
 
-        const passwordHash = await hashPass(password);
 
-        pool.query("INSERT INTO users (username, password) VALUES (?,?)", [username, passwordHash], (err) => {
-            if (err) {
-                console.error("SQL error: ", err)
-                return reject(err);
-            }
+        const success = await verifyPass(password, userData.password)
+        if (success == true) {
+            const token = randomUUID();
+            const tokenHash = sha256(token);
+            const refreshToken = randomUUID();
+            const refreshTokenHash = sha256(refreshToken);
 
-            resolve(true);
-        })
-    })
+            console.log(tokenHash);
+            // save token hash
+
+            const tokenExpire = new Date();
+            const refreshTokenExpire = new Date();
+
+            tokenExpire.setMinutes(tokenExpire.getMinutes() + 5);
+            refreshTokenExpire.setHours(refreshTokenExpire.getHours() + 128);
+
+            await createSession(userData.ID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire)
+
+            return {
+                token: token,
+                refreshToken: refreshToken,
+                tokenExpire: tokenExpire,
+                refreshTokenExpire: refreshTokenExpire
+            };
+        } else {
+            throw ("Wrong password")
+        }
+    } catch (error) {
+        throw error;
+    }
+
 }
 
-const loginUser = (username: string, password: string): Promise<{ token: string, refreshToken: string, tokenExpire: Date, refreshTokenExpire: Date }> => {
-    return new Promise((resolve, reject) => {
-        pool.query<RowDataPacket[]>("SELECT * FROM users WHERE username = ?", [username], (err, result) => {
-            if (err) {
-                console.error("SQL error: ", err);
-                return reject(err);
-            }
-
-            if (result.length == 0) {
-                console.log("User does not exist: ", username);
-                return reject("User does not exist");
-            }
-
-            const userData: userdata = result[0] as userdata;
-
-
-            verifyPass(password, userData.password).then((success) => {
-                if (success == true) {
-                    const token = randomUUID();
-                    const tokenHash = md5(token);
-                    const refreshToken = randomUUID();
-                    const refreshTokenHash = md5(refreshToken);
-
-                    console.log(tokenHash);
-                    // save token hash
-
-                    const tokenExpire = new Date();
-                    const refreshTokenExpire = new Date();
-
-                    tokenExpire.setMinutes(tokenExpire.getMinutes() + 5);
-                    refreshTokenExpire.setHours(refreshTokenExpire.getHours() + 128);
-
-                    createSession(userData.ID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire)
-
-                    resolve({
-                        token: token,
-                        refreshToken: refreshToken,
-                        tokenExpire: tokenExpire,
-                        refreshTokenExpire: refreshTokenExpire
-                    });
-                } else {
-                    return reject("Wrong password")
-                }
-            })
-        })
-    })
-}
-
-const listUsers = (search: string, limit: number = 50): Promise<userdataBrief[]> => {
-    return new Promise((resolve, reject) => {
-        pool.query<RowDataPacket[]>("SELECT id, username, created_at FROM users WHERE username LIKE ? LIMIT ?", [`%${search}%`, limit], (err, result) => {
-            if (err) {
-                console.error("Failed to list users: ", err)
-                return reject(err)
-            }
-
-            resolve(result as userdataBrief[])
-        })
-    })
+const listUsers = async (search: string, limit: number = 50): Promise<userdataBrief[]> => {
+    try {
+        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT id, username, created_at FROM users WHERE username LIKE ? LIMIT ?", [`%${search}%`, limit])
+        return result as userdataBrief[];
+    } catch (error) {
+        throw error;
+    }
 }
 
 // get user info
-const getUser = (userID: number): Promise<userdata | false> => {
-    return new Promise((resolve, reject) => {
-        pool.query<RowDataPacket[]>("SELECT ID, username, created_at, updated_at, pubKey FROM users WHERE ID = ?", [userID], (err, result) => {
-            if (err) {
-                console.error("Failed to get user info: ", err)
-                return reject(err);
-            }
+const getUser = async (userID: number): Promise<userdata | false> => {
+    try {
+        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT ID, username, created_at, updated_at, pubKey FROM users WHERE ID = ?", [userID])
 
-            if (result.length == 0) {
-                return resolve(false)
-            }
+        if (result.length == 0) {
+            return false;
+        }
 
-            resolve(result[0] as userdata)
-        })
-    })
+        return result[0] as userdata
+    } catch (error) {
+        throw error;
+    }
 }
 
 export { createUser, loginUser, listUsers, getUser };

@@ -49,14 +49,8 @@ const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
 
-
-    pool.query("DELETE FROM `user-chats` WHERE userId = ? AND chatId = ?", [userToRemove, chatID], (err) => {
-        if (err) {
-            console.error("Userremove error: ", err)
-            return res.status(500).json({
-                message: "Internal server error"
-            })
-        }
+    try {
+        await pool.promise().query("DELETE FROM `user-chats` WHERE userId = ? AND chatId = ?", [userToRemove, chatID]);
 
         try {
             const io = getSocketIOServer();
@@ -68,7 +62,13 @@ const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
         res.json({
             message: "Successfully deleted user from chat"
         })
-    })
+    } catch (err) {
+        console.error("Userremove error: ", err)
+        return res.status(500).json({
+            message: "Internal server error"
+        })
+    }
+
 }
 
 export default removeChatUser;

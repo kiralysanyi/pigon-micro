@@ -7,7 +7,6 @@ import {  RowDataPacket } from "mysql2";
 
 const getFile: RequestHandler = async (req: reqWithUserinfo, res) => {
     const assetId = req.params.assetId;
-    // TODO: verify access
     const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM chat_files WHERE uuid = ?", [assetId]);
 
     if (result.length == 0) {

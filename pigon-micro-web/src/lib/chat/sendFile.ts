@@ -36,7 +36,6 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
 
             console.log("Mimetype: ", type, file.type)
 
-            // TODO: send file to server
 
             const formData = new FormData();
             formData.append("file", packed);

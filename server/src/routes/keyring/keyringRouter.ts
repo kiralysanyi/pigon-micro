@@ -24,16 +24,12 @@ keyringRouter.post("/privkey", body("encryptedPrivKey").notEmpty().withMessage("
 keyringRouter.get("/privkey", getPrivKey);
 keyringRouter.get("/pubkey", getPubKey);
 
-// /chatkeys/self
-
-keyringRouter.get("/chatkeys/self", getChatKeys);
 
 // post /chatkeys/self
-
 keyringRouter.post("/chatkeys/self", body("pubKey").notEmpty().withMessage("pubKey field required"), body("encryptedPrivKey").notEmpty().withMessage("encryptedPrivKey field required"), postChatKeys)
 
+keyringRouter.get("/chatkeys/self", getChatKeys);
 keyringRouter.get("/chatkeys/key/:keyid", getChatKeys);
-
 keyringRouter.get("/chatkeys/user/:userid", getChatKeys);
 
 keyringRouter.get("/groupkeys/:chatID/:kGuid", getGroupKey);

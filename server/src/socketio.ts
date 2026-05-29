@@ -83,22 +83,19 @@ const attachSocketio = (server: Server) => {
             if (kGuid == undefined) {
                 // private message
 
-                pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId], (err) => {
-                    if (err) {
-                        console.error("Failed to save message", err);
-                        return;
-                    }
-                    // saved message send ack or something
-                });
+                try {
+                    await pool.promise().query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId]);
+                } catch (error) {
+                    console.error("Failed to save message", error);
+                }
             } else {
                 // group message
-                pool.query("INSERT INTO messages (chatID, senderID, type, message, kGuid) VALUES (?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, kGuid], (err) => {
-                    if (err) {
-                        console.error("Failed to save message", err);
-                        return;
-                    }
-                    // saved message send ack or something
-                });
+
+                try {
+                    await pool.promise().query("INSERT INTO messages (chatID, senderID, type, message, kGuid) VALUES (?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, kGuid]);
+                } catch (error) {
+                    console.error("Failed to save message", error);
+                }
             }
         })
     });

@@ -70,6 +70,10 @@ button {
   gap: 1rem;
 }
 
+.redbutton {
+  background-color: rgb(50, 0, 0);
+}
+
 button:hover {
   border-color: #646cff;
 }
@@ -151,6 +155,7 @@ button:focus-visible {
   align-items: center;
   padding-left: 1rem;
   padding-right: 1rem;
+  transition: 200ms;
 }
 
 .sidebar {
@@ -181,6 +186,7 @@ button:focus-visible {
   justify-content: center;
   gap: 1rem;
   border-radius: 999px;
+  transition: 200ms;
 }
 
 .user-display span {
@@ -300,17 +306,6 @@ button:focus-visible {
 
 /* Chat stuff */
 
-.send-message {
-  position: absolute;
-  bottom: 0px;
-  left: 0px;
-  width: 100%;
-  height: 3rem;
-  display: flex;
-  flex-direction: row;
-  backdrop-filter: blur(8px);
-}
-
 input {
   background-color: #202020c8;
   border: none;
@@ -320,15 +315,47 @@ input {
   transition: 200ms;
 }
 
-input:hover, input:focus {
+input:hover,
+input:focus {
   background-color: #3b3b3bc8;
+}
+
+.send-message {
+  box-sizing: border-box;
+  position: absolute;
+  bottom: 0.5rem;
+  left: 0.5rem;
+  width: calc(100% - 1rem);
+  height: 3rem;
+  display: flex;
+  flex-direction: row;
+  backdrop-filter: blur(8px);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  background-color: rgba(0, 0, 0, 0.346);
+  transition: 200ms;
+}
+
+.send-message:has(input[type="text"]:focus) {
+  background-color: rgb(28, 28, 28);
 }
 
 .send-message input[type="text"] {
   width: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: transparent;
   border: none;
   font-size: 1.5rem;
+}
+
+.send-message input[type="text"]:focus {
+  outline: 0;
+}
+
+.send-message button {
+  padding: 0.2rem;
+  margin-top: auto;
+  margin-bottom: auto;
 }
 
 .message-display {
@@ -415,6 +442,7 @@ input:hover, input:focus {
 .ap-pfp {
   width: 256px;
   height: 256px;
+  min-height: 256px;
   border-radius: 100%;
   margin-left: auto;
   margin-right: auto;

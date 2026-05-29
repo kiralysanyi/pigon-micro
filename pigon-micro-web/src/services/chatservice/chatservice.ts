@@ -1,0 +1,113 @@
+import type { Socket } from "socket.io-client";
+import { getSocket } from "../../lib/socket";
+import type { Message } from "../../types/Message";
+import uploadChatKeyPair from "../../lib/chat/uploadChatKeyPair";
+import historyHandler from "./historyHandler";
+import { handleMessageEvent, sendFileMessage, sendMessage } from "./messageHelper";
+
+// event map for chatservice, used for typing event listeners
+interface ChatServiceEventMap {
+    "message": CustomEvent<Message>;
+}
+
+// ChatService is responsible for handling all chat related functionality, including sending and receiving messages, key management, and message history retrieval.
+class ChatService extends EventTarget {
+    addEventListener<K extends keyof ChatServiceEventMap>(
+        type: K,
+        listener: (event: ChatServiceEventMap[K]) => void,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    addEventListener(
+        type: string,
+        listener: EventListenerOrEventListenerObject | null,
+        options?: boolean | AddEventListenerOptions
+    ): void;
+    addEventListener(type: string, listener: any, options?: any): void {
+        super.addEventListener(type, listener, options);
+    }
+
+    socket: Socket | undefined;
+    masterKey: CryptoKey | undefined;
+    privKey: CryptoKey | undefined;
+    initialized: boolean = false;
+
+    // handler for incoming messages
+
+    private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined, type: "text" | "image" | "video" | "file" }) => {
+        handleMessageEvent({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }, this);
+    }
+
+    // send message handler for private chats
+    sendMessage = async (message: string, chatID: number) => {
+        await sendMessage(message, chatID, this);
+    }
+
+    // send file handler, works for both group and private chats
+    sendFile = async (chatID: number): Promise<{ type: "image" | "video", url: string }> => {
+        return sendFileMessage(chatID, this);
+    }
+
+    // TODO: rip out key rotation from chatservice and make a separate service for auth related stuff like this.
+    // key rotation function, checks if keys need to be rotated and rotates if necessary (should be called every minute or so)
+    rotateKeys = () => {
+        const rotate = () => {
+            if (this.masterKey) {
+                console.log("Key rotating")
+                uploadChatKeyPair(this.masterKey);
+                const nrd = new Date();
+                nrd.setMinutes(nrd.getMinutes() + 10)
+                localStorage.setItem("nextRotate", nrd.toISOString())
+                return;
+            }
+        }
+
+        const nextRotate = localStorage.getItem("nextRotate");
+        if (nextRotate == null) {
+            rotate();
+        } else {
+            const nr = new Date(nextRotate);
+            if (nr < new Date()) {
+                rotate();
+            }
+        }
+
+    }
+
+    // unload function to remove event listeners when chat page is closed
+    unload = () => {
+        this.socket?.off("message", this.messageHandler)
+    }
+
+    // get messages from server and decrypt
+    getMessageHistory = (chatID: number): Promise<Message[]> => {
+        return historyHandler(this, chatID);
+    }
+
+    // init function to set masterKey and privKey, also initializes socket connection and event listeners
+    init = (masterKey: CryptoKey, privKey: CryptoKey) => {
+        if (this.initialized == true) {
+            console.warn("ChatService already initialized, skipping init");
+            return;
+        }
+        console.log("Chatservice init: ", masterKey)
+        this.masterKey = masterKey;
+        this.privKey = privKey;
+        getSocket()
+            .then((sock) => {
+                console.log("Got socket")
+                this.socket = sock;
+
+                // attach event listeners
+                sock.on("message", this.messageHandler)
+
+
+            })
+            .catch((err) => {
+                console.error("Failed to get socket: ", err);
+            });
+
+        this.initialized = true;
+    }
+}
+
+export default ChatService;

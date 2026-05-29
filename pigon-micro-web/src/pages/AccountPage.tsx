@@ -29,6 +29,8 @@ const AccountPage = () => {
             {userinfo && <>
                 <img className="ap-pfp" src={`${BASEURL}/auth/pfp/${userinfo.ID}`} alt="pfp" />
                 <button onClick={async () => {await uploadPfp(); location.reload();}}>Change Profile Picture</button>
+                {/* TODO: If endpoint implemented, implement usage here too */}
+                <button className="redbutton">Delete Account</button>
             </>}
         </div>
     </>

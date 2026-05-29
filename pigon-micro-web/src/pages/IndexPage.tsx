@@ -20,7 +20,7 @@ const IndexPage = () => {
     const navigate = useNavigate();
     const params = useParams();
     const [connected, setConnected] = useState(false);
-    const [hideSidebar, setHideSidebar] = useState(true);
+    const [hideSidebar, setHideSidebar] = useState(false);
     const krp = useContext(KeyRingContext)
 
     const updateChatList = async () => {
@@ -89,6 +89,7 @@ const IndexPage = () => {
 
     useEffect(() => {
         if (params.id) {
+            setHideSidebar(true);
             getChatName(parseInt(params.id)).then((cname) => {
                 setChatname(cname);
             }).catch(() => {
@@ -98,13 +99,12 @@ const IndexPage = () => {
     }, [params])
 
     return (userdata && connected == true) ? <>
-        <div className="header">
+        <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
                 <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
                 <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
-                    // TODO: move this to a hook
                     logout().then(() => {
                         // Clear keys then navigate to login
                         krp?.setMasterKey(undefined);
@@ -114,9 +114,9 @@ const IndexPage = () => {
                     })
                 }} />
             </div>
-            <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
+            {chatName && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
                 <span>Chat: {chatName}</span>
-            </div>
+            </div>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}

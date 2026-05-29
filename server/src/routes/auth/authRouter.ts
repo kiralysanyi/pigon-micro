@@ -10,8 +10,12 @@ import getUsers from "./getUsers";
 import logout from "./logout";
 import getPfp from "./getPfp";
 import postPfp from "./postPfp";
+import rateLimiter from "../../middlewares/rateLimiter";
 
 const authRouter = express.Router();
+
+authRouter.use("/register", rateLimiter);
+authRouter.use("/login", rateLimiter);
 
 authRouter.post("/register",
     body("username").notEmpty().trim().withMessage("Username field is required"),
@@ -23,6 +27,8 @@ authRouter.post("/login",
     body("username").notEmpty().trim().withMessage("Username field is required"),
     body("password").notEmpty().withMessage("Password field is required"),
     loginHandler)
+
+// TODO: implement delete account endpoint
 
 authRouter.get("/token", tokenHandler);
 authRouter.get("/refreshtoken", refreshTokenHandler);
