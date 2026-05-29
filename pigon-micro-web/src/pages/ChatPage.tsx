@@ -5,6 +5,7 @@ import type { userdata } from "../types/userdata";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import getUserInfo from "../lib/auth/getUserInfo";
 import useMessageRenderer from "../hooks/useMessageRenderer";
+import { PaperAirplaneIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 
 
 const ChatPage = () => {
@@ -128,8 +129,8 @@ const ChatPage = () => {
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
-            <button type="button" onClick={sendFileRef.current}>Send file</button>
-            <button onClick={sendMsg}>Send</button>
+            <button type="button" onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24}/></button>
+            <button onClick={sendMsg}><PaperAirplaneIcon width={24} height={24}/></button>
         </form>
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>

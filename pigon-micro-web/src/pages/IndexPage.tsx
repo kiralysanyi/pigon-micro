@@ -99,7 +99,7 @@ const IndexPage = () => {
     }, [params])
 
     return (userdata && connected == true) ? <>
-        <div className="header">
+        <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
                 <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
