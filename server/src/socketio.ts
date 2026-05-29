@@ -5,7 +5,6 @@ import { ExtendedSocket } from "./types/ExtendedSocket";
 import { checkUserInChat, getParticipants } from "./utils/db/chat";
 import { pool } from "./utils/db/db";
 let io: SocketIO.Server;
-// TODO: separate blocks to different files for better code readability and maintainability
 
 const getSocketIOServer = () => {
     if (io) {
@@ -50,7 +49,6 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected: ", socket.id, socket.authenticated)
 
-        // TODO: separate to messageHandler.ts
         socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string, type: "text" | "video" | "image" | "file" }) => {
             const msgType = type;
             if ((senderKeyId == undefined || recipientKeyId == undefined) && kGuid == undefined) {
@@ -75,13 +73,11 @@ const attachSocketio = (server: Server) => {
                 payload = JSON.stringify(payload)
             }
 
-            // TODO: separate sending logic to a different file for better code readability and maintainability
             // send message to recipient devices
             filteredParticipants.forEach((p) => {
                 io.to("usr" + p.id).emit("message", { payload: payload, chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid, type: msgType })
             })
 
-            // TODO: separate saving logic to a different file for better code readability and maintainability
             // save to db
 
             if (kGuid == undefined) {
