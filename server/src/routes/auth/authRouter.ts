@@ -28,6 +28,8 @@ authRouter.post("/login",
     body("password").notEmpty().withMessage("Password field is required"),
     loginHandler)
 
+// TODO: implement delete account endpoint
+
 authRouter.get("/token", tokenHandler);
 authRouter.get("/refreshtoken", refreshTokenHandler);
 authRouter.get("/info", verifyAccessMiddleware, infoHandler);
