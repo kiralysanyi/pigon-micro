@@ -3,6 +3,7 @@ import { reqWithUserinfo } from "../../types/reqWithUserinfo";
 import { pool } from "../../utils/db/db";
 import { pfpUpload } from "../../utils/multer";
 import multer from "multer";
+import serverConfig from "../../config";
 
 const upload = pfpUpload.single("image");
 
@@ -14,8 +15,7 @@ const postPfp: RequestHandler = async (req: reqWithUserinfo, res) => {
             // A Multer error occurred when uploading (e.g., file too large)
             if (err.code === 'LIMIT_FILE_SIZE') {
                 return res.status(413).json({
-                    // TODO: read max size from config
-                    message: "File is too large. Max limit is 1MB."
+                    message: `File is too large. Max limit is ${serverConfig.PFP_MAX_SIZE * 1_000_000}MB.`
                 });
             }
             return res.status(400).json({ message: err.message });

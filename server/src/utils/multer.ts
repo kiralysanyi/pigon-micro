@@ -8,9 +8,11 @@ import path from "path";
 const pfpPath = serverConfig.USERFILES + "/pfp";
 const mediaPath = serverConfig.USERFILES + "/media";
 
-const pfpStorage = multer.diskStorage({destination: pfpPath, filename(req, file, callback) {
-    callback(null, `${randomUUID()}.${path.extname(file.originalname)}`);
-},});
+const pfpStorage = multer.diskStorage({
+    destination: pfpPath, filename(req, file, callback) {
+        callback(null, `${randomUUID()}.${path.extname(file.originalname)}`);
+    },
+});
 
 if (!fs.existsSync(serverConfig.USERFILES)) {
     console.error("Userfiles folder does not exist: ", serverConfig.USERFILES);
@@ -25,8 +27,7 @@ if (!fs.existsSync(mediaPath)) {
     fs.mkdirSync(mediaPath);
 }
 
-// TODO: make these configurable
-const pfpUpload = multer({ storage: pfpStorage, limits: { fileSize: 1_000_000 } });
-const mediaUpload = multer({ dest: mediaPath, limits: { fileSize: 100_000_000 } })
+const pfpUpload = multer({ storage: pfpStorage, limits: { fileSize: serverConfig.PFP_MAX_SIZE * 1_000_000 } });
+const mediaUpload = multer({ dest: mediaPath, limits: { fileSize: serverConfig.MEDIA_MAX_SIZE * 1_000_000 } })
 
 export { pfpUpload, mediaUpload, pfpPath, mediaPath }

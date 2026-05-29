@@ -10,7 +10,9 @@ const serverConfig = {
     REGISTER_ENABLED: (process.env.REGISTER_ENABLED == "true"),
     USERFILES: process.env.USERFILES,
     REFRESH_EXPIRE: 128, // hours
-    ACCESS_EXPIRE: 5 // minutes
+    ACCESS_EXPIRE: 5, // minutes
+    PFP_MAX_SIZE: 1, // Megabytes
+    MEDIA_MAX_SIZE: 100 // Megabytes
 }
 
 export default serverConfig;
