@@ -104,7 +104,6 @@ const IndexPage = () => {
                 <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
                 <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
-                    // TODO: move this to a hook
                     logout().then(() => {
                         // Clear keys then navigate to login
                         krp?.setMasterKey(undefined);

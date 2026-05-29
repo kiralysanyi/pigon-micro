@@ -23,7 +23,7 @@ const SetupPage = () => {
     // check auth
     useEffect(() => {
         getAccessToken().catch(() => {
-            navigate("/login", {viewTransition: true})
+            navigate("/login", { viewTransition: true })
         })
     }, [])
 
@@ -45,8 +45,6 @@ const SetupPage = () => {
             setCreating(false);
             return;
         }
-
-        // TODO: error handling
 
         // generate masterKey
         generateMasterKey().then(async (masterKey) => {
@@ -71,7 +69,7 @@ const SetupPage = () => {
                                 setStatusText("Setting up initial chat keys")
                                 // set up first shared chat keypair (ecdh)
                                 uploadChatKeyPair(masterKey).then(() => {
-                                    navigate("/unlock", {viewTransition: true})
+                                    navigate("/unlock", { viewTransition: true })
                                 }).catch((err) => {
                                     console.error("Failed to set up chat keys: ", err);
                                     setCreating(false);
@@ -102,7 +100,15 @@ const SetupPage = () => {
                 })
 
 
+            }).catch((err) => {
+                console.error("Failed to generate ecdh keypair: ", err);
+                setStatusText("Failed to generate ecdh keypair");
+                setCreating(false);
             })
+        }).catch((error) => {
+            console.error("Failed to generate masterkey: ", error);
+            setStatusText("Failed to generate masterkey")
+            setCreating(false)
         });
 
 
