@@ -20,7 +20,7 @@ const IndexPage = () => {
     const navigate = useNavigate();
     const params = useParams();
     const [connected, setConnected] = useState(false);
-    const [hideSidebar, setHideSidebar] = useState(true);
+    const [hideSidebar, setHideSidebar] = useState(false);
     const krp = useContext(KeyRingContext)
 
     const updateChatList = async () => {
@@ -89,6 +89,7 @@ const IndexPage = () => {
 
     useEffect(() => {
         if (params.id) {
+            setHideSidebar(true);
             getChatName(parseInt(params.id)).then((cname) => {
                 setChatname(cname);
             }).catch(() => {
@@ -113,9 +114,9 @@ const IndexPage = () => {
                     })
                 }} />
             </div>
-            <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
+            {chatName && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
                 <span>Chat: {chatName}</span>
-            </div>
+            </div>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
