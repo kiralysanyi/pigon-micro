@@ -77,34 +77,23 @@ const getNewRefreshToken = async (refreshToken: string): Promise<{ refreshToken:
     }
 }
 
-// TODO: use one joined query or smth
 const verifyAccessToken = async (token: string): Promise<userdata> => {
-    try {
-        const hashed = sha256(token);
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT userID, tokenExpire FROM session WHERE tokenHash = ?", [hashed]);
+    const hashed = sha256(token);
 
-        if (result.length == 0) {
-            throw ("Invalid token")
-        }
+    const [rows] = await pool.promise().query<RowDataPacket[]>(
+        `SELECT u.ID, u.username, u.pubKey, u.created_at, u.updated_at, s.tokenExpire
+         FROM session s
+         JOIN users u ON u.ID = s.userID
+         WHERE s.tokenHash = ?
+           AND s.tokenExpire > NOW()`,
+        [hashed]
+    );
 
-        const expireDate = new Date(result[0]["tokenExpire"]);
-
-        if (expireDate < new Date()) {
-            throw ("Token expired");
-        }
-
-        const [result1] = await pool.promise().query<RowDataPacket[]>("SELECT ID, username, pubKey, created_at, updated_at FROM users WHERE ID = ?", [result[0]["userID"]])
-
-        if (result1.length == 0) {
-            throw ("No user assigned to this session")
-        }
-
-        const data: userdata = result1[0] as userdata;
-
-        return data;
-    } catch (error) {
-        throw error;
+    if (rows.length === 0) {
+        throw new Error("Invalid or expired token");
     }
-}
+
+    return rows[0] as userdata;
+};
 
 export { createSession, getNewToken, getNewRefreshToken, verifyAccessToken }
