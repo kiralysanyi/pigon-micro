@@ -28,7 +28,6 @@ keyringRouter.get("/pubkey", getPubKey);
 // post /chatkeys/self
 keyringRouter.post("/chatkeys/self", body("pubKey").notEmpty().withMessage("pubKey field required"), body("encryptedPrivKey").notEmpty().withMessage("encryptedPrivKey field required"), postChatKeys)
 
-// TODO: separate getchatkeys function to 3 different handlers for better code readability and maintainability
 keyringRouter.get("/chatkeys/self", getChatKeys);
 keyringRouter.get("/chatkeys/key/:keyid", getChatKeys);
 keyringRouter.get("/chatkeys/user/:userid", getChatKeys);
