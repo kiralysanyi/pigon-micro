@@ -128,7 +128,7 @@ const ChatPage = () => {
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
-            <button onClick={sendFileRef.current}>Send file</button>
+            <button type="button" onClick={sendFileRef.current}>Send file</button>
             <button onClick={sendMsg}>Send</button>
         </form>
         {loading && <div className="loading-popup">
