@@ -6,6 +6,7 @@ import { KeyRingContext } from "../services/KeyRingProvider";
 import getUserInfo from "../lib/auth/getUserInfo";
 import useMessageRenderer from "../hooks/useMessageRenderer";
 import { PaperAirplaneIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
+import formatMsgDate from "../lib/formatMsgDate";
 
 
 const ChatPage = () => {
@@ -123,7 +124,7 @@ const ChatPage = () => {
                     {msg.type == "image" && <img src={msg.message}></img>}
                     {msg.type == "video" && <video src={msg.message} controls></video>}
                 </> : <div className="spinner"></div>}
-                <span className="mdate">{msg.date.getHours()}:{msg.date.getMinutes()}</span>
+                <span className="mdate"> {formatMsgDate(msg.date)}</span>
             </div>)}
         </div>
 
