@@ -1,7 +1,7 @@
 import { createContext, useRef, useState } from "react"
 
 interface CallserviceContextData {
-    inCall: boolean
+    inCall: boolean,
     chatId?: number, // chat id of the call
     startTime?: Date, // start of the call
     audioRef?: React.RefObject<HTMLAudioElement | null>, // optionally expose the ref if we would need to interact with it, for example: changing volume

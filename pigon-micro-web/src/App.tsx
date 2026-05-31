@@ -10,6 +10,7 @@ import ChatIndex from './pages/ChatIndex'
 import AccountPage from './pages/AccountPage'
 import ChatSettingsPage from './pages/ChatSettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
+import CallUI from './pages/CallUI'
 
 const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ const router = createBrowserRouter([
       {
         path: "/chat/:id",
         Component: ChatPage
+      },
+      {
+        path: "/chat/:id/call",
+        Component: CallUI
       }
     ]
   },
