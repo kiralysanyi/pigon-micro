@@ -156,6 +156,7 @@ button:focus-visible {
   padding-left: 1rem;
   padding-right: 1rem;
   transition: 200ms;
+  box-sizing: border-box;
 }
 
 .sidebar {
@@ -454,5 +455,9 @@ input:focus {
 }
 
 .mstatus {
+  margin-left: auto;
+}
+
+.callbtn {
   margin-left: auto;
 }

@@ -1,7 +1,7 @@
 interface userdataBrief {
     id: number,
     username: string,
-    created_at: string
+    pubKey: string
 }
 
-export type {userdataBrief}
+export type { userdataBrief }

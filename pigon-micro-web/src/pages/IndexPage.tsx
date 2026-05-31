@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
-import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
@@ -10,12 +10,13 @@ import { getSocket } from "../lib/socket";
 import api from "../services/apiservice";
 import getUserInfo from "../lib/auth/getUserInfo";
 import { KeyRingContext } from "../services/KeyRingProvider";
+import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
-    const [chats, setChats] = useState<any[]>();
-    const [chatName, setChatname] = useState("");
+    const [chats, setChats] = useState<ChatinfoBrief[]>();
     const [netError, setNetError] = useState(false);
+    const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
 
     const navigate = useNavigate();
     const params = useParams();
@@ -90,11 +91,7 @@ const IndexPage = () => {
     useEffect(() => {
         if (params.id) {
             setHideSidebar(true);
-            getChatName(parseInt(params.id)).then((cname) => {
-                setChatname(cname);
-            }).catch(() => {
-                // Probbably just a group
-            })
+            setSelectedChat(chats?.filter((chat) => chat.chatID.toString() == params.id)[0])
         }
     }, [params])
 
@@ -114,9 +111,12 @@ const IndexPage = () => {
                     })
                 }} />
             </div>
-            {chatName && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
-                <span>Chat: {chatName}</span>
+            {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
+                <span>Chat: {selectedChat.name}</span>
             </div>}
+            {selectedChat?.type == "direct" && <button className="callbtn">
+                <PhoneIcon width={24} height={24} />
+            </button>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
