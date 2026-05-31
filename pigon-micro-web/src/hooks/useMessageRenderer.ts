@@ -1,33 +1,7 @@
 import { useEffect, useState } from "react";
 import type ChatService from "../services/chatservice/chatservice";
 import type { Message } from "../types/Message";
-import api from "../services/apiservice";
-import { decryptFile } from "../lib/encryption/ecdh";
-import { getFile, saveFile } from "../lib/indexedDB/fileDB";
-
-// TODO: move file fetching and decryption logic to a separate hook or utility function, this will make the code cleaner and more reusable
-// helper function to fetch and decrypt file, returns a blob url
-const getDecryptedFile = async (toLoad: string, type: string, dKey: CryptoKey): Promise<string> => {
-
-    try {
-        const loadedFile = await getFile(toLoad);
-        return URL.createObjectURL(loadedFile);
-    } catch (error) {
-        console.log("File not found in indexedDB, fetching from server: ", toLoad);
-    }
-
-    const response = await api.get(`/cdn/${toLoad}`, { responseType: "arraybuffer" });
-
-    const decryptedFile: File = await decryptFile(response.data, dKey, type);
-    const bUrl: string = URL.createObjectURL(decryptedFile);
-    saveFile(toLoad, decryptedFile).then(() => {
-        console.log("File saved to indexedDB for future use: ", toLoad);
-    }).catch((err) => {
-        console.error("Failed to save file to indexedDB: ", err);
-    });
-
-    return bUrl;
-}
+import getDecryptedFile from "../lib/encryption/file/getDecryptedFile";
 
 const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) => {
     const [messages, setMessages] = useState<Message[]>([]);

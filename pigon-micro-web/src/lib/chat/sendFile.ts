@@ -1,5 +1,6 @@
 import api from "../../services/apiservice";
-import { encryptFile, packEncryptedFile } from "../encryption/ecdh";
+import { encryptFile } from "../encryption/file/fileEncrypt";
+import { packEncryptedFile } from "../encryption/file/filePack";
 
 const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "video", url: string, assetId: string }> => {
     return new Promise((resolve, reject) => {
@@ -18,7 +19,7 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
             }
 
             const encrypted = await encryptFile(file, key);
-            const packed = await packEncryptedFile(encrypted);
+            const packed = packEncryptedFile(encrypted);
 
             console.log("Encrypted and packed: ", packed);
             let type: "" | "image" | "video" = "";

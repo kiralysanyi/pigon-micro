@@ -2,7 +2,6 @@ import { io, Socket } from "socket.io-client";
 import getAccessToken from "./auth/getAccessToken";
 import { BASEURL } from "../conf";
 
-//Todo: configure properly
 let socket: Socket | undefined;
 
 const getSocket = (): Promise<Socket> => {
