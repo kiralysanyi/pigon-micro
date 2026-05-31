@@ -3,7 +3,6 @@ import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
 import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon, PhoneIcon } from "@heroicons/react/24/outline";
-import getChatName from "../lib/chat/getChatName";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
