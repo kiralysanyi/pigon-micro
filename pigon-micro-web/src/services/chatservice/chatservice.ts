@@ -47,9 +47,10 @@ class ChatService extends EventTarget {
         return sendFileMessage(chatID, this);
     }
 
-    // TODO: rip out key rotation from chatservice and make a separate service for auth related stuff like this.
+    rotateInterval?: number = undefined
+
     // key rotation function, checks if keys need to be rotated and rotates if necessary (should be called every minute or so)
-    rotateKeys = () => {
+    private rotateKeys = () => {
         const rotate = () => {
             if (this.masterKey) {
                 console.log("Key rotating")
@@ -75,6 +76,7 @@ class ChatService extends EventTarget {
 
     // unload function to remove event listeners when chat page is closed
     unload = () => {
+        clearInterval(this.rotateInterval)
         this.socket?.off("message", this.messageHandler)
     }
 
@@ -106,6 +108,10 @@ class ChatService extends EventTarget {
                 console.error("Failed to get socket: ", err);
             });
 
+
+        this.rotateInterval = setInterval(() => {
+            this.rotateKeys();
+        }, 2 * 60 * 1000);
         this.initialized = true;
     }
 }

@@ -80,22 +80,10 @@ const ChatPage = () => {
 
         // get message history
 
-
-
-
-        // TODO: move key rotation to a different place in the code
-        // rotate keys
-        chatProvider.rotateKeys();
-        // Call rotatekeys every minute, the function will only rotate if required
-        const rotateInterval = setInterval(() => {
-            chatProvider.rotateKeys();
-        }, 1000 * 60);
-
         (window as any).chpr = chatProvider
 
         return () => {
             console.log("Unloading chat service for chat: ", params.id)
-            clearInterval(rotateInterval)
             chatProvider.unload();
         }
     }, [krp?.masterKey, params, krp?.privKey, userInfo])
