@@ -26,7 +26,7 @@ const ChatPage = () => {
 
     const krp = useContext(KeyRingContext);
 
-    const sendMessageRef = useRef<((message: string) => void) | undefined>(undefined);
+    const sendMessageRef = useRef<((message: string) => Promise<void>) | undefined>(undefined);
     const sendFileRef = useRef<(() => void) | undefined>(undefined);
 
     // Load chatservice
@@ -104,7 +104,7 @@ const ChatPage = () => {
         }
     }, [krp?.masterKey, params, krp?.privKey, userInfo])
 
-    const sendMsg = () => {
+    const sendMsg = async () => {
         if (!userInfo) {
             console.log("Message sending not allowed: userinfo not loaded.")
             return;
@@ -118,7 +118,7 @@ const ChatPage = () => {
         setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: message, type: "text", status: "sending", localId: localUID }])
 
         try {
-            sendMessageRef.current?.(message);
+            await sendMessageRef.current?.(message);
             // set state by uuid to sent
             setMessages((prev) => prev.map(msg => msg.localId == localUID ? { ...msg, status: "sent" } : msg))
 
@@ -148,7 +148,7 @@ const ChatPage = () => {
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
             <button type="button" onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24} /></button>
-            <button onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></button>
+            <button type="button" onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></button>
         </form>
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>

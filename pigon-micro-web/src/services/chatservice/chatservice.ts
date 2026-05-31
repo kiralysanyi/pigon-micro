@@ -39,7 +39,9 @@ class ChatService extends EventTarget {
 
     // send message handler for private chats
     sendMessage = async (message: string, chatID: number) => {
+        console.log("Send: ", message, chatID)
         await sendMessage(message, chatID, this);
+        return;
     }
 
     // send file handler, works for both group and private chats
