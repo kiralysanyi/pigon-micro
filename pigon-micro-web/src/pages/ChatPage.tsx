@@ -57,8 +57,13 @@ const ChatPage = () => {
 
         const smsg = async (message: string) => {
             console.log("Sending")
-            await chatProvider.sendMessage(message, parseInt(params.id as string))
-            console.log("Sent")
+            try {
+                await chatProvider.sendMessage(message, parseInt(params.id as string))
+                console.log("Sent")
+            } catch (error) {
+                console.error("Failed to send message");
+                throw "err_msg_send_failed"
+            }
         }
 
         sendMessageRef.current = smsg;
@@ -68,19 +73,30 @@ const ChatPage = () => {
                     return;
                 }
 
-                const data = await chatProvider.sendFile(parseInt(params.id as string));
-                console.log("File sent, got url: ", data.url);
+                const localUID = window.crypto.randomUUID();
 
-                setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: data.url, type: data.type }])
+                setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: "Sending file...", type: "text", status: "sending", localId: localUID }])
+
+                try {
+                    const data = await chatProvider.sendFile(parseInt(params.id as string));
+                    console.log("File sent, got url: ", data.url);
+                    setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "sent", type: data.type, message: data.url } : msg))
+                } catch (error) {
+                    if (error == "No file selected") {
+                        setMessages(prev => prev.filter(msg => msg.localId !== localUID));
+                        return;
+                    }
+                    setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "failed", type: "text", message: "Failed to send file" } : msg))
+                    setTimeout(() => {
+                        setMessages(prev => prev.filter(msg => msg.localId !== localUID));
+                    }, 2000);
+                }
+
             } catch (error) {
                 console.error(error);
                 window.alert(error);
             }
         }
-
-        // get message history
-
-        (window as any).chpr = chatProvider
 
         return () => {
             console.log("Unloading chat service for chat: ", params.id)
@@ -98,8 +114,20 @@ const ChatPage = () => {
             return;
         }
 
-        sendMessageRef.current?.(message);
-        setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: message, type: "text" }])
+        const localUID = window.crypto.randomUUID();
+        setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: message, type: "text", status: "sending", localId: localUID }])
+
+        try {
+            sendMessageRef.current?.(message);
+            // set state by uuid to sent
+            setMessages((prev) => prev.map(msg => msg.localId == localUID ? { ...msg, status: "sent" } : msg))
+
+        } catch (error) {
+            // set state by uuid to failed
+            setMessages((prev) => prev.map(msg => msg.localId == localUID ? { ...msg, status: "failed" } : msg))
+        }
+
+
         setMessage("")
     }
 
@@ -113,13 +141,14 @@ const ChatPage = () => {
                     {msg.type == "video" && <video src={msg.message} controls></video>}
                 </> : <div className="spinner"></div>}
                 <span className="mdate"> {formatMsgDate(msg.date)}</span>
+                {((msg.senderID == userInfo?.ID) && (msg.status != "ok")) && <span className="mstatus">{msg.status}</span>}
             </div>)}
         </div>
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
             <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
-            <button type="button" onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24}/></button>
-            <button onClick={sendMsg}><PaperAirplaneIcon width={24} height={24}/></button>
+            <button type="button" onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24} /></button>
+            <button onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></button>
         </form>
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>

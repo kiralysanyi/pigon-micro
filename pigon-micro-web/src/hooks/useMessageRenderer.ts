@@ -25,7 +25,7 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
 
             // message related to this chat
             console.log(senderID, message);
-            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type, toLoad }]);
+            setMessages(prev => [...prev, { senderID: senderID, chatID: chatID, senderName, date: new Date(), message: message, type: type, toLoad, status: "ok" }]);
 
             if (toLoad && dKey) {
                 const bUrl = await getDecryptedFile(toLoad, type, dKey);

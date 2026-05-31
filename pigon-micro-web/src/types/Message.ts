@@ -6,7 +6,9 @@ interface Message {
     date: Date,
     senderName?: string,
     dKey?: CryptoKey, // decryption key for the file, only used for file messages
-    type: "text" | "file" | "video" | "image"
+    type: "text" | "file" | "video" | "image",
+    status: "sending" | "sent" | "failed" | "ok",
+    localId?: string
 }
 
 export type { Message }

@@ -8,9 +8,16 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
         input.type = "file";
         input.accept = "image/*, video/*";
 
+        input.addEventListener("cancel", () => {
+            console.log("No file selected")
+            return reject("No file selected");
+
+        })
+
         input.addEventListener("change", async () => {
             const file = input.files?.item(0)
             if (file == null) {
+                console.log("No file selected")
                 return reject("No file selected");
             }
 

@@ -448,3 +448,7 @@ input:focus {
   margin-right: auto;
   object-fit: cover;
 }
+
+.mstatus {
+  margin-left: auto;
+}
