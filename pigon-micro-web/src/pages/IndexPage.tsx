@@ -88,11 +88,11 @@ const IndexPage = () => {
     }, [])
 
     useEffect(() => {
-        if (params.id) {
+        if (params.id && chats) {
             setHideSidebar(true);
             setSelectedChat(chats?.filter((chat) => chat.chatID.toString() == params.id)[0])
         }
-    }, [params])
+    }, [params, chats])
 
     return (userdata && connected == true) ? <>
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
@@ -113,7 +113,7 @@ const IndexPage = () => {
             {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
                 <span>Chat: {selectedChat.name}</span>
             </div>}
-            {selectedChat?.type == "direct" && <button className="callbtn">
+            {selectedChat?.type == "direct" && <button className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />
             </button>}
         </div>

@@ -2,6 +2,8 @@ import { createContext, useRef, useState } from "react"
 
 interface CallserviceContextData {
     inCall: boolean,
+    callState?: "ringing" | "connected" | "connecting",
+    setCallState?: React.Dispatch<React.SetStateAction<"connected" | "connecting" | "ringing" | undefined>>
     chatId?: number, // chat id of the call
     startTime?: Date, // start of the call
     audioRef?: React.RefObject<HTMLAudioElement | null>, // optionally expose the ref if we would need to interact with it, for example: changing volume
@@ -29,7 +31,10 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         setInCall(false);
         setChatId(undefined);
         setStartTime(undefined);
+        setCallState(undefined);
     }
+
+    const [callState, setCallState] = useState<"ringing" | "connected" | "connecting" | undefined>(undefined)
 
     const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -41,7 +46,7 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         }
     }
 
-    return <CallServiceContext value={{ inCall: inCall, setCall, chatId, endCall, startTime, setAudio, audioRef }}>
+    return <CallServiceContext value={{ inCall: inCall, setCall, chatId, endCall, startTime, setAudio, audioRef, callState, setCallState }}>
         <audio ref={audioRef} autoPlay></audio>
         {children}
     </CallServiceContext>

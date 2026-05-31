@@ -1,0 +1,33 @@
+.callui {
+    position: fixed;
+    top: 5rem;
+    left: 0px;
+    width: 100%;
+    height: calc(100% - 5rem);
+    background-color: rgba(0, 0, 0, 0.399);
+}
+
+.callui .dock {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, 0%);
+    background-color: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.callui .dock button {
+    padding: 0.5rem;
+    border-radius: 100%;
+}
+
+.callui .dock .red {
+    background-color: rgb(135, 0, 0);
+}

@@ -25,12 +25,12 @@ const router = createBrowserRouter([
       {
         path: "/chat/:id",
         Component: ChatPage
-      },
-      {
-        path: "/chat/:id/call",
-        Component: CallUI
       }
     ]
+  },
+  {
+    path: "/chat/:id/call",
+    Component: CallUI
   },
   {
     path: "/settings/:id",
