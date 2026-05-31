@@ -392,6 +392,10 @@ input:focus {
   align-self: flex-start;
 }
 
+.message-failed {
+  background-color: rgb(149, 0, 0) !important;
+}
+
 .message-display .mymessage {
   background-color: #252edc;
   border-radius: 1rem;

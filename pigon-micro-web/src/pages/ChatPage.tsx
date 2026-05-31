@@ -133,7 +133,7 @@ const ChatPage = () => {
 
     return <>
         <div className="message-display">
-            {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"}`}>
+            {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"} ${msg.status == "failed" ? "message-failed" : ""}`}>
                 <span className="sname">{msg.senderName}</span>
                 {msg.message ? <>
                     {msg.type == "text" && <span className="msg">{msg.message}</span>}
