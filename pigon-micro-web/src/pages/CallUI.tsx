@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import "../styles/callui.css"
 import { MicrophoneIcon, PhoneArrowDownLeftIcon, TvIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import { CallServiceContext } from "../services/callservice/CallServiceProvider";
 import requestPermissions from "../lib/call/requestPermissions";
 import getUserMedia from "../lib/call/getUserMedia";
@@ -10,6 +10,7 @@ import getUserInfo from "../lib/auth/getUserInfo";
 import api from "../services/apiservice";
 import { getSocket } from "../lib/socket";
 import checkScreenShareSupport from "../lib/call/checkScreenShareSupport";
+import getScreen from "../lib/call/getScreen";
 
 const CallUI = () => {
     const navigate = useNavigate();
@@ -147,55 +148,34 @@ const CallUI = () => {
             return;
         }
 
-        let detach: (() => void) | undefined = undefined;
+        let detach = () => { };
 
         (async () => {
             console.log("Attaching shit")
             await callService.attachSignaling?.(remotePeerId, sparams.get("callee") != "true");
-            const socket = await getSocket();
             if (sparams.get("callee") == "true") {
                 // handle offer answering
-                let handleRelay = async ({ from, payload }: any) => {
-                    if (from != remotePeerId) {
-                        console.log("Ignored data from", from)
-                        return;
-                    }
 
-                    if (payload.type == "offer") {
-                        await callService.answerOffer?.(payload.sdp, remotePeerId)
-                    }
-                }
-                socket.on("relay", handleRelay)
-                console.log("Sending ready signal")
-                socket.emit("relay", remotePeerId, { type: "ready" })
-                detach = () => {
-                    socket.off("relay", handleRelay)
-                }
+                console.log("Callee mode")
             } else {
                 // handle offer creation and answer handling
                 // emit offer
-                let handleRelay = async ({ from, payload }: any) => {
-                    if (from != remotePeerId) {
-                        console.log("Ignored data from", from)
+                let offerInterval = setInterval(async () => {
+                    if (callService.callState == "connected") {
+                        clearInterval(offerInterval);
                         return;
                     }
+                    console.log("Offering")
+                    await callService.emitOffer?.(remotePeerId);
+                }, 1000);
 
-                    if (payload.type == "ready") {
-                        console.log("Callee signaled ready")
-                        await callService.emitOffer?.(remotePeerId);
-                        socket.off("relay", handleRelay)
-                    }
-                }
-                socket.on("relay", handleRelay)
-                detach = () => {
-                    socket.off("relay", handleRelay)
-                }
+                detach = () => clearInterval(offerInterval);
             }
         })();
 
         return () => {
-            console.log("Detaching")
-            detach?.();
+            console.log("Detaching");
+            detach();
         }
 
 
@@ -252,21 +232,65 @@ const CallUI = () => {
         }
     }
 
+    const toggleScreenShare = useCallback(async () => {
+        if (callService.pc == undefined || callService.screenSendRef == undefined) {
+            return;
+        }
+
+        const stopScreenShare = async (sender: RTCRtpSender, stream: MediaStream) => {
+            stream.getTracks().forEach(track => track.stop());
+            callService.pc?.removeTrack(sender);
+            callService.setStream?.("screen", undefined);
+
+            // Await the socket here too
+            const socket = await getSocket();
+            socket.emit("relay", remotePeerId, { type: "screen-stop" });
+        };
+
+        if (callService.localScreenStream == undefined) {
+            try {
+                const stream = await getScreen();
+                const videoTrack = stream.getVideoTracks()[0];
+
+                // FIX 1: Await the socket first so "screen-start" is guaranteed to send BEFORE negotiation starts
+                const socket = await getSocket();
+
+                // FIX 2: Send the stream.id instead of the track.id
+                socket.emit("relay", remotePeerId, { type: "screen-start", streamId: stream.id });
+
+                const sender = callService.pc.addTrack(videoTrack, stream);
+                callService.screenSendRef.current = sender;
+                callService.setStream?.("screen", stream);
+
+                videoTrack.addEventListener("ended", () => {
+                    stopScreenShare(sender, stream);
+                });
+
+            } catch (error) {
+                console.error(error)
+            }
+        } else {
+            if (callService.screenSendRef.current) {
+                stopScreenShare(callService.screenSendRef.current, callService.localScreenStream);
+            }
+        }
+    }, [callService.pc, callService.localScreenStream, callService.screenSendRef, callService.setStream, remotePeerId])
+
+    const screenViewRef = useRef<HTMLVideoElement>(null)
+
+    useEffect(() => {
+        if (screenViewRef.current) {
+            screenViewRef.current.srcObject = callService.remoteScreen ? callService.remoteScreen : null
+        }
+    }, [callService.remoteScreen])
+
     return <>
-        <div className="header">
-            {/* <button onClick={() => {
-                if (callService.callState != "connected") {
-                    leaveCall();
-                } else {
-                    navigate(`/chat`)
-                }
-            }}><ArrowLeftCircleIcon width={24} height={24} /></button> */}
-        </div>
         <div className="callui">
             <div className={`selfview ${callService.callState == "connected" ? "selfview-minimized" : ""}`}>
                 <video autoPlay muted ref={localRef}></video>
             </div>
-            <div className="remoteview">
+            <video className="screenview" autoPlay muted ref={screenViewRef}></video>
+            <div className={`remoteview ${callService.remoteScreen ? "remote-minimized" : ""}`}>
                 <video autoPlay muted ref={remoteRef}></video>
             </div>
             <div className="dock">
@@ -281,8 +305,8 @@ const CallUI = () => {
                     <button className={!aMuted ? "red" : ""} onClick={toggleAudio}>
                         <MicrophoneIcon width={24} height={24} />
                     </button>
-                    {checkScreenShareSupport() ? <button>
-                        <TvIcon width={24} height={24}/>
+                    {checkScreenShareSupport() ? <button className={callService.localScreenStream ? "red" : ""} onClick={toggleScreenShare}>
+                        <TvIcon width={24} height={24} />
                     </button> : ""}
                 </>}
             </div>

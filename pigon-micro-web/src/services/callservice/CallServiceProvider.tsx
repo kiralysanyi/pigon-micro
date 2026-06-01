@@ -12,13 +12,16 @@ interface CallserviceContextData {
     endCall?: () => void, // clear out all states
     localVideoStream?: MediaStream,
     localAudioStream?: MediaStream,
-    setStream?: (type: "audio" | "video", stream: MediaStream | undefined) => void,
+    localScreenStream?: MediaStream,
+    setStream?: (type: "audio" | "video" | "screen", stream: MediaStream | undefined) => void,
     pc?: RTCPeerConnection,
     setPc?: React.Dispatch<React.SetStateAction<RTCPeerConnection | undefined>>,
     emitOffer?: (remoteSocketId: string) => Promise<void>,
     answerOffer?: (offer: RTCSessionDescriptionInit, remoteSocketId: string) => Promise<void>,
     remoteVideo?: MediaStream,
-    remoteAudio?: MediaStream
+    remoteAudio?: MediaStream,
+    remoteScreen?: MediaStream,
+    screenSendRef?: React.RefObject<RTCRtpSender | undefined>,
     attachSignaling?: (remoteSocketId: string, isCaller: boolean) => Promise<void>
 }
 
@@ -33,6 +36,10 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
     const [pc, setPc] = useState<RTCPeerConnection | undefined>(undefined);
     const [remoteAudio, setRemoteAudio] = useState<MediaStream | undefined>();
     const [remoteVideo, setRemoteVideo] = useState<MediaStream | undefined>();
+    const [localScreenStream, setLocalScreenStream] = useState<MediaStream | undefined>();
+    const [remoteScreen, setRemoteScreen] = useState<MediaStream | undefined>();
+
+    const screenSendRef = useRef<RTCRtpSender | undefined>(undefined);
 
     const setCall = (chatId: number) => {
         setInCall(true);
@@ -76,71 +83,6 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         }
     }
 
-    const attachSignaling = async (remoteSocketId: string, isCaller: boolean) => {
-        if (attached == true) {
-            console.log("Signaling already attached")
-            return
-        }
-        const socket = await getSocket();
-        if (pc != undefined) {
-            pc.addEventListener("connectionstatechange", () => {
-                console.warn("Peer connection state: ", pc.connectionState)
-                if (pc.connectionState == "connected") {
-                    setCallState("connected")
-                }
-
-                if (pc.connectionState == "connecting") {
-                    setCallState("connecting")
-                }
-            })
-
-            pc.addEventListener("track", ({ track }) => {
-                if (track.kind == "audio") {
-                    let stream = new MediaStream([track]);
-                    setAudio(stream);
-                    setRemoteAudio(stream);
-                    track.addEventListener("ended", () => {
-                        setRemoteAudio(undefined)
-                    })
-                }
-
-                if (track.kind == "video") {
-                    setRemoteVideo(new MediaStream([track]))
-                    track.addEventListener("ended", () => {
-                        setRemoteVideo(undefined)
-                    })
-                }
-            })
-
-            pc.addEventListener("icecandidate", ({ candidate }) => {
-                if (candidate) {
-                    socket.emit("relay", remoteSocketId, { type: "candidate", candidate })
-                }
-            })
-
-            if (isCaller) {
-                pc.addEventListener("negotiationneeded", async () => {
-                    await emitOffer(remoteSocketId);
-                })
-            }
-
-            socket.on("relay", async ({ from, payload }: any) => {
-                if (from !== remoteSocketId) return;
-                if (payload.type === "candidate" && payload.candidate) {
-                    try {
-                        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
-                        console.log("Added ICE candidate from", from);
-                    } catch (e) {
-                        console.error("Failed to add ICE candidate:", e);
-                    }
-                }
-            })
-
-            console.log("Attached signaling")
-            setAttached(true);
-        }
-    }
-
     const answerOffer = async (offer: RTCSessionDescriptionInit, remoteSocketId: string) => {
         const socket = await getSocket();
         if (pc) {
@@ -154,6 +96,141 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
             console.error("PC not initialized")
         }
     }
+
+    const attachSignaling = async (remoteSocketId: string, isCaller: boolean) => {
+        if (attached == true) {
+            console.log("Signaling already attached")
+            return
+        }
+        const socket = await getSocket();
+        let screenStreamId: string | null = null;
+        if (pc != undefined) {
+            pc.addEventListener("connectionstatechange", () => {
+                console.warn("Peer connection state: ", pc.connectionState)
+                if (pc.connectionState == "connected") {
+                    setCallState("connected")
+                }
+
+                if (pc.connectionState == "connecting") {
+                    setCallState("connecting")
+                }
+            })
+
+            pc.addEventListener("track", ({ track, streams }) => {
+                if (track.kind == "audio") {
+                    let stream = new MediaStream([track]);
+                    setAudio(stream);
+                    setRemoteAudio(stream);
+                    track.addEventListener("ended", () => {
+                        setRemoteAudio(undefined)
+                    })
+                }
+
+                if (track.kind == "video") {
+                    // FIX 4: Check if this video track is inside the signaled screen share stream container
+                    if (streams[0] && streams[0].id === screenStreamId) {
+                        console.log("Got screen share track cleanly via Stream ID!")
+                        setRemoteScreen(new MediaStream([track]));
+                        track.addEventListener("ended", () => {
+                            console.log("Screen share ended!")
+                            setRemoteScreen(undefined);
+                        })
+                        return;
+                    }
+
+                    // Fallback for camera track
+                    setRemoteVideo(new MediaStream([track]))
+                    track.addEventListener("ended", () => {
+                        setRemoteVideo(undefined)
+                    })
+                }
+            })
+
+            pc.addEventListener("icecandidate", ({ candidate }) => {
+                if (candidate) {
+                    socket.emit("relay", remoteSocketId, { type: "candidate", candidate })
+                }
+            })
+
+            let makingOffer = false;
+
+            pc.addEventListener("negotiationneeded", async () => {
+                try {
+                    if (pc.signalingState !== "stable") return;
+                    makingOffer = true;
+
+                    await pc.setLocalDescription();
+
+                    socket.emit("relay", remoteSocketId, {
+                        type: "offer",
+                        sdp: pc.localDescription
+                    });
+                } catch (e) {
+                    console.error("negotiationneeded error:", e);
+                } finally {
+                    makingOffer = false;
+                }
+            });
+
+            socket.on("relay", async ({ from, payload }: any) => {
+                if (from !== remoteSocketId) return;
+
+                if (payload.type === "screen-start") {
+                    console.log("Other participant started screen share")
+                    screenStreamId = payload.streamId;
+                    return;
+                }
+                if (payload.type === "screen-stop") {
+                    console.log("Other participant stopped screen share")
+                    screenStreamId = null;
+                    setRemoteScreen(undefined);
+                    return;
+                }
+
+                if (payload.type === "candidate" && payload.candidate) {
+                    try {
+                        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+                        console.log("Added ICE candidate from", from);
+                    } catch (e) {
+                        console.error("Failed to add ICE candidate:", e);
+                    }
+                }
+
+                try {
+                    const isPolite = !isCaller; // Callee is polite, Caller is impolite
+                    const offerCollision = payload.type === "offer" && (makingOffer || pc.signalingState !== "stable");
+
+                    if (offerCollision) {
+                        if (!isPolite) {
+                            console.log("Impolite peer: ignoring colliding offer");
+                            return;
+                        }
+                        console.log("Polite peer: rolling back local description for colliding offer");
+                        await pc.setLocalDescription({ type: "rollback" });
+                    }
+
+                    if (payload.type === "offer") {
+                        await pc.setRemoteDescription(payload.sdp);
+                        const answer = await pc.createAnswer();
+                        await pc.setLocalDescription(answer);
+                        console.log("Generated answer for renegotiation");
+                        socket.emit("relay", remoteSocketId, { type: "answer", sdp: answer });
+
+                    } else if (payload.type === "answer") {
+                        // ADDED THIS: Handles the answer when YOU initiate screen sharing!
+                        console.log("Received answer, completing negotiation handshake");
+                        await pc.setRemoteDescription(payload.sdp);
+                    }
+                } catch (err) {
+                    console.error("Error handling negotiation payload:", err);
+                }
+            })
+
+            console.log("Attached signaling")
+            setAttached(true);
+        }
+    }
+
     const [localVideoStream, setLocalVideostream] = useState<MediaStream>();
     const [localAudioStream, setLocalAudioStream] = useState<MediaStream>();
 
@@ -162,8 +239,11 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         console.log("Ending call ", localAudioStream, localVideoStream)
         localAudioStream?.getTracks().forEach((track) => track.stop());
         localVideoStream?.getTracks().forEach((track) => track.stop());
+        localScreenStream?.getTracks().forEach((track) => track.stop());
         setLocalAudioStream(undefined);
         setLocalVideostream(undefined);
+        setLocalScreenStream(undefined);
+        setRemoteScreen(undefined)
 
         setInCall(false);
         setChatId(undefined);
@@ -181,13 +261,16 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
 
     const audioRef = useRef<HTMLAudioElement>(null);
 
-    const setStream = (type: "video" | "audio", stream: MediaStream | undefined) => {
+    const setStream = (type: "video" | "audio" | "screen", stream: MediaStream | undefined) => {
         switch (type) {
             case "audio":
                 setLocalAudioStream(stream);
                 break;
             case "video":
                 setLocalVideostream(stream);
+                break;
+            case "screen":
+                setLocalScreenStream(stream);
                 break;
             default:
                 break;
@@ -212,7 +295,10 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         answerOffer,
         attachSignaling,
         remoteAudio,
-        remoteVideo
+        remoteVideo,
+        localScreenStream,
+        remoteScreen,
+        screenSendRef
     }}>
         <audio ref={audioRef} autoPlay></audio>
         {children}
