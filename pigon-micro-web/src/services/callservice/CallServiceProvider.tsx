@@ -19,7 +19,7 @@ interface CallserviceContextData {
     answerOffer?: (offer: RTCSessionDescriptionInit, remoteSocketId: string) => Promise<void>,
     remoteVideo?: MediaStream,
     remoteAudio?: MediaStream
-    attachSignaling?: (remoteSocketId: string) => Promise<void>
+    attachSignaling?: (remoteSocketId: string, isCaller: boolean) => Promise<void>
 }
 
 const CallServiceContext = createContext<CallserviceContextData>({
@@ -50,7 +50,33 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
 
     const [attached, setAttached] = useState(false);
 
-    const attachSignaling = async (remoteSocketId: string) => {
+    const emitOffer = async (remoteSocketId: string) => {
+        const socket = await getSocket();
+        if (pc) {
+            const offer = await pc.createOffer();
+            pc.setLocalDescription(offer);
+            const handleRelay = async ({ from, payload }: any) => {
+                if (from != remoteSocketId) {
+                    console.error("Ignored data from", from)
+                    return;
+                }
+
+                if (payload.type == "answer") {
+                    console.log("Got answer: ", payload.sdp)
+                    await pc.setRemoteDescription(payload.sdp)
+                    socket.off("relay", handleRelay)
+                }
+            }
+
+            socket.on("relay", handleRelay)
+            console.log("Emit offer: ", offer)
+            socket.emit("relay", remoteSocketId, { type: "offer", sdp: offer })
+        } else {
+            console.error("PC not initialized")
+        }
+    }
+
+    const attachSignaling = async (remoteSocketId: string, isCaller: boolean) => {
         if (attached == true) {
             console.log("Signaling already attached")
             return
@@ -92,6 +118,12 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
                 }
             })
 
+            if (isCaller) {
+                pc.addEventListener("negotiationneeded", async () => {
+                    await emitOffer(remoteSocketId);
+                })
+            }
+
             socket.on("relay", async ({ from, payload }: any) => {
                 if (from !== remoteSocketId) return;
                 if (payload.type === "candidate" && payload.candidate) {
@@ -106,32 +138,6 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
 
             console.log("Attached signaling")
             setAttached(true);
-        }
-    }
-
-    const emitOffer = async (remoteSocketId: string) => {
-        const socket = await getSocket();
-        if (pc) {
-            const offer = await pc.createOffer();
-            pc.setLocalDescription(offer);
-            const handleRelay = async ({ from, payload }: any) => {
-                if (from != remoteSocketId) {
-                    console.error("Ignored data from", from)
-                    return;
-                }
-
-                if (payload.type == "answer") {
-                    console.log("Got answer: ", payload.sdp)
-                    await pc.setRemoteDescription(payload.sdp)
-                    socket.off("relay", handleRelay)
-                }
-            }
-
-            socket.on("relay", handleRelay)
-            console.log("Emit offer: ", offer)
-            socket.emit("relay", remoteSocketId, { type: "offer", sdp: offer })
-        } else {
-            console.error("PC not initialized")
         }
     }
 

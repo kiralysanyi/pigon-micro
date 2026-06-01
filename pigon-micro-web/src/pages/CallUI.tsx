@@ -150,7 +150,7 @@ const CallUI = () => {
 
         (async () => {
             console.log("Attaching shit")
-            await callService.attachSignaling?.(remotePeerId);
+            await callService.attachSignaling?.(remotePeerId, sparams.get("callee") != "true");
             const socket = await getSocket();
             if (sparams.get("callee") == "true") {
                 // handle offer answering
