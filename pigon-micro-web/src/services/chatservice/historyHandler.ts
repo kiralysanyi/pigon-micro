@@ -29,7 +29,8 @@ const historyHandler = (cs: ChatService, chatID: number): Promise<Message[]> => 
                     message: dMesssage,
                     senderID: msg.senderID,
                     type: msg.type,
-                    senderName: await getUsernameById(msg.senderID)
+                    senderName: await getUsernameById(msg.senderID),
+                    status: "ok"
                 })
             }
 
@@ -48,7 +49,8 @@ const historyHandler = (cs: ChatService, chatID: number): Promise<Message[]> => 
                     senderID: msg.senderID,
                     type: msg.type,
                     dKey: dkey,
-                    senderName: await getUsernameById(msg.senderID)
+                    senderName: await getUsernameById(msg.senderID),
+                    status: "ok"
                 })
             }
 

@@ -98,6 +98,31 @@ const attachSocketio = (server: Server) => {
                 }
             }
         })
+
+
+        // signaling/call stuff
+        socket.on("ring", (userId: number) => {
+            console.log("Ring: ", userId)
+            let gotResponse = false;
+            io.to("usr" + userId).timeout(30_000).emit("ring", { userId, socketId: socket.id }, (err, responses) => {
+                if (gotResponse) {
+                    return;
+                }
+
+                gotResponse = true;
+
+                io.to("usr" + userId).emit("ring-end");
+                if (responses.length == 0) {
+                    socket.emit("ring-response", { accepted: false, socketId: "" })
+                }
+                console.log("Ring response: ", err, responses)
+                socket.emit("ring-response", responses[0]);
+            })
+        })
+
+        socket.on("relay", (target: string, payload: any) => {
+            io.to(target).emit("relay", { from: socket.id, payload })
+        })
     });
 }
 

@@ -1,7 +1,6 @@
 // encryption code
 
 import type { encryptedData } from "../../types/encryptedData";
-import type { encryptedFile } from "../../types/encryptedFile";
 
 // Convert string helpers
 const enc = new TextEncoder();
@@ -95,44 +94,7 @@ async function decryptMsg(data: encryptedData, key: CryptoKey): Promise<string> 
     return new TextDecoder().decode(decrypted);
 }
 
-// file encrypt stuff
 
-async function encryptFile(file: File, key: CryptoKey): Promise<encryptedFile> {
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ciphertext = await crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        key,
-        await file.arrayBuffer()
-    );
-
-    return { iv, ciphertext };
-}
-
-
-function packEncryptedFile(encrypted: encryptedFile): Blob {
-    // Layout: [12 bytes IV][ciphertext...]
-    const packed = new Uint8Array(12 + encrypted.ciphertext.byteLength);
-    packed.set(encrypted.iv, 0);
-    packed.set(new Uint8Array(encrypted.ciphertext), 12);
-    return new Blob([packed]);
-}
-
-function unpackEncryptedFile(packed: ArrayBuffer): encryptedFile {
-    return {
-        iv: new Uint8Array(packed.slice(0, 12)),
-        ciphertext: packed.slice(12)
-    };
-}
-
-async function decryptFile(packed: ArrayBuffer, key: CryptoKey, mimeType: string): Promise<File> {
-    const { iv, ciphertext } = unpackEncryptedFile(packed);
-    const decrypted = await crypto.subtle.decrypt(
-        { name: "AES-GCM", iv: iv as Uint8Array<ArrayBuffer> },
-        key,
-        ciphertext
-    );
-    return new File([decrypted], "decrypted", { type: mimeType });
-}
 
 
 // encryption code end
@@ -172,4 +134,4 @@ async function deriveSharedKey(privateKey: CryptoKey, publicKey: CryptoKey, extr
 
 
 
-export { generateECDHKeyPair, deriveSharedKey, deriveKey, encryptMsg, decryptMsg, ecdhEncryptKey, ecdhDecryptKey, encryptFile, decryptFile, packEncryptedFile }
+export { generateECDHKeyPair, deriveSharedKey, deriveKey, encryptMsg, decryptMsg, ecdhEncryptKey, ecdhDecryptKey}

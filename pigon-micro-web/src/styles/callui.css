@@ -1,0 +1,95 @@
+.callui {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.399);
+}
+
+.callui .dock {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, 0%);
+    background-color: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(4px);
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    z-index: 2;
+}
+
+.callui .dock button {
+    padding: 0.5rem;
+    border-radius: 100%;
+}
+
+.callui .dock .red {
+    background-color: rgb(135, 0, 0);
+}
+
+.callui .selfview,
+.selfview video {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 100%;
+    transition: 200ms;
+    z-index: 2;
+    object-fit: cover;
+}
+
+.callui .remoteview,
+.remoteview video {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.screenview {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.selfview-minimized {
+    width: 20dvw !important;
+    height: 20dvh !important;
+}
+
+.selfview-minimized video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.remote-minimized {
+    top: 0px;
+    left: 0px;
+    width: 20dvw !important;
+    height: 20dvh !important;
+}
+
+.remote-minimized video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.callui video {
+    background-color: transparent;
+}

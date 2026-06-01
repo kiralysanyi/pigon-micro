@@ -81,31 +81,31 @@ const sendGroupMessage = async (message: string, chatID: number, cs: ChatService
 // message sending for private and group chats, file sending is handled in separate function
 const sendMessage = async (message: string, chatID: number, cs: ChatService) => {
     const startTime = new Date();
-    api.get("/chat/" + chatID).then(async (response) => {
-        if (cs.masterKey == undefined) {
-            console.error("Chatservice not inited properly");
-            return;
-        }
+    const response = await api.get("/chat/" + chatID)
 
-        const chat = response.data.chat;
-        console.log(chat)
-        if (chat.type == "group") {
-            await sendGroupMessage(message, chatID, cs);
-            return;
-        }
+    if (cs.masterKey == undefined) {
+        console.error("Chatservice not inited properly");
+        return;
+    }
 
-        const participants = response.data.chat.participants as any[];
-        const userInfo = await getUserInfo();
-        const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
+    const chat = response.data.chat;
+    console.log(chat)
+    if (chat.type == "group") {
+        await sendGroupMessage(message, chatID, cs);
+        return;
+    }
 
-        const sharedKey = await getNewMessageEncryptionKey(recipientID, cs.masterKey)
+    const participants = response.data.chat.participants as any[];
+    const userInfo = await getUserInfo();
+    const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
 
-        let encrypted = await encryptMsg(message, sharedKey.key)
-        // todo: add ack
-        console.log("Sending message: ", encrypted, chatID, cs.socket)
-        cs.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: "text" })
-        console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
-    })
+    const sharedKey = await getNewMessageEncryptionKey(recipientID, cs.masterKey)
+
+    let encrypted = await encryptMsg(message, sharedKey.key)
+    // todo: add ack
+    console.log("Sending message: ", encrypted, chatID, cs.socket)
+    cs.socket?.emit("message", { payload: JSON.stringify(encrypted), chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: "text" })
+    console.log("Message sending took: ", `${new Date().getTime() - startTime.getTime()}ms`)
 }
 
 const sendFileMessage = async (chatID: number, cs: ChatService): Promise<{ type: "image" | "video", url: string }> => {

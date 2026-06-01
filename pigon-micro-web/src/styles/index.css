@@ -156,6 +156,7 @@ button:focus-visible {
   padding-left: 1rem;
   padding-right: 1rem;
   transition: 200ms;
+  box-sizing: border-box;
 }
 
 .sidebar {
@@ -392,6 +393,10 @@ input:focus {
   align-self: flex-start;
 }
 
+.message-failed {
+  background-color: rgb(149, 0, 0) !important;
+}
+
 .message-display .mymessage {
   background-color: #252edc;
   border-radius: 1rem;
@@ -447,4 +452,26 @@ input:focus {
   margin-left: auto;
   margin-right: auto;
   object-fit: cover;
+}
+
+.mstatus {
+  margin-left: auto;
+}
+
+.callbtn {
+  margin-left: auto;
+}
+
+.call-popup {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  background-color: black;
+  border-radius: 1rem;
+  transform: translate(-50%, 0%);
+  padding: 1rem;
+  z-index: 100;
 }

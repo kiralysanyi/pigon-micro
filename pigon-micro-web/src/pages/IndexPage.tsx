@@ -2,26 +2,28 @@ import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
-import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon } from "@heroicons/react/24/outline";
-import getChatName from "../lib/chat/getChatName";
+import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
 import api from "../services/apiservice";
 import getUserInfo from "../lib/auth/getUserInfo";
 import { KeyRingContext } from "../services/KeyRingProvider";
+import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
-    const [chats, setChats] = useState<any[]>();
-    const [chatName, setChatname] = useState("");
+    const [chats, setChats] = useState<ChatinfoBrief[]>();
     const [netError, setNetError] = useState(false);
+    const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
 
     const navigate = useNavigate();
     const params = useParams();
     const [connected, setConnected] = useState(false);
     const [hideSidebar, setHideSidebar] = useState(false);
-    const krp = useContext(KeyRingContext)
+    const krp = useContext(KeyRingContext);
+    const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
+    const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -52,6 +54,52 @@ const IndexPage = () => {
         const onNewChat = () => {
             updateChatList();
         }
+
+        const onRing = (data: any, cb: (res: { accepted: boolean, socketId: string }) => void) => {
+            console.log("Ringing: ", data);
+            setIncomingCall({ from: data.userId, socketId: data.socketId })
+            if (!socket) {
+                console.error("Refused call: no socket")
+                cb({ accepted: false, socketId: "" })
+                return;
+            }
+
+            if (socket.id == undefined) {
+                console.error("Refused call: no socket id")
+                cb({ accepted: false, socketId: "" })
+                return;
+            }
+
+            setHandleCall(() => (accept: boolean) => {
+                console.log("Accepted call?", accept)
+                if (accept == undefined) {
+                    return;
+                }
+                setHandleCall(undefined)
+                if (!socket) {
+                    console.error("Refused call: no socket")
+                    cb({ accepted: false, socketId: "" })
+                    return;
+                }
+
+                if (socket.id == undefined) {
+                    console.error("Refused call: no socket id")
+                    cb({ accepted: false, socketId: "" })
+                    return;
+                }
+                cb({ accepted: accept, socketId: socket.id })
+                if (accept == true) {
+                    navigate(`/chat/${params.id}/call?callee=true&remoteId=${data.socketId}`)
+                }
+            })
+        }
+
+        const onRingEnd = () => {
+            console.log("Ring ended");
+            setIncomingCall(undefined);
+            setHandleCall(undefined);
+        }
+
         (async () => {
 
             // get userinfo
@@ -73,6 +121,8 @@ const IndexPage = () => {
             socket.on("disconnect", onDisconnect);
             socket.on("connect_error", onSockError);
             socket.on("newchat", onNewChat);
+            socket.on("ring", onRing);
+            socket.on("ring-end", onRingEnd);
             setConnected(true)
         })()
         return () => {
@@ -81,6 +131,8 @@ const IndexPage = () => {
                 socket.off("disconnect", onDisconnect);
                 socket.off("connect_error", onSockError);
                 socket.off("newchat", onNewChat);
+                socket.off("ring", onRing);
+                socket.off("ring-end", onRingEnd);
             }
         }
 
@@ -88,17 +140,21 @@ const IndexPage = () => {
     }, [])
 
     useEffect(() => {
-        if (params.id) {
+        if (params.id && chats) {
             setHideSidebar(true);
-            getChatName(parseInt(params.id)).then((cname) => {
-                setChatname(cname);
-            }).catch(() => {
-                // Probbably just a group
-            })
+            setSelectedChat(chats?.filter((chat) => chat.chatID.toString() == params.id)[0])
         }
-    }, [params])
+    }, [params, chats])
+
 
     return (userdata && connected == true) ? <>
+        {incomingCall ? <div className="call-popup">
+            <h1>{incomingCall.from}</h1>
+            <div className="action">
+                <button onClick={() => handleCall?.(true)}>Accept</button>
+                <button onClick={() => handleCall?.(false)}>Decline</button>
+            </div>
+        </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
@@ -114,9 +170,12 @@ const IndexPage = () => {
                     })
                 }} />
             </div>
-            {chatName && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
-                <span>Chat: {chatName}</span>
+            {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
+                <span>Chat: {selectedChat.name}</span>
             </div>}
+            {selectedChat?.type == "direct" && <button className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
+                <PhoneIcon width={24} height={24} />
+            </button>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
