@@ -127,7 +127,7 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
                 }
 
                 if (track.kind == "video") {
-                    // FIX 4: Check if this video track is inside the signaled screen share stream container
+                    // Check if this video track is inside the signaled screen share stream container
                     if (streams[0] && streams[0].id === screenStreamId) {
                         console.log("Got screen share track cleanly via Stream ID!")
                         setRemoteScreen(new MediaStream([track]));
@@ -217,7 +217,6 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
                         socket.emit("relay", remoteSocketId, { type: "answer", sdp: answer });
 
                     } else if (payload.type === "answer") {
-                        // ADDED THIS: Handles the answer when YOU initiate screen sharing!
                         console.log("Received answer, completing negotiation handshake");
                         await pc.setRemoteDescription(payload.sdp);
                     }

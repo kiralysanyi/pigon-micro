@@ -252,10 +252,8 @@ const CallUI = () => {
                 const stream = await getScreen();
                 const videoTrack = stream.getVideoTracks()[0];
 
-                // FIX 1: Await the socket first so "screen-start" is guaranteed to send BEFORE negotiation starts
                 const socket = await getSocket();
 
-                // FIX 2: Send the stream.id instead of the track.id
                 socket.emit("relay", remotePeerId, { type: "screen-start", streamId: stream.id });
 
                 const sender = callService.pc.addTrack(videoTrack, stream);
