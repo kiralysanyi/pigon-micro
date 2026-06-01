@@ -1,16 +1,24 @@
 import { ArrowLeftCircleIcon } from "@heroicons/react/16/solid";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate, useParams, useSearchParams } from "react-router";
 import "../styles/callui.css"
 import { MicrophoneIcon, PhoneArrowDownLeftIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CallServiceContext } from "../services/callservice/CallServiceProvider";
+import requestPermissions from "../lib/call/requestPermissions";
+import getUserMedia from "../lib/call/getUserMedia";
+import ringUser from "../lib/call/ringer";
+import getUserInfo from "../lib/auth/getUserInfo";
+import api from "../services/apiservice";
 
 const CallUI = () => {
     const navigate = useNavigate();
     const params = useParams();
+    const [sparams] = useSearchParams();
 
     const [cameraEnabled, setCameraEnabled] = useState(false);
     const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
+    const localRef = useRef<HTMLVideoElement>(null);
+    const remoteRef = useRef<HTMLVideoElement>(null);
 
     const callService = useContext(CallServiceContext);
 
@@ -20,17 +28,94 @@ const CallUI = () => {
         // Check if you are initiating or you are invited
 
         callService.setCall?.(parseInt(params.id as string));
-        
+
         callService.setCallState?.("ringing");
-        
-        // init webrtc, socket io stuff
-        
+
+        const initCall = () => {
+            requestPermissions().then(async (granted) => {
+                if (granted.audio) {
+                    console.log("Got audio permission")
+                    const audioStream = await getUserMedia({ audio: true, video: false });
+                    callService.setStream?.("audio", audioStream);
+                } else {
+                    console.log("No audio permission")
+                }
+
+                if (granted.video) {
+                    console.log("Got video permission")
+                    const videoStream = await getUserMedia({ audio: false, video: true });
+                    callService.setStream?.("video", videoStream);
+                } else {
+                    console.log("No video permission")
+                }
+            })
+        }
+
+        // ring
+        (async () => {
+            // if you are being called, do not call ringing stuff, and jump to webrtc setup
+            if (sparams.get("callee") == "true") {
+                return;
+            }
+            const userinfo = await getUserInfo();
+            api.get("/chat/" + params.id).then((response) => {
+                if (response.data.chat.type != "direct") {
+                    console.error("Chat is not a direct chat, call aborted");
+                    leaveCall();
+                    return;
+                }
+                const participants = response.data.chat.participants as any[];
+                console.log(participants)
+                const userToCall: number = participants.filter((p) => p.id != userinfo.ID)[0].id;
+                console.log(userToCall)
+                ringUser(userToCall).then((response) => {
+                    if (response.accepted == false) {
+                        window.alert("User declined call");
+                        leaveCall();
+                    } else {
+                        console.log("User accepted call");
+                        initCall();
+                    }
+                })
+            }).catch((err) => {
+                console.error("Failed to call user: ", err);
+                leaveCall();
+            })
+        })()
     }, []);
+
+    // useeffect hook for managing stream sending over webrtc
+    useEffect(() => {
+        if (localRef.current) {
+            localRef.current.srcObject = callService.localVideoStream ? callService.localVideoStream : null
+        }
+
+        if (callService.pc == undefined) {
+            console.log("Peer connection object not initialized yet")
+            return;
+        }
+
+        (async () => {
+            if (callService.localAudioStream) {
+                // enable audio send
+            } else {
+                // disable audio send
+            }
+
+            if (callService.localVideoStream) {
+                // enable video send
+            } else {
+                // disable video send
+            }
+        })()
+
+    }, [callService.localAudioStream, callService.localVideoStream, callService.pc]);
 
     const leaveCall = () => {
         console.log("Leave call")
         callService.endCall?.();
         // Disconnect webrtc and stuff
+
 
         // leave ui
         navigate(`/chat/${params.id}`)
@@ -47,6 +132,12 @@ const CallUI = () => {
             }}><ArrowLeftCircleIcon width={24} height={24} /></button>
         </div>
         <div className="callui">
+            <div className={`selfview ${callService.callState == "connected" ? "selfview-minimized" : ""}`}>
+                <video autoPlay muted ref={localRef}></video>
+            </div>
+            <div className="remoteview">
+                <video autoPlay muted ref={remoteRef}></video>
+            </div>
             <div className="dock">
                 <button className="red" onClick={leaveCall}>
                     <PhoneArrowDownLeftIcon width={24} height={24} />

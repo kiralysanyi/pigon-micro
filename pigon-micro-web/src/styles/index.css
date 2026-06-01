@@ -461,3 +461,17 @@ input:focus {
 .callbtn {
   margin-left: auto;
 }
+
+.call-popup {
+  position: fixed;
+  top: 1rem;
+  left: 50%;
+  height: auto;
+  width: auto;
+  max-width: 100%;
+  background-color: black;
+  border-radius: 1rem;
+  transform: translate(-50%, 0%);
+  padding: 1rem;
+  z-index: 100;
+}

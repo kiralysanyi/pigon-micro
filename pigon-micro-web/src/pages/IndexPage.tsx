@@ -21,7 +21,9 @@ const IndexPage = () => {
     const params = useParams();
     const [connected, setConnected] = useState(false);
     const [hideSidebar, setHideSidebar] = useState(false);
-    const krp = useContext(KeyRingContext)
+    const krp = useContext(KeyRingContext);
+    const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
+    const [incomingCall, setIncomingCall] = useState<{ from: string } | undefined>(undefined)
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -52,6 +54,52 @@ const IndexPage = () => {
         const onNewChat = () => {
             updateChatList();
         }
+
+        const onRing = (data: any, cb: (res: { accepted: boolean, socketId: string }) => void) => {
+            console.log("Ringing: ", data);
+            setIncomingCall({ from: data.userId })
+            if (!socket) {
+                console.error("Refused call: no socket")
+                cb({ accepted: false, socketId: "" })
+                return;
+            }
+
+            if (socket.id == undefined) {
+                console.error("Refused call: no socket id")
+                cb({ accepted: false, socketId: "" })
+                return;
+            }
+
+            setHandleCall(() => (accept: boolean) => {
+                console.log("Accepted call?", accept)
+                if (accept == undefined) {
+                    return;
+                }
+                setHandleCall(undefined)
+                if (!socket) {
+                    console.error("Refused call: no socket")
+                    cb({ accepted: false, socketId: "" })
+                    return;
+                }
+
+                if (socket.id == undefined) {
+                    console.error("Refused call: no socket id")
+                    cb({ accepted: false, socketId: "" })
+                    return;
+                }
+                cb({ accepted: accept, socketId: socket.id })
+                if (accept == true) {
+                    navigate(`/chat/${params.id}/call?callee=true`)
+                }
+            })
+        }
+
+        const onRingEnd = () => {
+            console.log("Ring ended");
+            setIncomingCall(undefined);
+            setHandleCall(undefined);
+        }
+
         (async () => {
 
             // get userinfo
@@ -73,6 +121,8 @@ const IndexPage = () => {
             socket.on("disconnect", onDisconnect);
             socket.on("connect_error", onSockError);
             socket.on("newchat", onNewChat);
+            socket.on("ring", onRing);
+            socket.on("ring-end", onRingEnd);
             setConnected(true)
         })()
         return () => {
@@ -81,6 +131,8 @@ const IndexPage = () => {
                 socket.off("disconnect", onDisconnect);
                 socket.off("connect_error", onSockError);
                 socket.off("newchat", onNewChat);
+                socket.off("ring", onRing);
+                socket.off("ring-end", onRingEnd);
             }
         }
 
@@ -94,7 +146,15 @@ const IndexPage = () => {
         }
     }, [params, chats])
 
+
     return (userdata && connected == true) ? <>
+        {incomingCall ? <div className="call-popup">
+            <h1>{incomingCall.from}</h1>
+            <div className="action">
+                <button onClick={() => handleCall?.(true)}>Accept</button>
+                <button onClick={() => handleCall?.(false)}>Decline</button>
+            </div>
+        </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
                 <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />

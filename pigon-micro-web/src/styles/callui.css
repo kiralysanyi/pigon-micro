@@ -21,6 +21,7 @@
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
+    z-index: 2;
 }
 
 .callui .dock button {
@@ -30,4 +31,27 @@
 
 .callui .dock .red {
     background-color: rgb(135, 0, 0);
+}
+
+.callui .selfview,
+.selfview video,
+.callui .remoteview {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    width: 100%;
+    height: 100%;
+    transition: 200ms;
+    z-index: 1;
+    object-fit: cover;
+}
+
+.callui .remoteview {
+    z-index: 0;
+}
+
+.selfview-minimized {
+    width: 8rem;
+    height: auto;
+    object-fit: contain;
 }
