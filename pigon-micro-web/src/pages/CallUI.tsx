@@ -1,4 +1,3 @@
-import { ArrowLeftCircleIcon } from "@heroicons/react/16/solid";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import "../styles/callui.css"
 import { MicrophoneIcon, PhoneArrowDownLeftIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
@@ -16,8 +15,6 @@ const CallUI = () => {
     const params = useParams();
     const [sparams] = useSearchParams();
 
-    const [cameraEnabled, setCameraEnabled] = useState(false);
-    const [microphoneEnabled, setMicrophoneEnabled] = useState(false);
     const localRef = useRef<HTMLVideoElement>(null);
     const remoteRef = useRef<HTMLVideoElement>(null);
 
@@ -60,7 +57,7 @@ const CallUI = () => {
                     const audioStream = await getUserMedia({ audio: true, video: false });
                     callService.setStream?.("audio", audioStream);
                 } else {
-                    console.log("No audio permission")
+                    console.log("No audio permission");
                 }
 
                 if (granted.video) {
@@ -68,7 +65,7 @@ const CallUI = () => {
                     const videoStream = await getUserMedia({ audio: false, video: true });
                     callService.setStream?.("video", videoStream);
                 } else {
-                    console.log("No video permission")
+                    console.log("No video permission");
                 }
                 setFinishedPermCheck(true)
             })
@@ -118,7 +115,7 @@ const CallUI = () => {
             return;
         }
 
-        if (callService.localAudioStream == undefined && callService.localVideoStream == undefined) {
+        if (callService.localAudioStream == undefined && callService.localVideoStream == undefined && callService.callState != "connected") {
             console.error("Cannot start call with zero streams");
             return
         }
@@ -142,6 +139,10 @@ const CallUI = () => {
 
         if (remotePeerId == undefined) {
             console.error("Remote peer id is not defined")
+            return;
+        }
+
+        if (callService.callState != "ringing") {
             return;
         }
 
@@ -197,7 +198,7 @@ const CallUI = () => {
         }
 
 
-    }, [callService.pc, remotePeerId, finishedPermCheck, callService.inCall, callService.localAudioStream, callService.localVideoStream])
+    }, [callService.pc, remotePeerId, finishedPermCheck, callService.inCall, callService.localAudioStream, callService.localVideoStream, callService.callState])
 
     // useeffect hook for managing stream sending over webrtc
     useEffect(() => {
@@ -255,15 +256,32 @@ const CallUI = () => {
         }
     }, [remotePeerId])
 
+    const [vMuted, setVMuted] = useState(false);
+    const [aMuted, setAMuted] = useState(false);
+
+    const toggleVideo = () => {
+        if (callService.localVideoStream) {
+            callService.localVideoStream.getTracks().forEach((track) => track.enabled = vMuted);
+            setVMuted(!vMuted);
+        }
+    }
+
+    const toggleAudio = () => {
+        if (callService.localAudioStream) {
+            callService.localAudioStream.getTracks().forEach((track) => track.enabled = aMuted);
+            setAMuted(!aMuted)
+        }
+    }
+
     return <>
         <div className="header">
-            <button onClick={() => {
+            {/* <button onClick={() => {
                 if (callService.callState != "connected") {
                     leaveCall();
                 } else {
                     navigate(`/chat`)
                 }
-            }}><ArrowLeftCircleIcon width={24} height={24} /></button>
+            }}><ArrowLeftCircleIcon width={24} height={24} /></button> */}
         </div>
         <div className="callui">
             <div className={`selfview ${callService.callState == "connected" ? "selfview-minimized" : ""}`}>
@@ -278,10 +296,10 @@ const CallUI = () => {
                 </button>
                 {/* Buttons only shown after call accepted */}
                 {callService.callState == "connected" && <>
-                    <button className={cameraEnabled ? "red" : ""} onClick={() => setCameraEnabled(!cameraEnabled)}>
+                    <button className={!vMuted ? "red" : ""} onClick={toggleVideo}>
                         <VideoCameraIcon width={24} height={24} />
                     </button>
-                    <button className={microphoneEnabled ? "red" : ""} onClick={() => setMicrophoneEnabled(!microphoneEnabled)}>
+                    <button className={!aMuted ? "red" : ""} onClick={toggleAudio}>
                         <MicrophoneIcon width={24} height={24} />
                     </button>
                 </>}

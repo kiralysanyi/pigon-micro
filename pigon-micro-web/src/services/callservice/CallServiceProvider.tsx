@@ -1,4 +1,4 @@
-import { createContext, useRef, useState } from "react"
+import { createContext, useCallback, useRef, useState } from "react"
 import { getSocket } from "../../lib/socket";
 
 interface CallserviceContextData {
@@ -148,8 +148,11 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
             console.error("PC not initialized")
         }
     }
+    const [localVideoStream, setLocalVideostream] = useState<MediaStream>();
+    const [localAudioStream, setLocalAudioStream] = useState<MediaStream>();
 
-    const endCall = () => {
+
+    const endCall = useCallback(() => {
         console.log("Ending call ", localAudioStream, localVideoStream)
         localAudioStream?.getTracks().forEach((track) => track.stop());
         localVideoStream?.getTracks().forEach((track) => track.stop());
@@ -166,11 +169,9 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         getSocket().then((socket) => {
             socket.off("relay")
         })
-    }
+    }, [localAudioStream, localVideoStream])
 
     const [callState, setCallState] = useState<"ringing" | "connected" | "connecting" | undefined>(undefined);
-    const [localVideoStream, setLocalVideostream] = useState<MediaStream>();
-    const [localAudioStream, setLocalAudioStream] = useState<MediaStream>();
 
     const audioRef = useRef<HTMLAudioElement>(null);
 

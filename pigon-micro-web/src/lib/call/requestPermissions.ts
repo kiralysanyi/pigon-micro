@@ -1,5 +1,6 @@
 // Helper function to request permissions and probe for hw
 const requestPermissions = async (): Promise<{ audio: boolean, video: boolean }> => {
+    console.log("Requesting permissions")
     let audio = false;
     let video = false;
     try {
