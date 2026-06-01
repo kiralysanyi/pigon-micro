@@ -11,7 +11,6 @@ const getUserMedia = async ({ audio, video }: { audio: boolean, video: boolean }
     };
     console.log("Requesting media")
     const stream = await navigator.mediaDevices.getUserMedia({ audio: audio ? audioConf : false, video: video ? videoConf : false });
-
     return stream;
 }
 

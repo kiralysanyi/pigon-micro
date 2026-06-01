@@ -175,7 +175,7 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         getSocket().then((socket) => {
             socket.off("relay")
         })
-    }, [localAudioStream, localVideoStream])
+    }, [localAudioStream, localVideoStream, pc])
 
     const [callState, setCallState] = useState<"ringing" | "connected" | "connecting" | undefined>(undefined);
 

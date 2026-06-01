@@ -1,6 +1,6 @@
 import { useNavigate, useParams, useSearchParams } from "react-router";
 import "../styles/callui.css"
-import { MicrophoneIcon, PhoneArrowDownLeftIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
+import { MicrophoneIcon, PhoneArrowDownLeftIcon, TvIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useRef, useState } from "react";
 import { CallServiceContext } from "../services/callservice/CallServiceProvider";
 import requestPermissions from "../lib/call/requestPermissions";
@@ -9,6 +9,7 @@ import ringUser from "../lib/call/ringer";
 import getUserInfo from "../lib/auth/getUserInfo";
 import api from "../services/apiservice";
 import { getSocket } from "../lib/socket";
+import checkScreenShareSupport from "../lib/call/checkScreenShareSupport";
 
 const CallUI = () => {
     const navigate = useNavigate();
@@ -200,33 +201,11 @@ const CallUI = () => {
 
     }, [callService.pc, remotePeerId, finishedPermCheck, callService.inCall, callService.localAudioStream, callService.localVideoStream, callService.callState])
 
-    // useeffect hook for managing stream sending over webrtc
     useEffect(() => {
         if (localRef.current) {
             localRef.current.srcObject = callService.localVideoStream ? callService.localVideoStream : null
         }
-
-        if (callService.pc == undefined) {
-            console.log("Peer connection object not initialized yet")
-            return;
-        }
-
-        (async () => {
-            if (callService.localAudioStream) {
-                // enable audio send
-
-            } else {
-                // disable audio send
-            }
-
-            if (callService.localVideoStream) {
-                // enable video send
-            } else {
-                // disable video send
-            }
-        })()
-
-    }, [callService.localAudioStream, callService.localVideoStream, callService.pc]);
+    }, [callService.localVideoStream]);
 
     const leaveCall = () => {
         console.log("Leave call")
@@ -302,6 +281,9 @@ const CallUI = () => {
                     <button className={!aMuted ? "red" : ""} onClick={toggleAudio}>
                         <MicrophoneIcon width={24} height={24} />
                     </button>
+                    {checkScreenShareSupport() ? <button>
+                        <TvIcon width={24} height={24}/>
+                    </button> : ""}
                 </>}
             </div>
         </div>
