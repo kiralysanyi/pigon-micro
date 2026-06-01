@@ -23,7 +23,7 @@ const IndexPage = () => {
     const [hideSidebar, setHideSidebar] = useState(false);
     const krp = useContext(KeyRingContext);
     const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
-    const [incomingCall, setIncomingCall] = useState<{ from: string } | undefined>(undefined)
+    const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -57,7 +57,7 @@ const IndexPage = () => {
 
         const onRing = (data: any, cb: (res: { accepted: boolean, socketId: string }) => void) => {
             console.log("Ringing: ", data);
-            setIncomingCall({ from: data.userId })
+            setIncomingCall({ from: data.userId, socketId: data.socketId })
             if (!socket) {
                 console.error("Refused call: no socket")
                 cb({ accepted: false, socketId: "" })
@@ -89,7 +89,7 @@ const IndexPage = () => {
                 }
                 cb({ accepted: accept, socketId: socket.id })
                 if (accept == true) {
-                    navigate(`/chat/${params.id}/call?callee=true`)
+                    navigate(`/chat/${params.id}/call?callee=true&remoteId=${data.socketId}`)
                 }
             })
         }

@@ -9,6 +9,7 @@ import getUserMedia from "../lib/call/getUserMedia";
 import ringUser from "../lib/call/ringer";
 import getUserInfo from "../lib/auth/getUserInfo";
 import api from "../services/apiservice";
+import { getSocket } from "../lib/socket";
 
 const CallUI = () => {
     const navigate = useNavigate();
@@ -21,6 +22,27 @@ const CallUI = () => {
     const remoteRef = useRef<HTMLVideoElement>(null);
 
     const callService = useContext(CallServiceContext);
+    const [remotePeerId, setRemotePeerId] = useState<string | undefined>(undefined);
+
+    const [finishedPermCheck, setFinishedPermCheck] = useState(false);
+
+    useEffect(() => {
+        if (sparams.get("remoteId") != undefined) {
+            setRemotePeerId(sparams.get("remoteId") as string)
+        }
+    }, [])
+
+    useEffect(() => {
+        if (remoteRef.current == undefined) {
+            return;
+        }
+
+        if (callService.remoteVideo) {
+            remoteRef.current.srcObject = callService.remoteVideo;
+        } else {
+            remoteRef.current.srcObject = null;
+        }
+    }, [callService.remoteVideo])
 
     useEffect(() => {
         // Check if chat is direct chat
@@ -48,11 +70,13 @@ const CallUI = () => {
                 } else {
                     console.log("No video permission")
                 }
+                setFinishedPermCheck(true)
             })
         }
 
         // ring
         (async () => {
+            initCall();
             // if you are being called, do not call ringing stuff, and jump to webrtc setup
             if (sparams.get("callee") == "true") {
                 return;
@@ -74,7 +98,7 @@ const CallUI = () => {
                         leaveCall();
                     } else {
                         console.log("User accepted call");
-                        initCall();
+                        setRemotePeerId(response.socketId);
                     }
                 })
             }).catch((err) => {
@@ -83,6 +107,97 @@ const CallUI = () => {
             })
         })()
     }, []);
+
+    useEffect(() => {
+        if (callService.inCall == false) {
+            console.log("inCall state is false, aborting init")
+            return;
+        }
+        if (finishedPermCheck == false) {
+            console.warn("Waiting for permission checks");
+            return;
+        }
+
+        if (callService.localAudioStream == undefined && callService.localVideoStream == undefined) {
+            console.error("Cannot start call with zero streams");
+            return
+        }
+
+        if (callService.pc == undefined) {
+            const pc = new RTCPeerConnection({
+                iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+            })
+
+            // attach streams
+            if (callService.localAudioStream) {
+                pc.addTrack(callService.localAudioStream.getAudioTracks()[0])
+            }
+            if (callService.localVideoStream) {
+                pc.addTrack(callService.localVideoStream.getVideoTracks()[0])
+            }
+
+            callService.setPc?.(pc);
+            return;
+        }
+
+        if (remotePeerId == undefined) {
+            console.error("Remote peer id is not defined")
+            return;
+        }
+
+        let detach: (() => void) | undefined = undefined;
+
+        (async () => {
+            console.log("Attaching shit")
+            await callService.attachSignaling?.(remotePeerId);
+            const socket = await getSocket();
+            if (sparams.get("callee") == "true") {
+                // handle offer answering
+                let handleRelay = async ({ from, payload }: any) => {
+                    if (from != remotePeerId) {
+                        console.log("Ignored data from", from)
+                        return;
+                    }
+
+                    if (payload.type == "offer") {
+                        await callService.answerOffer?.(payload.sdp, remotePeerId)
+                    }
+                }
+                socket.on("relay", handleRelay)
+                console.log("Sending ready signal")
+                socket.emit("relay", remotePeerId, { type: "ready" })
+                detach = () => {
+                    socket.off("relay", handleRelay)
+                }
+            } else {
+                // handle offer creation and answer handling
+                // emit offer
+                let handleRelay = async ({ from, payload }: any) => {
+                    if (from != remotePeerId) {
+                        console.log("Ignored data from", from)
+                        return;
+                    }
+
+                    if (payload.type == "ready") {
+                        console.log("Callee signaled ready")
+                        await callService.emitOffer?.(remotePeerId);
+                        socket.off("relay", handleRelay)
+                    }
+                }
+                socket.on("relay", handleRelay)
+                detach = () => {
+                    socket.off("relay", handleRelay)
+                }
+            }
+        })();
+
+        return () => {
+            console.log("Detaching")
+            detach?.();
+        }
+
+
+    }, [callService.pc, remotePeerId, finishedPermCheck, callService.inCall, callService.localAudioStream, callService.localVideoStream])
 
     // useeffect hook for managing stream sending over webrtc
     useEffect(() => {
@@ -98,6 +213,7 @@ const CallUI = () => {
         (async () => {
             if (callService.localAudioStream) {
                 // enable audio send
+
             } else {
                 // disable audio send
             }
@@ -113,13 +229,31 @@ const CallUI = () => {
 
     const leaveCall = () => {
         console.log("Leave call")
+        getSocket().then((socket) => {
+            socket.emit("relay", remotePeerId, { type: "call-end" })
+        })
         callService.endCall?.();
         // Disconnect webrtc and stuff
 
 
         // leave ui
-        navigate(`/chat/${params.id}`)
+        navigate(`/`)
     }
+
+    useEffect(() => {
+        if (remotePeerId) {
+            getSocket().then((socket) => {
+                socket.on("relay", ({ from, payload }) => {
+                    if (from == remotePeerId) {
+                        if (payload.type == "call-end") {
+                            window.alert("Call ended")
+                            leaveCall();
+                        }
+                    }
+                })
+            })
+        }
+    }, [remotePeerId])
 
     return <>
         <div className="header">
@@ -127,7 +261,7 @@ const CallUI = () => {
                 if (callService.callState != "connected") {
                     leaveCall();
                 } else {
-                    navigate(`/chat/${params.id}`)
+                    navigate(`/chat`)
                 }
             }}><ArrowLeftCircleIcon width={24} height={24} /></button>
         </div>

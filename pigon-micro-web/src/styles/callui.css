@@ -34,8 +34,7 @@
 }
 
 .callui .selfview,
-.selfview video,
-.callui .remoteview {
+.selfview video {
     position: absolute;
     top: 0px;
     right: 0px;
@@ -46,12 +45,24 @@
     object-fit: cover;
 }
 
-.callui .remoteview {
+.callui .remoteview,
+.remoteview video {
+    position: absolute;
+    top: 0px;
+    left: 0px;
     z-index: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .selfview-minimized {
-    width: 8rem;
-    height: auto;
+    width: 20dvw !important;
+    height: 20dvh !important;
+}
+
+.selfview-minimized video {
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
