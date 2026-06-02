@@ -51,12 +51,14 @@ const CallUI = () => {
         callService.setCall?.(parseInt(params.id as string));
 
         callService.setCallState?.("ringing");
+        let videoStream: MediaStream;
+        let audioStream: MediaStream;
 
         const initCall = () => {
             requestPermissions().then(async (granted) => {
                 if (granted.audio) {
                     console.log("Got audio permission")
-                    const audioStream = await getUserMedia({ audio: true, video: false });
+                    audioStream = await getUserMedia({ audio: true, video: false });
                     callService.setStream?.("audio", audioStream);
                 } else {
                     console.log("No audio permission");
@@ -64,7 +66,7 @@ const CallUI = () => {
 
                 if (granted.video) {
                     console.log("Got video permission")
-                    const videoStream = await getUserMedia({ audio: false, video: true });
+                    videoStream = await getUserMedia({ audio: false, video: true });
                     callService.setStream?.("video", videoStream);
                 } else {
                     console.log("No video permission");
@@ -94,6 +96,8 @@ const CallUI = () => {
                 ringUser(userToCall).then((response) => {
                     if (response.accepted == false) {
                         window.alert("User declined call");
+                        audioStream.getTracks().forEach((track) => track.stop());
+                        videoStream.getTracks().forEach((track) => track.stop());
                         leaveCall();
                     } else {
                         console.log("User accepted call");
@@ -201,19 +205,28 @@ const CallUI = () => {
     }
 
     useEffect(() => {
+        let handleFunc = ({ from, payload }: any) => {
+            if (from == remotePeerId) {
+                if (payload.type == "call-end") {
+                    window.alert("Call ended")
+                    leaveCall();
+                }
+            }
+        }
         if (remotePeerId) {
             getSocket().then((socket) => {
-                socket.on("relay", ({ from, payload }) => {
-                    if (from == remotePeerId) {
-                        if (payload.type == "call-end") {
-                            window.alert("Call ended")
-                            leaveCall();
-                        }
-                    }
-                })
+                socket.on("relay", handleFunc)
             })
         }
-    }, [remotePeerId])
+
+        return () => {
+            if (remotePeerId) {
+                getSocket().then((socket) => {
+                    socket.off("relay", handleFunc)
+                })
+            }
+        }
+    }, [remotePeerId, callService.localAudioStream, callService.localScreenStream, callService.localVideoStream, callService.pc])
 
     const [vMuted, setVMuted] = useState(false);
     const [aMuted, setAMuted] = useState(false);
@@ -258,11 +271,13 @@ const CallUI = () => {
 
                 const sender = callService.pc.addTrack(videoTrack, stream);
                 callService.screenSendRef.current = sender;
-                callService.setStream?.("screen", stream);
+
 
                 videoTrack.addEventListener("ended", () => {
                     stopScreenShare(sender, stream);
                 });
+
+                callService.setStream?.("screen", stream);
 
             } catch (error) {
                 console.error(error)
@@ -291,6 +306,9 @@ const CallUI = () => {
             <div className={`remoteview ${callService.remoteScreen ? "remote-minimized" : ""}`}>
                 <video autoPlay muted ref={remoteRef}></video>
             </div>
+            {callService.callState !== "connected" && (
+                <div className="state">{callService.callState}</div>
+            )}
             <div className="dock">
                 <button className="red" onClick={leaveCall}>
                     <PhoneArrowDownLeftIcon width={24} height={24} />
