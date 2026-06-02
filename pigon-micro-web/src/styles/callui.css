@@ -93,3 +93,18 @@
 .callui video {
     background-color: transparent;
 }
+
+.state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: auto;
+    height: auto;
+    padding: 2rem;
+    border-radius: 1rem;
+    background-color: rgba(30, 30, 30, 0.8);
+    backdrop-filter: blur(4px);
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    z-index: 10;
+}

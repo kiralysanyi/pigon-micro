@@ -2,7 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
-import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon, PhoneIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftEndOnRectangleIcon, Bars3Icon, Cog6ToothIcon, PhoneArrowDownLeftIcon, PhoneArrowUpRightIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import logout from "../lib/auth/logout";
 import type { Socket } from "socket.io-client";
 import { getSocket } from "../lib/socket";
@@ -10,6 +10,7 @@ import api from "../services/apiservice";
 import getUserInfo from "../lib/auth/getUserInfo";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import type { ChatinfoBrief } from "../types/ChatinfoBrief";
+import getUsernameById from "../lib/auth/getUsernameById";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -55,9 +56,9 @@ const IndexPage = () => {
             updateChatList();
         }
 
-        const onRing = (data: any, cb: (res: { accepted: boolean, socketId: string }) => void) => {
+        const onRing = async (data: any, cb: (res: { accepted: boolean, socketId: string }) => void) => {
             console.log("Ringing: ", data);
-            setIncomingCall({ from: data.userId, socketId: data.socketId })
+            setIncomingCall({ from: await getUsernameById(data.userId), socketId: data.socketId })
             if (!socket) {
                 console.error("Refused call: no socket")
                 cb({ accepted: false, socketId: "" })
@@ -149,10 +150,10 @@ const IndexPage = () => {
 
     return (userdata && connected == true) ? <>
         {incomingCall ? <div className="call-popup">
-            <h1>{incomingCall.from}</h1>
+            <span>Incoming call from: {incomingCall.from}</span>
             <div className="action">
-                <button onClick={() => handleCall?.(true)}>Accept</button>
-                <button onClick={() => handleCall?.(false)}>Decline</button>
+                <button className="accept-btn" onClick={() => handleCall?.(true)}><PhoneArrowUpRightIcon width={24} height={24}/></button>
+                <button className="decline-btn" onClick={() => handleCall?.(false)}><PhoneArrowDownLeftIcon width={24} height={24}/></button>
             </div>
         </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
