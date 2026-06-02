@@ -235,7 +235,7 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
 
 
     const endCall = useCallback(() => {
-        console.log("Ending call ", localAudioStream, localVideoStream)
+        console.log("Ending call ", localAudioStream, localVideoStream, localScreenStream)
         localAudioStream?.getTracks().forEach((track) => track.stop());
         localVideoStream?.getTracks().forEach((track) => track.stop());
         localScreenStream?.getTracks().forEach((track) => track.stop());
@@ -254,13 +254,14 @@ const CallServiceProvider = ({ children }: React.PropsWithChildren) => {
         getSocket().then((socket) => {
             socket.off("relay")
         })
-    }, [localAudioStream, localVideoStream, pc])
+    }, [localAudioStream, localVideoStream, localScreenStream, pc])
 
     const [callState, setCallState] = useState<"ringing" | "connected" | "connecting" | undefined>(undefined);
 
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const setStream = (type: "video" | "audio" | "screen", stream: MediaStream | undefined) => {
+        console.log("Setstream: ", type, stream)
         switch (type) {
             case "audio":
                 setLocalAudioStream(stream);

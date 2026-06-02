@@ -271,11 +271,13 @@ const CallUI = () => {
 
                 const sender = callService.pc.addTrack(videoTrack, stream);
                 callService.screenSendRef.current = sender;
-                callService.setStream?.("screen", stream);
+
 
                 videoTrack.addEventListener("ended", () => {
                     stopScreenShare(sender, stream);
                 });
+
+                callService.setStream?.("screen", stream);
 
             } catch (error) {
                 console.error(error)
