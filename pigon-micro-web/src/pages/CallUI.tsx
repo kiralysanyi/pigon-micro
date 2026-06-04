@@ -255,6 +255,8 @@ const CallUI = () => {
                 } catch (error) {
                     console.log("Failed to add audio stream")
                 }
+
+                setMessage(null)
             }
 
 
@@ -262,6 +264,7 @@ const CallUI = () => {
                 // caller code
                 getUserIdForCall(chatId).then(async (targetUserId) => {
                     setRemoteUserId(targetUserId);
+                    setMessage("Ringing...")
                     const response = await ringUser(targetUserId, chatId);
                     if (response.accepted == false) {
                         setMessage(`Call ended. Reason: ${response.reason}`)
@@ -271,6 +274,7 @@ const CallUI = () => {
                         return;
                     }
 
+                    setMessage("Connecting")
                     setAccepted(true)
 
                     // call accepted, set up transport
