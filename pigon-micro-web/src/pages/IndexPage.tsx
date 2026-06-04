@@ -11,6 +11,7 @@ import getUserInfo from "../lib/auth/getUserInfo";
 import { KeyRingContext } from "../services/KeyRingProvider";
 import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 import getUsernameById from "../lib/auth/getUsernameById";
+import { clearKeys } from "../lib/indexedDB/keyDB";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -90,7 +91,7 @@ const IndexPage = () => {
                 }
                 cb({ accepted: accept, socketId: socket.id })
                 if (accept == true) {
-                    navigate(`/chat/${params.id}/call?callee=true&remoteId=${data.socketId}`)
+                    navigate(`/chat/${data.chatId}/call?remoteId=${data.socketId}`)
                 }
             })
         }
@@ -152,8 +153,8 @@ const IndexPage = () => {
         {incomingCall ? <div className="call-popup">
             <span>Incoming call from: {incomingCall.from}</span>
             <div className="action">
-                <button className="accept-btn" onClick={() => handleCall?.(true)}><PhoneArrowUpRightIcon width={24} height={24}/></button>
-                <button className="decline-btn" onClick={() => handleCall?.(false)}><PhoneArrowDownLeftIcon width={24} height={24}/></button>
+                <button className="accept-btn" onClick={() => handleCall?.(true)}><PhoneArrowUpRightIcon width={24} height={24} /></button>
+                <button className="decline-btn" onClick={() => handleCall?.(false)}><PhoneArrowDownLeftIcon width={24} height={24} /></button>
             </div>
         </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
@@ -163,6 +164,7 @@ const IndexPage = () => {
                 <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
                 <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
                     logout().then(() => {
+                        clearKeys();
                         // Clear keys then navigate to login
                         krp?.setMasterKey(undefined);
                         krp?.setPrivKey(undefined);
