@@ -8,6 +8,7 @@ import ringUser from "../lib/call/ringer";
 import { getSocket } from "../lib/socket";
 import { RTCWrapper } from "../services/callservice/WebRTC_Service";
 import getUserMedia from "../lib/call/getUserMedia";
+import getScreen from "../lib/call/getScreen";
 
 const CallUI = () => {
     const [vMuted, setVMuted] = useState(false);
@@ -23,12 +24,18 @@ const CallUI = () => {
     const localVideoStreamRef = useRef<MediaStream>(null);
     const localAudioStreamRef = useRef<MediaStream>(null);
     const localVideoRef = useRef<HTMLVideoElement>(null);
+    const remoteScreenRef = useRef<HTMLVideoElement>(null);
+
+    const localScreenStreamRef = useRef<MediaStream | null>(null);
+    const [streaming, setStreaming] = useState(false);
 
     const [minimizeLocal, setMinimizeLocal] = useState(false);
+    const [minimizeRemote, setMinimizeRemote] = useState(false);
 
     const [remoteUserId, setRemoteUserId] = useState<number>();
     const [remoteSocketId, setRemoteSocketId] = useState<string>();
     const [accepted, setAccepted] = useState(false);
+    const rtcRef = useRef<RTCWrapper>(null);
 
     const navigate = useNavigate();
 
@@ -45,6 +52,7 @@ const CallUI = () => {
         })
     }
 
+    // handle mute
     useEffect(() => {
         if (localAudioStreamRef.current) {
             localAudioStreamRef.current.getTracks().forEach((track) => track.enabled = !aMuted)
@@ -55,6 +63,7 @@ const CallUI = () => {
         }
     }, [vMuted, aMuted])
 
+    // cleanup
     useEffect(() => {
         return () => {
             if (localVideoStreamRef.current) {
@@ -65,12 +74,18 @@ const CallUI = () => {
                 localAudioStreamRef.current.getTracks().forEach((track) => track.stop());
             }
 
+            if (localScreenStreamRef.current) {
+                localScreenStreamRef.current.getTracks().forEach((track) => track.stop());
+            }
+
             getSocket().then((socket) => {
                 socket.off("relay")
             })
         }
     }, [])
 
+
+    // main logic
     useEffect(() => {
         let remoteId = sparams.get("remoteId");
         let isCaller = remoteId == null;
@@ -82,6 +97,9 @@ const CallUI = () => {
                 const webrtc = new RTCWrapper((data) => {
                     socket.emit("relay", remoteId, data)
                 }, isCaller);
+
+                rtcRef.current = webrtc;
+                let screenTrackId: string | null = null;
 
                 // relay listener
                 socket.on("relay", ({ from, payload }) => {
@@ -96,6 +114,11 @@ const CallUI = () => {
                         return;
                     }
 
+                    if (payload.trackId) {
+                        screenTrackId = payload.trackId;
+                        return;
+                    }
+
                     if (payload.type == "call-end") {
                         setMessage("Call ended");
                         setTimeout(() => {
@@ -106,10 +129,25 @@ const CallUI = () => {
                 })
 
                 // listen for streams
-                let screenTrackId = null;
                 webrtc.pc.addEventListener("track", ({ track }) => {
                     if (track.id == screenTrackId && track.kind == "video") {
-                        // TODO: implement screen track handling
+                        if (remoteScreenRef.current) {
+                            remoteScreenRef.current.srcObject = new MediaStream([track]);
+                            setMinimizeRemote(true);
+                            const handleRelay = ({ from, payload }: any) => {
+                                if (from == remoteId) {
+                                    if (payload.type == "screen-end") {
+                                        console.log("Screen share ended!")
+                                        setMinimizeRemote(false);
+                                        if (remoteScreenRef.current) {
+                                            remoteScreenRef.current.srcObject = null
+                                        }
+                                        socket.off("relay", handleRelay);
+                                    }
+                                }
+                            }
+                            socket.on("relay", handleRelay)
+                        }
                         return;
                     }
 
@@ -186,10 +224,49 @@ const CallUI = () => {
         })
     }, [])
 
+    const stopStream = () => {
+        setStreaming(false);
+        if (localScreenStreamRef.current) {
+            localScreenStreamRef.current.getTracks().forEach((track) => track.stop());
+        }
+
+        getSocket().then((socket) => {
+            socket.emit("relay", remoteSocketId, { type: "screen-end" });
+        })
+    }
+
+    const startStream = () => {
+        getSocket().then(async (socket) => {
+            if (rtcRef.current) {
+                const stream = await getScreen();
+                const track = stream.getVideoTracks()[0];
+                setStreaming(true);
+                let sender: RTCRtpSender;
+                track.addEventListener("ended", () => {
+                    rtcRef.current?.pc.removeTrack(sender);
+                    stopStream();
+                })
+
+                socket.emit("relay", remoteSocketId, { trackId: track.id });
+                localScreenStreamRef.current = stream;
+                sender = rtcRef.current.pc.addTrack(track);
+            }
+        })
+    }
+
+    const toggleStream = () => {
+        if (streaming) {
+            stopStream();
+        } else {
+            startStream();
+        }
+    }
+
     return <>
         <div className="callui">
             <audio hidden ref={remoteAudioRef} autoPlay playsInline></audio>
-            <video ref={remoteVideoRef} className="remote-video" autoPlay playsInline></video>
+            <video ref={remoteScreenRef} className="remote-screen" autoPlay playsInline muted></video>
+            <video ref={remoteVideoRef} className={`remote-video ${minimizeRemote ? "remote-video-minimized" : ""}`} autoPlay playsInline></video>
             <video ref={localVideoRef} className={`local-video ${minimizeLocal ? "local-video-minimized" : ""}`} autoPlay muted playsInline></video>
             {message && <div className="state">{message}</div>}
             <div className="dock">
@@ -204,7 +281,7 @@ const CallUI = () => {
                     <button className={!aMuted ? "red" : ""} onClick={() => setAMuted(!aMuted)}>
                         <MicrophoneIcon width={24} height={24} />
                     </button>
-                    {checkScreenShareSupport() ? <button className={""}>
+                    {checkScreenShareSupport() ? <button onClick={toggleStream} className={streaming ? "red" : ""}>
                         <TvIcon width={24} height={24} />
                     </button> : ""}
                 </>

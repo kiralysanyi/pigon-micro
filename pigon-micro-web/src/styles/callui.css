@@ -33,7 +33,9 @@
     background-color: rgb(135, 0, 0);
 }
 
-.remote-video, .local-video {
+.remote-video,
+.local-video,
+.remote-screen {
     position: absolute;
     top: 0px;
     left: 0px;
@@ -47,8 +49,16 @@
     top: 0px;
     right: 0px;
     left: auto;
-    width: 10%;
-    height: 10%;
+    width: 15%;
+    height: 15%;
+}
+
+.remote-video-minimized {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 15%;
+    height: 15%;
 }
 
 .state {
