@@ -32,6 +32,11 @@ const AccountPage = () => {
                 {/* TODO: If endpoint implemented, implement usage here too */}
                 <button className="redbutton">Delete Account</button>
             </>}
+            <p>
+                pigon-micro by Király Sándor
+                <br />
+                <a href="https://github.com/kiralysanyi/pigon-micro" target="blank">Source</a>
+            </p>
         </div>
     </>
 }

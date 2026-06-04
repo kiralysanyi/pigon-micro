@@ -18,6 +18,7 @@ const CallUI = () => {
     const params = useParams();
 
     const [message, setMessage] = useState<string | null>(null);
+    const callActiveRef = useRef<boolean>(false)
 
     const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -36,10 +37,12 @@ const CallUI = () => {
     const [remoteSocketId, setRemoteSocketId] = useState<string>();
     const [accepted, setAccepted] = useState(false);
     const rtcRef = useRef<RTCWrapper>(null);
+    const pingIntervalRef = useRef<number>(null)
 
     const navigate = useNavigate();
 
     const endCall = () => {
+        callActiveRef.current = false;
         getSocket().then((socket) => {
             if (remoteUserId && !accepted) {
                 socket.emit("ring-end", remoteUserId);
@@ -63,6 +66,11 @@ const CallUI = () => {
         }
     }, [vMuted, aMuted])
 
+    const remoteSocketIdRef = useRef<string>(remoteSocketId)
+
+    // sync state to ref
+    useEffect(() => { remoteSocketIdRef.current = remoteSocketId }, [remoteSocketId])
+
     // cleanup
     useEffect(() => {
         return () => {
@@ -78,8 +86,16 @@ const CallUI = () => {
                 localScreenStreamRef.current.getTracks().forEach((track) => track.stop());
             }
 
+            if (pingIntervalRef.current) {
+                clearInterval(pingIntervalRef.current);
+            }
+
             getSocket().then((socket) => {
-                socket.off("relay")
+                socket.off("relay");
+                if (callActiveRef.current == true) {
+                    // send call end signal
+                    socket.emit("relay", remoteSocketIdRef.current, { type: "call-end" })
+                }
             })
         }
     }, [])
@@ -96,6 +112,7 @@ const CallUI = () => {
         }
 
         getSocket().then(async (socket) => {
+            callActiveRef.current = true;
             const setupRtc = async () => {
                 console.log("Socket id: ", socket.id)
                 const webrtc = new RTCWrapper((data) => {
@@ -113,6 +130,10 @@ const CallUI = () => {
                         return;
                     }
 
+                    if (payload.type == "ping") {
+                        socket.emit("relay", remoteId, { type: "pong" })
+                    }
+
                     if (payload.description != undefined || payload.candidate != undefined) {
                         webrtc.receiveHandler(payload);
                         return;
@@ -128,6 +149,9 @@ const CallUI = () => {
                     }
 
                     if (payload.type == "call-end") {
+                        if (pingIntervalRef.current) {
+                            clearInterval(pingIntervalRef.current);
+                        }
                         setMessage("Call ended");
                         setTimeout(() => {
                             navigate("/")
@@ -135,6 +159,36 @@ const CallUI = () => {
                     }
 
                 })
+
+                // ping-pong
+                let responded = true;
+
+                const pongHandler = ({ from, payload }: any) => {
+                    if (from == remoteId) {
+                        if (payload.type == "pong") {
+                            responded = true
+                        }
+                    }
+                }
+
+                socket.on("relay", pongHandler)
+
+                pingIntervalRef.current = setInterval(() => {
+                    if (responded == false) {
+                        if (pingIntervalRef.current) {
+                            clearInterval(pingIntervalRef.current);
+                        }
+                        setMessage("Call ended. Reason: timeout");
+                        setTimeout(() => {
+                            endCall();
+                        }, 2000);
+                        return;
+                    }
+
+                    responded = false;
+
+                    socket.emit("relay", remoteId, { type: "ping" })
+                }, 1000);
 
                 // listen for streams
                 webrtc.pc.addEventListener("track", ({ track }) => {
@@ -201,6 +255,8 @@ const CallUI = () => {
                 } catch (error) {
                     console.log("Failed to add audio stream")
                 }
+
+                setMessage(null)
             }
 
 
@@ -208,6 +264,7 @@ const CallUI = () => {
                 // caller code
                 getUserIdForCall(chatId).then(async (targetUserId) => {
                     setRemoteUserId(targetUserId);
+                    setMessage("Ringing...")
                     const response = await ringUser(targetUserId, chatId);
                     if (response.accepted == false) {
                         setMessage(`Call ended. Reason: ${response.reason}`)
@@ -217,6 +274,7 @@ const CallUI = () => {
                         return;
                     }
 
+                    setMessage("Connecting")
                     setAccepted(true)
 
                     // call accepted, set up transport
