@@ -91,7 +91,7 @@ const IndexPage = () => {
                 }
                 cb({ accepted: accept, socketId: socket.id })
                 if (accept == true) {
-                    navigate(`/chat/${params.id}/call?callee=true&remoteId=${data.socketId}`)
+                    navigate(`/chat/${data.chatId}/call?remoteId=${data.socketId}`)
                 }
             })
         }

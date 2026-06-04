@@ -14,6 +14,8 @@ const getSocketIOServer = () => {
     }
 }
 
+const callTrack: Record<number, boolean> = {}
+
 const attachSocketio = (server: Server) => {
     console.log("Attaching socket.io")
     io = new SocketIO.Server(server, { path: "/socket", cors: { origin: "*" } })
@@ -101,19 +103,34 @@ const attachSocketio = (server: Server) => {
 
 
         // signaling/call stuff
-        socket.on("ring", (userId: number) => {
+        socket.on("ring-end", (userId: number) => {
+            if (callTrack[userId] == false) {
+                return;
+            }
+            io.to("usr" + userId).emit("ring-end");
+            callTrack[userId] = false
+        })
+
+        socket.on("ring", (userId: number, chatId: number) => {
+            if (callTrack[userId] == true) {
+                socket.emit("ring-response", { accepted: false, socketId: "", reason: "busy" })
+                return;
+            }
             console.log("Ring: ", userId)
             let gotResponse = false;
-            io.to("usr" + userId).timeout(30_000).emit("ring", { userId, socketId: socket.id }, (err, responses) => {
+            callTrack[userId] = true;
+            io.to("usr" + userId).timeout(30_000).emit("ring", { userId, socketId: socket.id, chatId }, (err, responses) => {
                 if (gotResponse) {
                     return;
                 }
 
                 gotResponse = true;
 
+                callTrack[userId] = false;
                 io.to("usr" + userId).emit("ring-end");
                 if (responses.length == 0) {
-                    socket.emit("ring-response", { accepted: false, socketId: "" })
+                    socket.emit("ring-response", { accepted: false, socketId: "", reason: "not available" })
+                    return;
                 }
                 console.log("Ring response: ", err, responses)
                 socket.emit("ring-response", responses[0]);
