@@ -91,6 +91,10 @@ const CallUI = () => {
         let isCaller = remoteId == null;
         let chatId = parseInt(params.id as string);
 
+        if (remoteId) {
+            setRemoteSocketId(remoteId);
+        }
+
         getSocket().then(async (socket) => {
             const setupRtc = async () => {
                 console.log("Socket id: ", socket.id)
@@ -115,6 +119,7 @@ const CallUI = () => {
                     }
 
                     if (payload.trackId) {
+                        console.log("Got screen share track id:", payload.trackId)
                         screenTrackId = payload.trackId;
                         return;
                     }
@@ -148,6 +153,11 @@ const CallUI = () => {
                             }
                             socket.on("relay", handleRelay)
                         }
+                        return;
+                    }
+
+                    if (track.kind == "video" && remoteVideoRef.current?.srcObject) {
+                        console.error("Unknown video track!");
                         return;
                     }
 
