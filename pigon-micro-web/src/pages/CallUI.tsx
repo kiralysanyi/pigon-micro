@@ -18,6 +18,7 @@ const CallUI = () => {
     const params = useParams();
 
     const [message, setMessage] = useState<string | null>(null);
+    const callActiveRef = useRef<boolean>(false)
 
     const remoteAudioRef = useRef<HTMLAudioElement>(null);
     const remoteVideoRef = useRef<HTMLVideoElement>(null);
@@ -40,6 +41,7 @@ const CallUI = () => {
     const navigate = useNavigate();
 
     const endCall = () => {
+        callActiveRef.current = false;
         getSocket().then((socket) => {
             if (remoteUserId && !accepted) {
                 socket.emit("ring-end", remoteUserId);
@@ -63,6 +65,11 @@ const CallUI = () => {
         }
     }, [vMuted, aMuted])
 
+    const remoteSocketIdRef = useRef<string>(remoteSocketId)
+
+    // sync state to ref
+    useEffect(() => { remoteSocketIdRef.current = remoteSocketId }, [remoteSocketId])
+
     // cleanup
     useEffect(() => {
         return () => {
@@ -79,7 +86,11 @@ const CallUI = () => {
             }
 
             getSocket().then((socket) => {
-                socket.off("relay")
+                socket.off("relay");
+                if (callActiveRef.current == true) {
+                    // send call end signal
+                    socket.emit("relay", remoteSocketIdRef.current, { type: "call-end" })
+                }
             })
         }
     }, [])
@@ -96,6 +107,7 @@ const CallUI = () => {
         }
 
         getSocket().then(async (socket) => {
+            callActiveRef.current = true;
             const setupRtc = async () => {
                 console.log("Socket id: ", socket.id)
                 const webrtc = new RTCWrapper((data) => {
