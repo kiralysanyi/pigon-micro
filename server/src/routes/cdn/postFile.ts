@@ -12,7 +12,7 @@ const postFile: RequestHandler = (req: reqWithUserinfo, res) => {
             if (err instanceof MulterError) {
                 if (err.code == "LIMIT_FILE_SIZE") {
                     return res.status(413).json({
-                        message: `Max media file size is: ${serverConfig.MEDIA_MAX_SIZE * 1_000_000}MB.`
+                        message: `Max media file size is: ${serverConfig.MEDIA_MAX_SIZE}MB.`
                     })
                 }
             }

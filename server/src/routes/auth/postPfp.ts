@@ -15,7 +15,7 @@ const postPfp: RequestHandler = async (req: reqWithUserinfo, res) => {
             // A Multer error occurred when uploading (e.g., file too large)
             if (err.code === 'LIMIT_FILE_SIZE') {
                 return res.status(413).json({
-                    message: `File is too large. Max limit is ${serverConfig.PFP_MAX_SIZE * 1_000_000}MB.`
+                    message: `File is too large. Max limit is ${serverConfig.PFP_MAX_SIZE}MB.`
                 });
             }
             return res.status(400).json({ message: err.message });

@@ -86,6 +86,9 @@ const ChatPage = () => {
                         setMessages(prev => prev.filter(msg => msg.localId !== localUID));
                         return;
                     }
+                    if (typeof error == "string") {
+                        window.alert(error);
+                    }
                     setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "failed", type: "text", message: "Failed to send file" } : msg))
                     setTimeout(() => {
                         setMessages(prev => prev.filter(msg => msg.localId !== localUID));

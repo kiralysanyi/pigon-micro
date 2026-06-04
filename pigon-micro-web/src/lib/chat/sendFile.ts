@@ -6,15 +6,9 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
     return new Promise((resolve, reject) => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = "image/*, video/*";
+        input.accept = "image/png,image/jpeg,image/jpg,image/webp,image/gif,video/mp4,video/webp";
 
-        input.addEventListener("cancel", () => {
-            console.log("No file selected")
-            return reject("No file selected");
-
-        })
-
-        input.addEventListener("change", async () => {
+        const handleChange = async () => {
             const file = input.files?.item(0)
             if (file == null) {
                 console.log("No file selected")
@@ -23,6 +17,11 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
 
             if (file.size > 100 * 1_000_000) {
                 return reject("File too large")
+            }
+
+            if (!input.accept.includes(file.type)) {
+                reject(`File type not supported: ${file.type}`);
+                return;
             }
 
             const encrypted = await encryptFile(file, key);
@@ -48,6 +47,8 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
             const formData = new FormData();
             formData.append("file", packed);
             formData.append("type", type)
+            input.removeEventListener("change", handleChange);
+            input.remove();
 
             try {
                 const response = await api.postForm(`/cdn/${chatId}`, formData);
@@ -59,7 +60,17 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
             } catch (error) {
                 console.error("Upload error: ", error)
             }
+        }
+
+        input.addEventListener("cancel", () => {
+            input.removeEventListener("change", handleChange);
+            input.remove();
+            console.log("No file selected")
+            return reject("No file selected");
+
         })
+
+        input.addEventListener("change", handleChange)
 
         input.click();
     });

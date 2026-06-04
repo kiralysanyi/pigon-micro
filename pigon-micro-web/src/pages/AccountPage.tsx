@@ -17,9 +17,17 @@ const AccountPage = () => {
         })
     }, [])
 
+    const setPfp = () => {
+        uploadPfp().then(() => {
+            location.reload();
+        }).catch((error) => {
+            window.alert(error)
+        })
+    }
+
     return <>
         <div className="modal">
-            <button onClick={() => navigate("/", {viewTransition: true})}>
+            <button onClick={() => navigate("/", { viewTransition: true })}>
                 <ArrowLeftCircleIcon width={24} height={24} />
                 <span>Go back</span>
             </button>
@@ -28,7 +36,7 @@ const AccountPage = () => {
             <h3>Profile picture</h3>
             {userinfo && <>
                 <img className="ap-pfp" src={`${BASEURL}/auth/pfp/${userinfo.ID}`} alt="pfp" />
-                <button onClick={async () => {await uploadPfp(); location.reload();}}>Change Profile Picture</button>
+                <button onClick={setPfp}>Change Profile Picture</button>
                 {/* TODO: If endpoint implemented, implement usage here too */}
                 <button className="redbutton">Delete Account</button>
             </>}
