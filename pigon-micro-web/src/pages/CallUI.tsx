@@ -103,7 +103,7 @@ const CallUI = () => {
                 }, isCaller);
 
                 rtcRef.current = webrtc;
-                let screenTrackId: string | null = null;
+                let expectingScreenTrack = false;
 
                 // relay listener
                 socket.on("relay", ({ from, payload }) => {
@@ -120,7 +120,10 @@ const CallUI = () => {
 
                     if (payload.trackId) {
                         console.log("Got screen share track id:", payload.trackId)
-                        screenTrackId = payload.trackId;
+                        expectingScreenTrack = true;
+                        // send ack to remote peer so it starts streaming
+                        console.log("Emit id-ack", payload.trackId);
+                        socket.emit("relay", remoteId, { type: "id-ack" })
                         return;
                     }
 
@@ -135,7 +138,8 @@ const CallUI = () => {
 
                 // listen for streams
                 webrtc.pc.addEventListener("track", ({ track }) => {
-                    if (track.id == screenTrackId && track.kind == "video") {
+                    if (expectingScreenTrack == true && track.kind == "video") {
+                        expectingScreenTrack = false;
                         if (remoteScreenRef.current) {
                             remoteScreenRef.current.srcObject = new MediaStream([track]);
                             setMinimizeRemote(true);
@@ -157,7 +161,7 @@ const CallUI = () => {
                     }
 
                     if (track.kind == "video" && remoteVideoRef.current?.srcObject) {
-                        console.error("Unknown video track!");
+                        console.error("Unknown video track!", track.id);
                         return;
                     }
 
@@ -253,13 +257,26 @@ const CallUI = () => {
                 setStreaming(true);
                 let sender: RTCRtpSender;
                 track.addEventListener("ended", () => {
-                    rtcRef.current?.pc.removeTrack(sender);
+                    if (sender) {
+                        rtcRef.current?.pc.removeTrack(sender);
+                    }
                     stopStream();
                 })
 
                 socket.emit("relay", remoteSocketId, { trackId: track.id });
                 localScreenStreamRef.current = stream;
-                sender = rtcRef.current.pc.addTrack(track);
+                const handleAck = ({ from, payload }: any) => {
+                    if (from != remoteSocketId) {
+                        return;
+                    }
+                    if (rtcRef.current && payload.type == "id-ack") {
+                        console.log("id-ack", track.id)
+                        sender = rtcRef.current.pc.addTrack(track);
+                        socket.off("relay", handleAck)
+                    }
+                }
+
+                socket.on("relay", handleAck);
             }
         })
     }
