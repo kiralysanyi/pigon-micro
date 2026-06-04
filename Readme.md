@@ -217,5 +217,5 @@ This project is licensed under the **GNU Affero General Public License v3.0** �
 ---
 
 **Author:** Király Sándor  
-**Repository:** [https://github.com/kiralysanyi/pigon-micro](https://github.com/kiralysanyi/pigon-micro) (replace with actual URL)
+**Repository:** [https://github.com/kiralysanyi/pigon-micro](https://github.com/kiralysanyi/pigon-micro)
 **Disclaimer:** This readme.md was mostly written by AI (Deepseek).
