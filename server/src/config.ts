@@ -1,6 +1,6 @@
 import { config } from "dotenv";
 config();
-
+// TODO: read everything from environment
 const serverConfig = {
     PORT: process.env.PORT? parseInt(process.env.PORT): 8080,
     DB_DATABASE: process.env.DB_DATABASE,
