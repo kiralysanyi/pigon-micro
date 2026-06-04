@@ -27,7 +27,21 @@ if (!fs.existsSync(mediaPath)) {
     fs.mkdirSync(mediaPath);
 }
 
-const pfpUpload = multer({ storage: pfpStorage, limits: { fileSize: serverConfig.PFP_MAX_SIZE * 1_000_000 } });
+const pfpUpload = multer({
+    storage: pfpStorage, fileFilter: (req, file, cb) => {
+        const allowedMimes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+            'image/gif'
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+            cb(null, true);   // accept
+        } else {
+            cb(new Error('Invalid file type. Only JPEG, PNG, WEBP, GIF are allowed.'));
+        }
+    }, limits: { fileSize: serverConfig.PFP_MAX_SIZE * 1_000_000 }
+});
 const mediaUpload = multer({ dest: mediaPath, limits: { fileSize: serverConfig.MEDIA_MAX_SIZE * 1_000_000 } })
 
 export { pfpUpload, mediaUpload, pfpPath, mediaPath }
