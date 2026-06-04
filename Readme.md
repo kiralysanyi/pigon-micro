@@ -38,6 +38,7 @@
 - MySQL or MariaDB
 - Docker & Docker Compose (optional, for containerised deployment)
 - Git
+- Reverse Proxy for https (not needed for dev environment)
 
 ## Installation
 
@@ -112,6 +113,13 @@ npm run dev
 Access the frontend at `http://localhost:5173` (ensure the backend API is reachable – see `pigon-micro-web/src/conf.ts`).
 
 ### Production Mode (without Docker)
+
+#### Notes for deployment
+
+You will need a reverse proxy with https for two reasons:
+- Improve the security of the app
+- WebCrypto wont work on http sites
+
 Build both parts (as above), then run:
 ```bash
 cd server
