@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { BASEURL } from "../conf";
 import { Outlet, useNavigate, useParams } from "react-router";
 import type { userdata } from "../types/userdata";
@@ -12,6 +12,7 @@ import { KeyRingContext } from "../services/KeyRingProvider";
 import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 import getUsernameById from "../lib/auth/getUsernameById";
 import { clearKeys } from "../lib/indexedDB/keyDB";
+import ringtone from "../assets/ringtone.mp3";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -26,6 +27,7 @@ const IndexPage = () => {
     const krp = useContext(KeyRingContext);
     const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
     const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
+    const ringtoneRef = useRef<HTMLAudioElement>(null);
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -148,8 +150,22 @@ const IndexPage = () => {
         }
     }, [params, chats])
 
+    useEffect(() => {
+        if (incomingCall) {
+            ringtoneRef.current?.play();
+        }
+
+        return () => {
+            ringtoneRef.current?.pause();
+            if (ringtoneRef.current) {
+                ringtoneRef.current.currentTime = 0
+            }
+        }
+    }, [incomingCall])
+
 
     return (userdata && connected == true) ? <>
+        <audio ref={ringtoneRef} playsInline src={ringtone} />
         {incomingCall ? <div className="call-popup">
             <span>Incoming call from: {incomingCall.from}</span>
             <div className="action">
