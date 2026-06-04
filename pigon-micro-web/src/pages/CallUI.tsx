@@ -149,6 +149,9 @@ const CallUI = () => {
                     }
 
                     if (payload.type == "call-end") {
+                        if (pingIntervalRef.current) {
+                            clearInterval(pingIntervalRef.current);
+                        }
                         setMessage("Call ended");
                         setTimeout(() => {
                             navigate("/")
