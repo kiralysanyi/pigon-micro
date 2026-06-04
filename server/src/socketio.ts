@@ -112,10 +112,10 @@ const attachSocketio = (server: Server) => {
         })
 
         socket.on("ring", (userId: number, chatId: number) => {
-            if (callTrack[userId] == true) {
-                socket.emit("ring-response", { accepted: false, socketId: "", reason: "busy" })
-                return;
-            }
+            // if (callTrack[userId] == true) {
+            //     socket.emit("ring-response", { accepted: false, socketId: "", reason: "busy" })
+            //     return;
+            // }
             console.log("Ring: ", userId)
             let gotResponse = false;
             callTrack[userId] = true;
