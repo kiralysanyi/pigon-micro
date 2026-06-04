@@ -2,7 +2,7 @@ import { config } from "dotenv";
 config();
 // TODO: read everything from environment
 const serverConfig = {
-    PORT: process.env.PORT? parseInt(process.env.PORT): 8080,
+    PORT: process.env.PORT ? parseInt(process.env.PORT) : 8080,
     DB_DATABASE: process.env.DB_DATABASE,
     DB_HOST: process.env.DB_HOST,
     DB_USER: process.env.DB_USER,
@@ -11,8 +11,8 @@ const serverConfig = {
     USERFILES: process.env.USERFILES,
     REFRESH_EXPIRE: 128, // hours
     ACCESS_EXPIRE: 5, // minutes
-    PFP_MAX_SIZE: 1, // Megabytes
-    MEDIA_MAX_SIZE: 100 // Megabytes
+    PFP_MAX_SIZE: process.env.PFP_MAX_SIZE ? parseInt(process.env.PFP_MAX_SIZE) : 1, // Megabytes
+    MEDIA_MAX_SIZE: process.env.MEDIA_MAX_SIZE ? parseInt(process.env.MEDIA_MAX_SIZE) : 100 // Megabytes
 }
 
 export default serverConfig;
