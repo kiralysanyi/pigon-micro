@@ -1,7 +1,5 @@
 # Pigon Micro
 
-## Disclaimer: This readme.md was mostly written by AI (Deepseek).
-
 **Pigon Micro** is a self‑hosted, end‑to‑end encrypted chat application. It supports private and group conversations, file sharing (images/videos), voice/video calls with screen sharing, and a fully encrypted key management system. The project consists of a React/TypeScript frontend and a Node.js/Express backend, communicating via REST API, Socket.IO (real‑time messaging), and WebRTC (calls).
 
 <!-- ![Screenshot placeholder](https://via.placeholder.com/800x400?text=Pigon+Micro+Demo) -->
@@ -214,9 +212,10 @@ A GitHub Actions workflow (`.github/workflows/build-testing.yaml`) is included t
 
 ## License
 
-This project is currently **proprietary** (no explicit license). For any use, please contact the author.
+This project is licensed under the **GNU Affero General Public License v3.0** – see the [LICENSE](LICENSE) file for details.
 
 ---
 
 **Author:** Király Sándor  
 **Repository:** [https://github.com/kiralysanyi/pigon-micro](https://github.com/kiralysanyi/pigon-micro) (replace with actual URL)
+**Disclaimer:** This readme.md was mostly written by AI (Deepseek).
