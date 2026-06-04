@@ -37,6 +37,7 @@ const CallUI = () => {
     const [remoteSocketId, setRemoteSocketId] = useState<string>();
     const [accepted, setAccepted] = useState(false);
     const rtcRef = useRef<RTCWrapper>(null);
+    const pingIntervalRef = useRef<number>(null)
 
     const navigate = useNavigate();
 
@@ -85,6 +86,10 @@ const CallUI = () => {
                 localScreenStreamRef.current.getTracks().forEach((track) => track.stop());
             }
 
+            if (pingIntervalRef.current) {
+                clearInterval(pingIntervalRef.current);
+            }
+
             getSocket().then((socket) => {
                 socket.off("relay");
                 if (callActiveRef.current == true) {
@@ -125,6 +130,10 @@ const CallUI = () => {
                         return;
                     }
 
+                    if (payload.type == "ping") {
+                        socket.emit("relay", remoteId, { type: "pong" })
+                    }
+
                     if (payload.description != undefined || payload.candidate != undefined) {
                         webrtc.receiveHandler(payload);
                         return;
@@ -147,6 +156,36 @@ const CallUI = () => {
                     }
 
                 })
+
+                // ping-pong
+                let responded = true;
+
+                const pongHandler = ({ from, payload }: any) => {
+                    if (from == remoteId) {
+                        if (payload.type == "pong") {
+                            responded = true
+                        }
+                    }
+                }
+
+                socket.on("relay", pongHandler)
+
+                pingIntervalRef.current = setInterval(() => {
+                    if (responded == false) {
+                        if (pingIntervalRef.current) {
+                            clearInterval(pingIntervalRef.current);
+                        }
+                        setMessage("Call ended. Reason: timeout");
+                        setTimeout(() => {
+                            endCall();
+                        }, 2000);
+                        return;
+                    }
+
+                    responded = false;
+
+                    socket.emit("relay", remoteId, { type: "ping" })
+                }, 1000);
 
                 // listen for streams
                 webrtc.pc.addEventListener("track", ({ track }) => {
