@@ -49,7 +49,7 @@ const unwrapMasterKey = async (wrapped: string, password: string): Promise<Crypt
         "raw", keyBytes, kek,
         { name: "AES-GCM", iv: ivBytes },
         { name: "AES-GCM", length: 256 },
-        true,
+        false,
         ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
     )
 }
@@ -90,7 +90,7 @@ const importMasterFromBase64 = async (base64Key: string): Promise<CryptoKey> => 
         "raw",
         keyBytes,
         { name: "AES-GCM", length: 256 },
-        true,
+        false,
         ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
     );
 }
