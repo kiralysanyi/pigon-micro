@@ -11,6 +11,8 @@ import AccountPage from './pages/AccountPage'
 import ChatSettingsPage from './pages/ChatSettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CallUI from './pages/CallUI'
+import { useEffect } from 'react'
+import { toast, ToastContainer } from 'react-toastify';
 
 const router = createBrowserRouter([
   {
@@ -67,7 +69,35 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router}></RouterProvider>
+  useEffect(() => {
+    const handleNetworkError = () => toast.error("Check your internet connection");
+    const handleServerError = () => toast.error("Server error - try again later");
+    const handleForbidden = () => toast.error("You don't have permission");
+
+    window.addEventListener("api:network-error", handleNetworkError);
+    window.addEventListener("api:server-error", handleServerError);
+    window.addEventListener("api:forbidden", handleForbidden);
+    return () => {
+      window.removeEventListener("api:network-error", handleNetworkError);
+      window.removeEventListener("api:server-error", handleServerError);
+      window.removeEventListener("api:forbidden", handleForbidden);
+    };
+  }, []);
+  return <>
+    <RouterProvider router={router}></RouterProvider>
+    <ToastContainer
+      position="bottom-left"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />
+  </>
 }
 
 export default App
