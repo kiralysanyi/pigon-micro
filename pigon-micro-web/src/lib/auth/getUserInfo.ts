@@ -34,4 +34,6 @@ const getUserInfo = (userID?: number): Promise<userdata> => {
     });
 }
 
+export const clearUserInfoCache = () => { userInfoCache = {} }
+
 export default getUserInfo;

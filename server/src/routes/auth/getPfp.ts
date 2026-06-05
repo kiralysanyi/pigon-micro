@@ -29,9 +29,6 @@ const getPfp: RequestHandler = async (req, res) => {
         console.error("Failed to get profile picture", error);
         return res.status(500).json({ error: "Failed to get profile picture" });
     }
-
-
-
 }
 
 export default getPfp;

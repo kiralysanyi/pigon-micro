@@ -1,11 +1,12 @@
 import api from "../../services/apiservice";
+import { clearUserInfoCache } from "./getUserInfo";
 
 const logout = (): Promise<void> => {
     return new Promise(async (resolve, reject) => {
         api.post("/auth/logout", {}).then(() => {
             sessionStorage.clear();
             localStorage.clear();
-            // TODO: Clear keys from context and indexedDB
+            clearUserInfoCache();
             resolve();
         }).catch((err) => {
             console.error("Failed to log out: ", err)
