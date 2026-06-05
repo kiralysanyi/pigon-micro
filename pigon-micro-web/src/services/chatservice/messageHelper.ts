@@ -44,17 +44,12 @@ const handleMessageEvent = async ({ payload, chatID, senderId, senderKeyId, reci
     console.log(type)
     // handle text messages
     if (type == "text") {
-        decryptMsg(JSON.parse(payload), dKey).then(async (message) => {
-            cs.dispatchEvent(new CustomEvent("message", {
-                detail: { message: message, chatID, senderId, senderName: await getUsernameById(senderId), type: "text" }
-            }))
+        const decryptedMessage = await decryptMsg(JSON.parse(payload), dKey);
+        cs.dispatchEvent(new CustomEvent("message", {
+            detail: { message: decryptedMessage, chatID, senderId, senderName: await getUsernameById(senderId), type: "text" }
+        }))
 
-            console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
-
-        }).catch((err) => {
-            console.error("Failed to decrypt message: ", err)
-            console.error("MSGINFO: ", payload, chatID, senderId)
-        })
+        console.log("Message processing took: ", `${new Date().getTime() - startTime.getTime()}ms`)
     } else {
         // handle file messages
         const assetId = JSON.parse(payload).assetId;
@@ -109,53 +104,47 @@ const sendMessage = async (message: string, chatID: number, cs: ChatService) => 
 }
 
 const sendFileMessage = async (chatID: number, cs: ChatService): Promise<{ type: "image" | "video", url: string }> => {
-    return new Promise((resolve, reject) => {
-        api.get("/chat/" + chatID).then(async (response) => {
-            if (cs.masterKey == undefined) {
-                console.error("Chatservice not inited properly");
-                return;
-            }
+    if (!cs.masterKey) {
+        console.error("Chatservice not inited properly");
+        throw new Error("Chatservice not inited properly");
+    }
 
-            if (!cs.privKey) {
-                console.error("privKey not loaded");
-                return;
-            }
+    if (!cs.privKey) {
+        console.error("privKey not loaded");
+        throw new Error("privKey not loaded");
+    }
 
-            const chat = response.data.chat;
-            console.log(chat);
-            if (chat.type == "group") {
-                const { key, kGuid } = await getGroupEncryptKey(chatID, cs.privKey);
-                try {
-                    const data = await sendFile(chatID, key);
-                    console.log("File uploaded: ", data)
-                    cs.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, kGuid, type: data.type })
-                    console.log("Control message sent")
-                    resolve(data)
-                } catch (error) {
-                    reject(error);
-                }
+    const response = await api.get("/chat/" + chatID);
 
-                return;
-            }
+    const chat = response.data.chat;
+    if (chat.type == "group") {
+        const { key, kGuid } = await getGroupEncryptKey(chatID, cs.privKey);
+        try {
+            const data = await sendFile(chatID, key);
+            console.log("File uploaded: ", data)
+            cs.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, kGuid, type: data.type })
+            console.log("Control message sent")
+            return data;
+        } catch (error) {
+            throw error;
+        }
+    }
 
-            const participants = response.data.chat.participants as any[];
-            const userInfo = await getUserInfo();
-            const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
+    const participants = response.data.chat.participants as any[];
+    const userInfo = await getUserInfo();
+    const recipientID = participants.filter((p) => p.id != userInfo.ID)[0].id
 
-            const sharedKey = await getNewMessageEncryptionKey(recipientID, cs.masterKey)
+    const sharedKey = await getNewMessageEncryptionKey(recipientID, cs.masterKey)
 
-            // sendFile function handles upload
-            try {
-                const data = await sendFile(chatID, sharedKey.key);
-                console.log("File uploaded: ", data)
-                cs.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: data.type })
-                console.log("Control message sent")
-                resolve(data)
-            } catch (error) {
-                reject(error);
-            }
-        })
-    })
+    try {
+        const data = await sendFile(chatID, sharedKey.key);
+        console.log("File uploaded: ", data)
+        cs.socket?.emit("message", { payload: { assetId: data.assetId }, chatID, senderKeyId: sharedKey.senderKeyId, recipientKeyId: sharedKey.recipientKeyId, type: data.type })
+        console.log("Control message sent")
+        return data;
+    } catch (error) {
+        throw error;
+    }
 }
 
 export { handleMessageEvent, sendMessage, sendFileMessage };
