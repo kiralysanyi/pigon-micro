@@ -21,7 +21,7 @@ const AccountPage = () => {
         uploadPfp().then(() => {
             location.reload();
         }).catch((error) => {
-            window.alert(error)
+            window.dispatchEvent(new CustomEvent("api:error", { detail: { message: error } }));
         })
     }
 
