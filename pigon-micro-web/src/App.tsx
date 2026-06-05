@@ -78,16 +78,22 @@ function App() {
       toast.error(`Error: ${event.detail.message}`);
     };
 
+    const handleInfoMessage = (e: Event) => {
+      const event: CustomEvent = e as CustomEvent;
+      toast.info(event.detail.message);
+    }
+
     window.addEventListener("api:network-error", handleNetworkError);
     window.addEventListener("api:server-error", handleServerError);
     window.addEventListener("api:forbidden", handleForbidden);
     window.addEventListener("api:error", handleErrorMessage);
+    window.addEventListener("api:info", handleInfoMessage);
     return () => {
       window.removeEventListener("api:network-error", handleNetworkError);
       window.removeEventListener("api:server-error", handleServerError);
       window.removeEventListener("api:forbidden", handleForbidden);
       window.removeEventListener("api:error", handleErrorMessage);
-
+      window.removeEventListener("api:info", handleInfoMessage);
     };
   }, []);
   return <>
