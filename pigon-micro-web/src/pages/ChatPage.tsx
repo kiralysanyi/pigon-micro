@@ -87,7 +87,7 @@ const ChatPage = () => {
                         return;
                     }
                     if (typeof error == "string") {
-                        window.alert(error);
+                        window.dispatchEvent(new CustomEvent("api:error", { detail: { message: error } }));
                     }
                     setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "failed", type: "text", message: "Failed to send file" } : msg))
                     setTimeout(() => {
@@ -97,7 +97,7 @@ const ChatPage = () => {
 
             } catch (error) {
                 console.error(error);
-                window.alert(error);
+                window.dispatchEvent(new CustomEvent("api:error", { detail: { message: error } }));
             }
         }
 

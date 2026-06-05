@@ -10,39 +10,40 @@ const LoginPage = () => {
     const [error, setError] = useState<string>();
     const navigate = useNavigate();
 
-    const login = () => {
+    const login = async () => {
         setInputsDisabled(true);
         if (username === "" || password === "") {
-            setError("No input fields should be empty")
+            setError("No input fields should be empty");
             setInputsDisabled(false);
             return;
         }
 
-        axios.post(BASEURL + "/auth/login", {
-            username,
-            password
-        }).then((response) => {
+        try {
+            const response = await axios.post(BASEURL + "/auth/login", {
+                username,
+                password
+            });
             if (response.status == 200) {
                 localStorage.setItem("atoken", response.data.token);
                 localStorage.setItem("atokenExpire", response.data.tokenExpire);
                 localStorage.setItem("rtoken", response.data.refreshToken);
                 localStorage.setItem("rtokenExpire", response.data.refreshTokenExpire);
                 console.log("Logged in successfully: ", response.data);
-                navigate("/unlock", { viewTransition: true })
+                navigate("/unlock", { viewTransition: true });
             } else {
-                console.log(response.status)
+                console.log(response.status);
             }
-        }).catch((error) => {
-            console.error("Login fail: ", error.response)
+        } catch (error: any) {
+            console.error("Login fail: ", error.response);
             setInputsDisabled(false);
             if (typeof error.response.data.error == "string") {
-                setError(error.response.data.error)
+                setError(error.response.data.error);
             } else {
-                console.log(error.response)
-                setError("Unknown error, try again later")
+                console.log(error.response);
+                setError("Unknown error, try again later");
             }
-        })
-    }
+        }
+    };
 
     return <>
         <div className="modal">

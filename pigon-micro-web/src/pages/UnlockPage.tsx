@@ -19,68 +19,66 @@ const UnlockPage = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        // get private key
-        api.get("/keyring/privkey").then((response) => {
-            console.log("Got private key")
-            if (response.data.data.encryptedPrivKey == null) {
-                return navigate("/setup", { viewTransition: true })
-            }
-            setEncryptedPrivkey(response.data.data.encryptedPrivKey);
+        (async () => {
+            try {
+                // get private key
+                const response = await api.get("/keyring/privkey");
+                console.log("Got private key")
+                if (response.data.data.encryptedPrivKey == null) {
+                    return navigate("/setup", { viewTransition: true })
+                }
+                setEncryptedPrivkey(response.data.data.encryptedPrivKey);
 
-            // get public key
-            api.get("/keyring/pubkey").then((response) => {
+                // get public key
+                const pubkeyResponse = await api.get("/keyring/pubkey");
                 console.log("Got public key")
-                setPubkey(response.data.data.pubKey);
+                setPubkey(pubkeyResponse.data.data.pubKey);
                 setLoading(false);
                 setStatusText("Unlock keyring")
-            })
-        }).catch((err) => {
-            if (err.response) {
-                if (err.response.status == 401) {
-                    navigate("/login", { viewTransition: true })
+            } catch (err: any) {
+                if (err.response) {
+                    if (err.response.status == 401) {
+                        navigate("/login", { viewTransition: true })
+                    } else {
+                        setError("Error: " + err.response.data.message)
+                    }
                 } else {
-                    setError("Error: " + err.response.data.message)
+                    setError("Network error")
                 }
-            } else {
-                setError("Network error")
             }
-        })
+        })()
 
     }, []);
 
-    const unlock = () => {
-        setError(undefined)
+    const unlock = async () => {
+        setError(undefined);
         setLoading(true);
+
         if (encryptedPrivkey && pubkey) {
-            getMasterKey(kpass).then(async (masterKey) => {
+            try {
+                const masterKey = await getMasterKey(kpass);
                 // Load masterkey to context
                 krp?.setMasterKey(masterKey);
 
                 // Decrypt user keys
-                masterDecrypt(encryptedPrivkey, masterKey).then(async (decrypted) => {
-                    console.log("Decrypted privkey: ", decrypted)
-                    setStatusText("Unlocked keyring successfully")
-                    const privKey = await importECDHPrivateKeyFromBase64(decrypted);
-                    const pubKey = await importECDHPublicKeyFromBase64(pubkey);
-                    krp?.setPrivKey(privKey);
-                    krp?.setPubKey(pubKey);
-                    await saveKey("master", masterKey);
-                    await saveKey("private", privKey);
-                    await saveKey("public", pubKey);
+                const decrypted = await masterDecrypt(encryptedPrivkey, masterKey);
+                console.log("Decrypted privkey: ", decrypted)
+                setStatusText("Unlocked keyring successfully")
+                const privKey = await importECDHPrivateKeyFromBase64(decrypted);
+                const pubKey = await importECDHPublicKeyFromBase64(pubkey);
+                krp?.setPrivKey(privKey);
+                krp?.setPubKey(pubKey);
+                await saveKey("master", masterKey);
+                await saveKey("private", privKey);
+                await saveKey("public", pubKey);
 
-                    navigate("/", { viewTransition: true })
-                }).catch((error) => {
-                    console.error("Failed to decrypt private key: ", error)
-                    setStatusText("Unlock keyring")
-                    setError("Wrong password")
-                    setLoading(false);
-                })
-            }).catch((err) => {
-                console.error(err);
+                navigate("/", { viewTransition: true })
+            } catch (error) {
+                console.error("Failed to decrypt private key: ", error)
                 setStatusText("Unlock keyring")
                 setError("Wrong password")
                 setLoading(false);
-            })
+            }
         } else {
             console.log("No keys: ", encryptedPrivkey, pubkey)
             setLoading(false)

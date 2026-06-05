@@ -11,6 +11,8 @@ import AccountPage from './pages/AccountPage'
 import ChatSettingsPage from './pages/ChatSettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CallUI from './pages/CallUI'
+import { useEffect } from 'react'
+import { toast, ToastContainer } from 'react-toastify';
 
 const router = createBrowserRouter([
   {
@@ -67,7 +69,48 @@ const router = createBrowserRouter([
 ])
 
 function App() {
-  return <RouterProvider router={router}></RouterProvider>
+  useEffect(() => {
+    const handleNetworkError = () => toast.error("Check your internet connection");
+    const handleServerError = () => toast.error("Server error - try again later");
+    const handleForbidden = () => toast.error("You don't have permission");
+    const handleErrorMessage = (e: Event) => {
+      const event: CustomEvent = e as CustomEvent;
+      toast.error(`Error: ${event.detail.message}`);
+    };
+
+    const handleInfoMessage = (e: Event) => {
+      const event: CustomEvent = e as CustomEvent;
+      toast.info(event.detail.message);
+    }
+
+    window.addEventListener("api:network-error", handleNetworkError);
+    window.addEventListener("api:server-error", handleServerError);
+    window.addEventListener("api:forbidden", handleForbidden);
+    window.addEventListener("api:error", handleErrorMessage);
+    window.addEventListener("api:info", handleInfoMessage);
+    return () => {
+      window.removeEventListener("api:network-error", handleNetworkError);
+      window.removeEventListener("api:server-error", handleServerError);
+      window.removeEventListener("api:forbidden", handleForbidden);
+      window.removeEventListener("api:error", handleErrorMessage);
+      window.removeEventListener("api:info", handleInfoMessage);
+    };
+  }, []);
+  return <>
+    <RouterProvider router={router}></RouterProvider>
+    <ToastContainer
+      position="bottom-left"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme="dark"
+    />
+  </>
 }
 
 export default App

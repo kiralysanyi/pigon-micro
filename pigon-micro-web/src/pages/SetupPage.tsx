@@ -27,7 +27,7 @@ const SetupPage = () => {
         })
     }, [])
 
-    const create = () => {
+    const create = async () => {
         setError(undefined)
         setStatusText("Creating keyring");
         setCreating(true);
@@ -46,74 +46,44 @@ const SetupPage = () => {
             return;
         }
 
-        // generate masterKey
-        generateMasterKey().then(async (masterKey) => {
+        try {
+            // generate masterKey
+            const masterKey = await generateMasterKey();
             // upload masterkey
             await uploadMasterKey(masterKey, kpass)
+
             // generate user ecdh keypair (long lived ones)
-            generateECDHKeyPair().then(async (keypair) => {
-                setStatusText("Generating keys");
-                const pub = await exportPublicKeyToBase64(keypair.publicKey);
-                const priv = await exportPrivateKeyToBase64(keypair.privateKey);
-                setStatusText("Encrypting private key for storage");
-                const encryptedPKey = await masterEncrypt(priv, masterKey)
-                setStatusText("Uploading keys")
-                // send ecdh public key
-                api.post("/keyring/pubkey",
-                    { pubKey: pub }
-                ).then(async (response) => {
-                    if (response.status == 201) {
-                        // send ecdh private key
-                        api.post("/keyring/privkey", { encryptedPrivKey: encryptedPKey }).then((response) => {
-                            if (response.status == 201) {
-                                setStatusText("Setting up initial chat keys")
-                                // set up first shared chat keypair (ecdh)
-                                uploadChatKeyPair(masterKey).then(() => {
-                                    navigate("/unlock", { viewTransition: true })
-                                }).catch((err) => {
-                                    console.error("Failed to set up chat keys: ", err);
-                                    setCreating(false);
-                                })
+            const keypair = await generateECDHKeyPair();
+            setStatusText("Generating keys");
+            const pub = await exportPublicKeyToBase64(keypair.publicKey);
+            const priv = await exportPrivateKeyToBase64(keypair.privateKey);
+            setStatusText("Encrypting private key for storage");
+            const encryptedPKey = await masterEncrypt(priv, masterKey)
+            setStatusText("Uploading keys")
 
+            // send ecdh public key
+            const publicKeyResponse = await api.post("/keyring/pubkey", { pubKey: pub });
+            if (publicKeyResponse.status !== 201) {
+                throw new Error("Failed to upload public key");
+            }
 
-                            } else {
-                                setStatusText("Failed to upload private key")
-                                setCreating(false)
-                                console.log(response.data)
-                            }
-                        }).catch((error) => {
-                            console.error("Failed to upload private key", error)
-                            setStatusText("Failed to upload private key")
-                            setCreating(false)
-                        })
-                    } else {
-                        console.log(response.data)
-                        setStatusText("Failed to upload public key")
-                        setCreating(false)
-                    }
+            // send ecdh private key
+            const privateKeyResponse = await api.post("/keyring/privkey", { encryptedPrivKey: encryptedPKey });
+            if (privateKeyResponse.status !== 201) {
+                throw new Error("Failed to upload private key");
+            }
 
+            setStatusText("Setting up initial chat keys")
+            // set up first shared chat keypair (ecdh)
+            await uploadChatKeyPair(masterKey);
+            navigate("/unlock", { viewTransition: true })
 
-                }).catch((error) => {
-                    console.error("Failed to upload public key: ", error);
-                    setStatusText("Failed to upload public key")
-                    setCreating(false)
-                })
-
-
-            }).catch((err) => {
-                console.error("Failed to generate ecdh keypair: ", err);
-                setStatusText("Failed to generate ecdh keypair");
-                setCreating(false);
-            })
-        }).catch((error) => {
-            console.error("Failed to generate masterkey: ", error);
-            setStatusText("Failed to generate masterkey")
-            setCreating(false)
-        });
-
-
+        } catch (err) {
+            console.error(err);
+            setStatusText("Failed to create keyring");
+            setCreating(false);
+        }
     }
-
     return <>
         <div className="modal">
             <h2>{statusText}</h2>

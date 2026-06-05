@@ -32,7 +32,8 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        api.post(`/chat/group/${chat?.id}/user/${id}`, {}).then(async () => {
+        try {
+            await api.post(`/chat/group/${chat?.id}/user/${id}`, {});
             console.log("User added, adding key");
             // add key for target user
             // group chat key
@@ -49,21 +50,18 @@ const ChatSettingsPage = () => {
             // encrypted key for transit
             const encryptedKey = await ecdhEncryptKey(key, sharedKey)
 
-            api.post(`/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid }).then(() => {
-                setShowApModal(false)
-            }).catch((err) => {
-                console.error(err, err.response)
-            })
-
-        }).catch((err) => {
+            await api.post(`/keyring/groupkeys/${chat.id}`, { targetUserId: id, encryptedKey, kGuid });
+            setShowApModal(false)
+            window.dispatchEvent(new CustomEvent("api:info", { detail: { message: "User added" } }));
+        } catch (err) {
             console.error(err);
-        })
+        }
     }
 
     const getChatInfo = async () => {
         try {
             console.log(params.id)
-            const response = await api.get("/chat/" + params.id);
+            const response = await api.get(`/chat/${params.id}`);
             let data = response.data.chat;
             console.log(response.data)
             if (data.name == undefined) {
@@ -83,17 +81,18 @@ const ChatSettingsPage = () => {
             return;
         }
 
-        api.delete(`/chat/group/${chat?.id}/user/${id}`).then(() => {
+        try {
+            await api.delete(`/chat/group/${chat?.id}/user/${id}`);
             console.log("User removed");
-            getChatInfo();
-
-        }).catch((err) => {
+            window.dispatchEvent(new CustomEvent("api:info", { detail: { message: "User removed" } }));
+            await getChatInfo();
+        } catch (err) {
             console.error(err);
-        })
+        }
     }
 
     const deleteChat = () => {
-        api.delete("/chat/" + chat?.id).then(() => {
+        api.delete(`/chat/${chat?.id}`).then(() => {
             navigate("/")
         }).catch((err) => {
             console.error(err)

@@ -1,3 +1,5 @@
+/* ===== Styles applied for mobile view ===== */
+
 @media (max-width: 720px) {
     .chat-main-container {
         width: 100%;

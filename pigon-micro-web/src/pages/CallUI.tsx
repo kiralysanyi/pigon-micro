@@ -1,5 +1,4 @@
 import { MicrophoneIcon, PhoneArrowDownLeftIcon, TvIcon, VideoCameraIcon } from "@heroicons/react/16/solid";
-import "../styles/callui.css"
 import checkScreenShareSupport from "../lib/call/checkScreenShareSupport";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
@@ -265,6 +264,13 @@ const CallUI = () => {
                 getUserIdForCall(chatId).then(async (targetUserId) => {
                     setRemoteUserId(targetUserId);
                     setMessage("Ringing...")
+                    if (!targetUserId) {
+                        setMessage("Failed to get target user id");
+                        setTimeout(() => {
+                            navigate("/")
+                        }, 2000);
+                        return;
+                    }
                     const response = await ringUser(targetUserId, chatId);
                     if (response.accepted == false) {
                         setMessage(`Call ended. Reason: ${response.reason}`)

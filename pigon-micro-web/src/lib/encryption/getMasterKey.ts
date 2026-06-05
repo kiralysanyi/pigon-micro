@@ -1,21 +1,16 @@
 import { unwrapMasterKey } from "./masterkey";
 import api from "../../services/apiservice";
 
-const getMasterKey = (kpass: string): Promise<CryptoKey> => {
-    return new Promise(async (resolve, reject) => {
-        api.get("/keyring/masterkey").then((response) => {
-            const encrypted = response.data.masterKey;
-            unwrapMasterKey(encrypted, kpass).then((masterKey) => {
-                resolve(masterKey)
-            }).catch((err) => {
-                console.error("Failed to unwrap masterkey: ", err)
-                reject(err)
-            })
-        }).catch((err) => {
-            console.error("Failed to get masterkey: ", err)
-            reject(err)
-        })
-    })
+const getMasterKey = async (kpass: string): Promise<CryptoKey> => {
+    try {
+        const response = await api.get("/keyring/masterkey");
+        const encrypted = response.data.masterKey;
+        const masterKey = await unwrapMasterKey(encrypted, kpass);
+        return masterKey;
+    } catch (err) {
+        console.error("Failed to get masterkey: ", err);
+        throw err;
+    }
 }
 
 export default getMasterKey;
