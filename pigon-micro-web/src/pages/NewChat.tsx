@@ -38,38 +38,39 @@ const NewChat = () => {
 
     }, [])
 
-    const startChat = (userId: number) => {
+    const startChat = async (userId: number) => {
 
         setLoading(true);
         console.log("Start new chat with user: ", userId)
-        api.post("/chat", { targetID: userId }).then((response) => {
+        try {
+            const response = await api.post("/chat", { targetID: userId });
             console.log(response.data)
             window.dispatchEvent(new CustomEvent("api:info", { detail: { message: "Chat created successfully" } }))
             navigate("/", { viewTransition: true })
-        }).catch((err) => {
+        } catch (err: any) {
             setLoading(false);
             console.error("Failed to create chat: ", err)
             if (err.response) {
                 setError(err.response.data.message)
             }
-        })
+        }
 
 
     }
 
-    const createGroup = () => {
+    const createGroup = async () => {
         setLoading(true);
         if (krp == undefined || krp.privKey == undefined || krp.pubKey == undefined) {
             setLoading(false);
             setError("Key initialization failure")
             return;
         }
-        api.post("/chat/group", { chatName: chatname }).then(async (response) => {
+        try {
+            const response = await api.post("/chat/group", { chatName: chatname });
             console.log("Group created");
             // create and upload initial keys
             const chatID = response.data.chatID;
             const user = await getUserInfo();
-
 
             // generate chat key
             const chatKey = await generateMasterKey();
@@ -81,17 +82,11 @@ const NewChat = () => {
             const encryptedKey = await ecdhEncryptKey(chatKey, sharedKey);
 
             // upload
-            api.post("/keyring/groupkeys/" + chatID, { targetUserId: user.ID, encryptedKey }).then((response) => {
-                console.log(response.data);
-                window.dispatchEvent(new CustomEvent("api:info", { detail: { message: "Group created successfully" } }))
-                navigate(`/chat/${chatID}`, { viewTransition: true })
-            }).catch((err) => {
-                console.error(err, err.response)
-                setLoading(false);
-                setError("Failed to create initial keys")
-            })
-            //navigate("/")
-        }).catch((err) => {
+            const keyResponse = await api.post("/keyring/groupkeys/" + chatID, { targetUserId: user.ID, encryptedKey });
+            console.log(keyResponse.data);
+            window.dispatchEvent(new CustomEvent("api:info", { detail: { message: "Group created successfully" } }))
+            navigate(`/chat/${chatID}`, { viewTransition: true })
+        } catch (err: any) {
             setLoading(false);
             if (err.response) {
                 setError(err.response.data.message)
@@ -99,7 +94,7 @@ const NewChat = () => {
                 setError("Unknown error, check console")
             }
             console.error(err, err.response)
-        })
+        }
 
     }
 
