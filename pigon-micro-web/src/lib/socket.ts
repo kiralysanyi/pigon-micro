@@ -13,14 +13,16 @@ const getSocket = async (): Promise<Socket> => {
         socket = io(`${urlObj.protocol}//${urlObj.hostname}${urlObj.port ? `:${urlObj.port}` : ''}`, { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
         socket.on("connect_error", (err) => {
             console.error(err);
+            window.dispatchEvent(new CustomEvent("api:error", { detail: { message: "Connection failed" } }))
         });
 
         socket.on("error", (err) => {
             console.error(err);
+            window.dispatchEvent(new CustomEvent("api:error", { detail: { message: "Socket error" } }))
         })
 
         socket.on("connected", () => {
-            console.log("Socket connected")
+            console.log("Socket connected");
         });
 
         return socket;

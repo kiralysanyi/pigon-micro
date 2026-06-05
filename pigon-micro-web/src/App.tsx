@@ -73,14 +73,21 @@ function App() {
     const handleNetworkError = () => toast.error("Check your internet connection");
     const handleServerError = () => toast.error("Server error - try again later");
     const handleForbidden = () => toast.error("You don't have permission");
+    const handleErrorMessage = (e: Event) => {
+      const event: CustomEvent = e as CustomEvent;
+      toast.error(`Error: ${event.detail.message}`);
+    };
 
     window.addEventListener("api:network-error", handleNetworkError);
     window.addEventListener("api:server-error", handleServerError);
     window.addEventListener("api:forbidden", handleForbidden);
+    window.addEventListener("api:error", handleErrorMessage);
     return () => {
       window.removeEventListener("api:network-error", handleNetworkError);
       window.removeEventListener("api:server-error", handleServerError);
       window.removeEventListener("api:forbidden", handleForbidden);
+      window.removeEventListener("api:error", handleErrorMessage);
+
     };
   }, []);
   return <>
