@@ -75,6 +75,7 @@
 }
 
 input {
+    color: white;
     background-color: #202020c8;
     border: none;
     font-size: 1.25rem;
