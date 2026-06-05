@@ -7,7 +7,13 @@ import * as fs from "fs";
 
 const getPfp: RequestHandler = async (req, res) => {
     const userId = parseInt(req.params.id as string)
-    let src = path.join(__dirname, "../../assets/default_pfp.png")
+    let src: string;
+    if (process.env.NODE_ENV === 'production') {
+        // In production, assets are copied to the same level as the binary or to a known location
+        src = path.join(__dirname, 'assets', 'default_pfp.png');
+    } else {
+        src = path.join(__dirname, '../../assets/default_pfp.png');
+    }
     console.log(src, isNaN(userId))
     if (isNaN(userId)) {
         return res.sendFile(src);
