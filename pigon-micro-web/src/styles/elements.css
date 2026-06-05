@@ -21,6 +21,9 @@ button {
 .redbutton,
 .decline-btn {
     background-color: rgb(50, 0, 0);
+}
+
+.decline-btn {
     border-radius: 100%;
 }
 
