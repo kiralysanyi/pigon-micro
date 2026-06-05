@@ -10,7 +10,7 @@ const getSocket = async (): Promise<Socket> => {
     } else {
         const token = await getAccessToken();
         const urlObj = new URL(BASEURL == "/api/v1" ? window.location.origin : BASEURL);
-        socket = io(urlObj.protocol + "//" + urlObj.hostname + `${urlObj.port ? `:${urlObj.port}` : ''}`, { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
+        socket = io(`${urlObj.protocol}//${urlObj.hostname}${urlObj.port ? `:${urlObj.port}` : ''}`, { path: "/socket", extraHeaders: { "Authorization": `Bearer ${token}` } });
         socket.on("connect_error", (err) => {
             console.error(err);
         });
