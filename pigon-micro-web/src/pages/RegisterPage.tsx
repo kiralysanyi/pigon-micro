@@ -13,7 +13,7 @@ const RegisterPage = () => {
 
     const navigate = useNavigate();
 
-    const register = () => {
+    const register = async () => {
         setInputsDisabled(true);
         if (password !== password1) {
             setError("Password mismatch");
@@ -35,20 +35,21 @@ const RegisterPage = () => {
 
         setError(undefined);
 
-        axios.post(BASEURL + "/auth/register", {
-            username,
-            password
-        }).then((response) => {
+        try {
+            const response = await axios.post(BASEURL + "/auth/register", {
+                username,
+                password
+            });
             if (response.status == 201) {
                 setError(undefined);
                 console.log("Created user, navigating");
-                navigate("/login", {viewTransition: true});
+                navigate("/login", { viewTransition: true });
             }
-        }).catch((error) => {
+        } catch (error) {
             console.error(error);
             setError("Failed to create user");
             setInputsDisabled(false);
-        })
+        }
     }
 
     return <>
