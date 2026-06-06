@@ -13,6 +13,7 @@ import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 import getUsernameById from "../lib/auth/getUsernameById";
 import { clearKeys } from "../lib/indexedDB/keyDB";
 import ringtone from "../assets/ringtone.mp3";
+import GlassButton from "../components/GlassButton";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -192,9 +193,9 @@ const IndexPage = () => {
             {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
                 <span>Chat: {selectedChat.name}</span>
             </div>}
-            {selectedChat?.type == "direct" && <button className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
+            {selectedChat?.type == "direct" && <GlassButton className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />
-            </button>}
+            </GlassButton>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}

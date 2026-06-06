@@ -108,7 +108,7 @@ function App() {
       pauseOnFocusLoss
       draggable
       pauseOnHover
-      theme="dark"
+      toastClassName="toast"
     />
   </>
 }

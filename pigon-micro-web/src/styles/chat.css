@@ -9,16 +9,9 @@
     height: 3rem;
     display: flex;
     flex-direction: row;
-    backdrop-filter: blur(8px);
     gap: 0.5rem;
-    padding: 0.5rem;
     border-radius: 1rem;
-    background-color: rgba(0, 0, 0, 0.346);
     transition: 200ms;
-}
-
-.send-message:has(input[type="text"]:focus) {
-    background-color: rgb(28, 28, 28);
 }
 
 .send-message input[type="text"] {
@@ -30,12 +23,16 @@
 
 .send-message input[type="text"]:focus {
     outline: 0;
+    background-color: rgba(255, 255, 255, 0.129);
 }
 
 .send-message button {
-    padding: 0.2rem;
     margin-top: auto;
     margin-bottom: auto;
+}
+
+.send-message .glassbtn {
+    padding: 0.7rem !important;
 }
 
 .message-display {

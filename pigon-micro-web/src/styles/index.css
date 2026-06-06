@@ -6,6 +6,7 @@
 @import "./layout.css";
 @import "./sidebar.css";
 @import "./mobile.css";
+@import "./toast.css";
 
 /* ===== ROOT VARIABLES & GLOBAL DEFAULTS ===== */
 :root {
@@ -72,6 +73,8 @@
 
 .callbtn {
   margin-left: auto;
+  padding: 0;
+  background-color: transparent;
 }
 
 /* ===== OVERLAYS, POPUPS & LOADING STATES ===== */
