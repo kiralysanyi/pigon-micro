@@ -10,7 +10,6 @@
     display: flex;
     flex-direction: row;
     gap: 0.5rem;
-    border-radius: 1rem;
     transition: 200ms;
 }
 

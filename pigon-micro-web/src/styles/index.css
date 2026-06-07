@@ -26,16 +26,20 @@
 
 /* ===== USER INFO, ICONS & UTILITIES ===== */
 .user-display {
-  padding: 0.5rem;
-  padding-left: 1rem;
-  background-color: rgb(37, 37, 37);
+  background-color: transparent;
+}
+
+.user-glass {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  border-radius: 999px;
+  border-radius: 999px !important;
   transition: 200ms;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.35);
 }
 
 .user-display span {
@@ -93,19 +97,16 @@
   position: absolute;
   top: 15%;
   left: 50%;
-  padding: 1rem;
-  text-align: center;
-  line-height: 1rem;
-  height: 1rem;
-  border-radius: 1rem;
-  width: fit-content;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: 200ms;
+  transform: translate(-50%, 0%);
 }
 
-.chat-header:hover {
-  background-color: #363636;
+.chat-header .ch-glass {
+  background-color: rgba(0, 0, 0, 0.215);
+  padding: 1rem;
+  width: 100%;
+  border-radius: 999px !important;
+  text-align: center;
+  box-sizing: border-box;
 }
 
 .call-popup {

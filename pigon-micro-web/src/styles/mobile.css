@@ -41,10 +41,15 @@
         max-width: 70%;
     }
 
+    .header {
+        background-color: rgba(0, 0, 0, 0.47);
+    }
+
     .header-focus {
         top: 0.5rem;
         left: 0.5rem;
         width: calc(100% - 1rem);
         border-radius: 2rem;
+        background-color: transparent;
     }
 }

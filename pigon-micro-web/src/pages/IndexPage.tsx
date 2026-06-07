@@ -14,6 +14,7 @@ import getUsernameById from "../lib/auth/getUsernameById";
 import { clearKeys } from "../lib/indexedDB/keyDB";
 import ringtone from "../assets/ringtone.mp3";
 import GlassButton from "../components/GlassButton";
+import { LiquidGlass } from "@liquidglass/react";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -176,22 +177,26 @@ const IndexPage = () => {
         </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
-                <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
-                <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
-                <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
-                    logout().then(() => {
-                        clearKeys();
-                        // Clear keys then navigate to login
-                        krp?.setMasterKey(undefined);
-                        krp?.setPrivKey(undefined);
-                        krp?.setPubKey(undefined);
-                        navigate("/login", { viewTransition: true })
-                    })
-                }} />
+                <LiquidGlass className="user-glass" blur={1}>
+                    <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
+                    <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
+                    <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
+                    <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
+                        logout().then(() => {
+                            clearKeys();
+                            // Clear keys then navigate to login
+                            krp?.setMasterKey(undefined);
+                            krp?.setPrivKey(undefined);
+                            krp?.setPubKey(undefined);
+                            navigate("/login", { viewTransition: true })
+                        })
+                    }} />
+                </LiquidGlass>
             </div>
             {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
-                <span>Chat: {selectedChat.name}</span>
+                <LiquidGlass className="ch-glass" blur={1} displacementScale={1}>
+                    <b>{selectedChat.name}</b>
+                </LiquidGlass>
             </div>}
             {selectedChat?.type == "direct" && <GlassButton className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />

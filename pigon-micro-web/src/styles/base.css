@@ -29,6 +29,7 @@ h1 {
 }
 
 .glassbtn {
+  border-radius: 999px !important;
   padding: 1rem;
   background-color: rgba(0, 0, 0, 0.5);
   transition: 200ms;
