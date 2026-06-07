@@ -8,6 +8,7 @@ import { getSocket } from "../lib/socket";
 import { RTCWrapper } from "../services/callservice/WebRTC_Service";
 import getUserMedia from "../lib/call/getUserMedia";
 import getScreen from "../lib/call/getScreen";
+import { LiquidGlass } from "@liquidglass/react";
 
 const CallUI = () => {
     const [vMuted, setVMuted] = useState(false);
@@ -361,21 +362,25 @@ const CallUI = () => {
             <video ref={localVideoRef} className={`local-video ${minimizeLocal ? "local-video-minimized" : ""}`} autoPlay muted playsInline></video>
             {message && <div className="state">{message}</div>}
             <div className="dock">
-                <button className="red" onClick={endCall}>
-                    <PhoneArrowDownLeftIcon width={24} height={24} />
-                </button>
-                {/* Buttons only shown after call accepted */}
-                <>
-                    <button className={!vMuted ? "red" : ""} onClick={() => setVMuted(!vMuted)}>
-                        <VideoCameraIcon width={24} height={24} />
-                    </button>
-                    <button className={!aMuted ? "red" : ""} onClick={() => setAMuted(!aMuted)}>
-                        <MicrophoneIcon width={24} height={24} />
-                    </button>
-                    {checkScreenShareSupport() ? <button onClick={toggleStream} className={streaming ? "red" : ""}>
-                        <TvIcon width={24} height={24} />
-                    </button> : ""}
-                </>
+                <LiquidGlass blur={1} borderRadius={999} displacementScale={3}>
+                    <div className="dock-container">
+                        <button className="red" onClick={endCall}>
+                            <PhoneArrowDownLeftIcon width={24} height={24} />
+                        </button>
+                        {/* Buttons only shown after call accepted */}
+                        <>
+                            <button className={!vMuted ? "red" : ""} onClick={() => setVMuted(!vMuted)}>
+                                <VideoCameraIcon width={24} height={24} />
+                            </button>
+                            <button className={!aMuted ? "red" : ""} onClick={() => setAMuted(!aMuted)}>
+                                <MicrophoneIcon width={24} height={24} />
+                            </button>
+                            {checkScreenShareSupport() ? <button onClick={toggleStream} className={streaming ? "red" : ""}>
+                                <TvIcon width={24} height={24} />
+                            </button> : ""}
+                        </>
+                    </div>
+                </LiquidGlass>
             </div>
         </div>
     </>

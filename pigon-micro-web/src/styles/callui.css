@@ -16,14 +16,14 @@
     width: auto;
     height: auto;
     transform: translate(-50%, 0%);
-    background-color: rgba(30, 30, 30, 0.8);
-    backdrop-filter: blur(4px);
-    border-radius: 1rem;
+    z-index: 2;
+}
+
+.callui .dock .dock-container {
     padding: 1rem;
     display: flex;
-    flex-direction: row;
     gap: 0.5rem;
-    z-index: 2;
+    flex-direction: row;
 }
 
 .callui .dock button {
