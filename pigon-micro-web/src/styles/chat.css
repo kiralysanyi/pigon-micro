@@ -58,10 +58,11 @@
     overflow-wrap: anywhere;
     display: flex;
     flex-direction: column;
+    backdrop-filter: blur(4px);
 }
 
 .message-display .message {
-    background-color: #3f405c;
+    background-color: #276089b6;
     border-radius: 1rem;
     padding: 1rem;
     margin-right: auto;
@@ -73,7 +74,7 @@
 }
 
 .message-display .mymessage {
-    background-color: #252edc;
+    background-color: #137100b6;
     border-radius: 1rem;
     padding: 1rem;
     margin-left: auto;

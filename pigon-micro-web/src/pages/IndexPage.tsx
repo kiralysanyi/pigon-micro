@@ -198,7 +198,7 @@ const IndexPage = () => {
                     <b>{selectedChat.name}</b>
                 </LiquidGlass>
             </div>}
-            {selectedChat?.type == "direct" && <GlassButton className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
+            {selectedChat?.type == "direct" && <GlassButton className={`callbtn ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />
             </GlassButton>}
         </div>

@@ -9,6 +9,10 @@
     .sidebar {
         z-index: 10;
         width: 100%;
+        left: 0px;
+        top: 5rem;
+        border-radius: 0;
+        height: calc(100% - 5rem);
         transition: 300ms;
     }
 
@@ -43,6 +47,7 @@
 
     .header {
         background-color: rgba(0, 0, 0, 0.47);
+        backdrop-filter: blur(8px);
     }
 
     .header-focus {
@@ -51,5 +56,6 @@
         width: calc(100% - 1rem);
         border-radius: 2rem;
         background-color: transparent;
+        backdrop-filter: none;
     }
 }

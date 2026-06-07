@@ -9,13 +9,14 @@
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    padding-top: 0.5rem;
 }
 
 .chatlist div {
     position: relative;
-    width: 100%;
+    width: 95%;
     height: 3rem;
-    background-color: rgb(50, 50, 50);
+    background-color: rgb(13, 13, 13);
     line-height: 3rem;
     cursor: pointer;
     transition: 200ms;
@@ -26,6 +27,9 @@
     box-sizing: border-box;
     flex-direction: row;
     align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 1rem;
 }
 
 .chatlist img {
@@ -36,11 +40,11 @@
 }
 
 .chatlist div:hover {
-    background-color: rgb(92, 92, 92);
+    background-color: rgb(55, 55, 55);
 }
 
 .chatlist .focused {
-    background-color: rgb(92, 92, 92);
+    background-color: rgb(55, 55, 55);
 }
 
 .newchat {
