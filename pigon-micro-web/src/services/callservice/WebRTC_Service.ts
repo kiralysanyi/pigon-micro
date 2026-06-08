@@ -1,5 +1,18 @@
 class RTCWrapper {
-    pc = new RTCPeerConnection(); // Create a new instance of the RTCPeerConnection class
+    pc = new RTCPeerConnection({
+        iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            { urls: "stun:stun.l.google.com:5349" },
+            { urls: "stun:stun1.l.google.com:3478" },
+            { urls: "stun:stun1.l.google.com:5349" },
+            { urls: "stun:stun2.l.google.com:19302" },
+            { urls: "stun:stun2.l.google.com:5349" },
+            { urls: "stun:stun3.l.google.com:3478" },
+            { urls: "stun:stun3.l.google.com:5349" },
+            { urls: "stun:stun4.l.google.com:19302" },
+            { urls: "stun:stun4.l.google.com:5349" }
+        ]
+    }); // Create a new instance of the RTCPeerConnection class
     makingOffer = false; // A flag indicating whether the current state is in the process of making an offer
     ignoreOffer = false; // A flag indicating whether to ignore incoming offers based on the polite policy
     isSettingRemoteAnswerPending = false; // A flag indicating whether the current state is in the process of setting a remote answer
