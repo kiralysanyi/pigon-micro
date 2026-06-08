@@ -98,15 +98,25 @@
   top: 15%;
   left: 50%;
   transform: translate(-50%, 0%);
+  cursor: pointer;
+  user-select: none;
+}
+
+.chat-header img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
 }
 
 .chat-header .ch-glass {
   background-color: rgba(0, 0, 0, 0.215);
   padding: 1rem;
-  width: 100%;
-  border-radius: 999px !important;
-  text-align: center;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
 }
 
 .call-popup {

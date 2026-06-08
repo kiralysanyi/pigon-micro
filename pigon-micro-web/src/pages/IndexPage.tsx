@@ -15,6 +15,7 @@ import { clearKeys } from "../lib/indexedDB/keyDB";
 import ringtone from "../assets/ringtone.mp3";
 import GlassButton from "../components/GlassButton";
 import { LiquidGlass } from "@liquidglass/react";
+import getUserIdForCall from "../lib/call/getUserIdForCall";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -30,6 +31,7 @@ const IndexPage = () => {
     const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
     const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
     const ringtoneRef = useRef<HTMLAudioElement>(null);
+    const [pfpId, setPfpId] = useState<number | undefined>(undefined)
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -39,6 +41,21 @@ const IndexPage = () => {
             console.error("Failed to get chats: ", err)
         })
     }
+
+    // set pfp id
+    useEffect(() => {
+        if (selectedChat) {
+            if (selectedChat.type == "direct") {
+                getUserIdForCall(selectedChat.chatID).then((id) => {
+                    setPfpId(id);
+                }).catch(() => { setPfpId(undefined) })
+            } else {
+                setPfpId(undefined)
+            }
+        } else {
+            setPfpId(undefined)
+        }
+    }, [selectedChat])
 
     useEffect(() => {
         let socket: Socket | undefined;
@@ -194,8 +211,11 @@ const IndexPage = () => {
                 </LiquidGlass>
             </div>
             {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
-                <LiquidGlass className="ch-glass" blur={1} displacementScale={1}>
-                    <b>{selectedChat.name}</b>
+                <LiquidGlass blur={1} displacementScale={1} borderRadius={999}>
+                    <div className="ch-glass">
+                        {pfpId && <img src={`${BASEURL}/auth/pfp/${pfpId}`}></img>}
+                        <b>{selectedChat.name}</b>
+                    </div>
                 </LiquidGlass>
             </div>}
             {selectedChat?.type == "direct" && <GlassButton className={`callbtn ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate(`/chat/${params.id}/call`)}>
