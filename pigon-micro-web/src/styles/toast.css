@@ -1,0 +1,9 @@
+.toast {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    backdrop-filter: blur(8px);
+    color: white !important;
+}
+
+.toast svg {
+    color: white !important;
+}

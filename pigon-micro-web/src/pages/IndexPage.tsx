@@ -13,6 +13,9 @@ import type { ChatinfoBrief } from "../types/ChatinfoBrief";
 import getUsernameById from "../lib/auth/getUsernameById";
 import { clearKeys } from "../lib/indexedDB/keyDB";
 import ringtone from "../assets/ringtone.mp3";
+import GlassButton from "../components/GlassButton";
+import { LiquidGlass } from "@liquidglass/react";
+import getUserIdForCall from "../lib/call/getUserIdForCall";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -28,6 +31,7 @@ const IndexPage = () => {
     const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
     const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
     const ringtoneRef = useRef<HTMLAudioElement>(null);
+    const [pfpId, setPfpId] = useState<number | undefined>(undefined)
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -37,6 +41,21 @@ const IndexPage = () => {
             console.error("Failed to get chats: ", err)
         })
     }
+
+    // set pfp id
+    useEffect(() => {
+        if (selectedChat) {
+            if (selectedChat.type == "direct") {
+                getUserIdForCall(selectedChat.chatID).then((id) => {
+                    setPfpId(id);
+                }).catch(() => { setPfpId(undefined) })
+            } else {
+                setPfpId(undefined)
+            }
+        } else {
+            setPfpId(undefined)
+        }
+    }, [selectedChat])
 
     useEffect(() => {
         let socket: Socket | undefined;
@@ -175,26 +194,33 @@ const IndexPage = () => {
         </div> : ""}
         <div className={`header ${hideSidebar ? "header-focus" : ""}`}>
             <div className="user-display">
-                <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
-                <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
-                <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
-                <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
-                    logout().then(() => {
-                        clearKeys();
-                        // Clear keys then navigate to login
-                        krp?.setMasterKey(undefined);
-                        krp?.setPrivKey(undefined);
-                        krp?.setPubKey(undefined);
-                        navigate("/login", { viewTransition: true })
-                    })
-                }} />
+                <LiquidGlass className="user-glass" blur={1}>
+                    <Bars3Icon className="menuicon icon" onClick={() => setHideSidebar(!hideSidebar)} width={24} height={24} />
+                    <Cog6ToothIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => navigate("/account", { viewTransition: true })} style={{ cursor: "pointer" }} />
+                    <span className={hideSidebar ? "mobilehidden" : ""}>{userdata?.username}</span>
+                    <ArrowLeftEndOnRectangleIcon className={`${hideSidebar ? "mobilehidden" : ""} icon`} width={24} height={24} onClick={() => {
+                        logout().then(() => {
+                            clearKeys();
+                            // Clear keys then navigate to login
+                            krp?.setMasterKey(undefined);
+                            krp?.setPrivKey(undefined);
+                            krp?.setPubKey(undefined);
+                            navigate("/login", { viewTransition: true })
+                        })
+                    }} />
+                </LiquidGlass>
             </div>
             {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
-                <span>Chat: {selectedChat.name}</span>
+                <LiquidGlass blur={1} displacementScale={1} borderRadius={999}>
+                    <div className="ch-glass">
+                        {pfpId && <img src={`${BASEURL}/auth/pfp/${pfpId}`}></img>}
+                        <b>{selectedChat.name}</b>
+                    </div>
+                </LiquidGlass>
             </div>}
-            {selectedChat?.type == "direct" && <button className="callbtn" onClick={() => navigate(`/chat/${params.id}/call`)}>
+            {selectedChat?.type == "direct" && <GlassButton className={`callbtn ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />
-            </button>}
+            </GlassButton>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}

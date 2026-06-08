@@ -11,12 +11,16 @@ import { KeyRingContext } from "../services/KeyRingProvider";
 import { deriveSharedKey, ecdhEncryptKey } from "../lib/encryption/ecdh";
 import { importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
 import api from "../services/apiservice";
+import GlassButton from "../components/GlassButton";
+import { BASEURL } from "../conf";
+import getUserIdForCall from "../lib/call/getUserIdForCall";
 
 const ChatSettingsPage = () => {
     const [chat, setChat] = useState<chatinfo>();
     const params = useParams();
     const navigate = useNavigate();
     const [userInfo, setUserInfo] = useState<userdata>();
+    const [remoteUser, setRemoteUser] = useState<userdata>();
     const [showApModal, setShowApModal] = useState(false);
     const [users, setUsers] = useState<userdataBrief[]>();
     const krp = useContext(KeyRingContext);
@@ -62,14 +66,19 @@ const ChatSettingsPage = () => {
         try {
             console.log(params.id)
             const response = await api.get(`/chat/${params.id}`);
-            let data = response.data.chat;
+            let data: chatinfo = response.data.chat;
             console.log(response.data)
             if (data.name == undefined) {
                 data.name = await getChatName(data.id)
             }
             setChat(data)
 
-            setUserInfo(await getUserInfo())
+            setUserInfo(await getUserInfo());
+
+            if (data.type == "direct") {
+                const remoteID = await getUserIdForCall(data.id);
+                setRemoteUser(await getUserInfo(remoteID))
+            }
         } catch (error) {
             console.error(error);
         }
@@ -123,10 +132,9 @@ const ChatSettingsPage = () => {
         })
     }, [showApModal])
 
-    // TODO: if chat type is direct then show the user's info
     return <>
         {showApModal ? <div className="modal">
-            <button onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /> Go back</button>
+            <GlassButton className="backbutton" onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
             <h1>Add participant</h1>
             <div className="modal-list">
                 {users?.map((u) => <div onClick={() => addUser(u.id)} className="list-element">
@@ -134,19 +142,23 @@ const ChatSettingsPage = () => {
                 </div>)}
             </div>
         </div> : <div className="modal">
-            <button onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /> Go back</button>
-            <h1>Chat settings</h1>
-            <h2>{chat?.type}:{chat?.name} | {chat?.creatorId}:{userInfo?.ID}</h2>
-            {chat?.type == "group" && <>
+            <GlassButton className="backbutton" onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
+            {chat?.type == "group" ? <>
+                <h1>Chat settings</h1>
                 <span>Participants</span>
                 <div className="modal-list">
                     {chat?.participants.map((p) => <div className="list-element">
+                        <img src={`${BASEURL}/auth/pfp/${p.id}`} alt="" />
                         <span style={{ marginRight: "auto" }}>{p.username}</span>
                         {userInfo?.ID != p.id ? userInfo?.ID == chat?.creatorId && <button onClick={(e) => { e.stopPropagation(); removeUser(p.id) }} style={{ marginLeft: "auto" }}>Remove</button> : <span style={{ fontSize: "1.3rem", fontWeight: "bold", color: "gray" }}>You</span>}
                     </div>)}
                 </div>
                 {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
-                {userInfo?.ID == chat?.creatorId && <button style={{ backgroundColor: "rgb(50,0,0)" }} onClick={() => deleteChat()}>Delete group</button>}
+                {userInfo?.ID == chat?.creatorId && <button className="redbutton" onClick={() => deleteChat()}>Delete group</button>}
+            </> : <>
+                {remoteUser && <img style={{ width: "10rem", height: "10rem", borderRadius: "100%", objectFit: "cover", marginTop: "1rem", marginInline: "auto" }} src={`${BASEURL}/auth/pfp/${remoteUser.ID}`}></img>}
+                <h1>{remoteUser?.username}</h1>
+                <h2>Registered at: <strong>{remoteUser && new Date(remoteUser?.created_at).toLocaleDateString()}</strong></h2>
             </>}
         </div>}
     </>

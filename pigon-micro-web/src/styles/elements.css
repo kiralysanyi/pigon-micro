@@ -6,9 +6,10 @@ button {
     font-size: 1em;
     font-weight: 500;
     font-family: inherit;
-    background-color: #1a1a1a;
+    background-color: #1a1a1a99;
     cursor: pointer;
     transition: border-color 0.25s;
+    backdrop-filter: blur(4px);
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -16,11 +17,16 @@ button {
     align-items: center;
     color: white;
     gap: 1rem;
+    transition: 200ms;
 }
 
 .redbutton,
 .decline-btn {
     background-color: rgb(50, 0, 0);
+}
+
+.redbutton:hover {
+    box-shadow: 0px 5px 5px rgba(255, 0, 0, 0.42);
 }
 
 .decline-btn {
@@ -33,7 +39,8 @@ button {
 }
 
 button:hover {
-    border-color: #646cff;
+    transform: scale(1.1);
+    box-shadow: 0px 5px 5px rgba(0, 191, 255, 0.42);
 }
 
 button:focus,

@@ -19,6 +19,8 @@ const refreshAccessToken = async (): Promise<{ token: string, tokenExpire: strin
         };
     } catch (error) {
         console.error("Failed to refresh access token: ", error);
+        // Probbably not logged in so just redirect to login
+        location.replace("/login")
         throw error;
     }
 }

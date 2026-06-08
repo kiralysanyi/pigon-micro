@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import type { userdata } from "../types/userdata";
 import getUserInfo from "../lib/auth/getUserInfo";
 import uploadPfp from "../lib/auth/uploadPfp";
+import GlassButton from "../components/GlassButton";
 
 const AccountPage = () => {
     const navigate = useNavigate();
@@ -27,10 +28,9 @@ const AccountPage = () => {
 
     return <>
         <div className="modal">
-            <button onClick={() => navigate("/", { viewTransition: true })}>
+            <GlassButton className="backbutton" onClick={() => navigate("/", { viewTransition: true })}>
                 <ArrowLeftCircleIcon width={24} height={24} />
-                <span>Go back</span>
-            </button>
+            </GlassButton>
             <h1>Account Settings</h1>
             {userinfo && <h2>Logged in as: <strong>{userinfo.username}</strong></h2>}
             <h3>Profile picture</h3>

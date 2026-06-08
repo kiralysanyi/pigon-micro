@@ -7,6 +7,8 @@ import getUserInfo from "../lib/auth/getUserInfo";
 import useMessageRenderer from "../hooks/useMessageRenderer";
 import { PaperAirplaneIcon, PlusCircleIcon } from "@heroicons/react/24/outline";
 import formatMsgDate from "../lib/formatMsgDate";
+import { LiquidGlass } from "@liquidglass/react";
+import GlassButton from "../components/GlassButton";
 
 
 const ChatPage = () => {
@@ -149,9 +151,11 @@ const ChatPage = () => {
         </div>
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
-            <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
-            <button type="button" onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24} /></button>
-            <button type="button" onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></button>
+            <LiquidGlass borderRadius={999} shadowIntensity={1} brightness={0.5} displacementScale={0.5} blur={1}>
+                <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
+            </LiquidGlass>
+            <GlassButton onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24} /></GlassButton>
+            <GlassButton onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></GlassButton>
         </form>
         {loading && <div className="loading-popup">
             <h1>Loading...</h1>

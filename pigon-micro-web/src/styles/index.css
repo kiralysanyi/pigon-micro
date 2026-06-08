@@ -6,6 +6,7 @@
 @import "./layout.css";
 @import "./sidebar.css";
 @import "./mobile.css";
+@import "./toast.css";
 
 /* ===== ROOT VARIABLES & GLOBAL DEFAULTS ===== */
 :root {
@@ -25,16 +26,20 @@
 
 /* ===== USER INFO, ICONS & UTILITIES ===== */
 .user-display {
-  padding: 0.5rem;
-  padding-left: 1rem;
-  background-color: rgb(37, 37, 37);
+  background-color: transparent;
+}
+
+.user-glass {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 1rem;
-  border-radius: 999px;
+  border-radius: 999px !important;
   transition: 200ms;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.35);
 }
 
 .user-display span {
@@ -72,6 +77,8 @@
 
 .callbtn {
   margin-left: auto;
+  padding: 0;
+  background-color: transparent;
 }
 
 /* ===== OVERLAYS, POPUPS & LOADING STATES ===== */
@@ -90,19 +97,26 @@
   position: absolute;
   top: 15%;
   left: 50%;
-  padding: 1rem;
-  text-align: center;
-  line-height: 1rem;
-  height: 1rem;
-  border-radius: 1rem;
-  width: fit-content;
-  background-color: #1a1a1a;
+  transform: translate(-50%, 0%);
   cursor: pointer;
-  transition: 200ms;
+  user-select: none;
 }
 
-.chat-header:hover {
-  background-color: #363636;
+.chat-header img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.chat-header .ch-glass {
+  background-color: rgba(0, 0, 0, 0.215);
+  padding: 1rem;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
 }
 
 .call-popup {
