@@ -13,12 +13,14 @@ import { importECDHPublicKeyFromBase64 } from "../lib/encryption/utils";
 import api from "../services/apiservice";
 import GlassButton from "../components/GlassButton";
 import { BASEURL } from "../conf";
+import getUserIdForCall from "../lib/call/getUserIdForCall";
 
 const ChatSettingsPage = () => {
     const [chat, setChat] = useState<chatinfo>();
     const params = useParams();
     const navigate = useNavigate();
     const [userInfo, setUserInfo] = useState<userdata>();
+    const [remoteUser, setRemoteUser] = useState<userdata>();
     const [showApModal, setShowApModal] = useState(false);
     const [users, setUsers] = useState<userdataBrief[]>();
     const krp = useContext(KeyRingContext);
@@ -64,14 +66,19 @@ const ChatSettingsPage = () => {
         try {
             console.log(params.id)
             const response = await api.get(`/chat/${params.id}`);
-            let data = response.data.chat;
+            let data: chatinfo = response.data.chat;
             console.log(response.data)
             if (data.name == undefined) {
                 data.name = await getChatName(data.id)
             }
             setChat(data)
 
-            setUserInfo(await getUserInfo())
+            setUserInfo(await getUserInfo());
+
+            if (data.type == "direct") {
+                const remoteID = await getUserIdForCall(data.id);
+                setRemoteUser(await getUserInfo(remoteID))
+            }
         } catch (error) {
             console.error(error);
         }
@@ -125,7 +132,6 @@ const ChatSettingsPage = () => {
         })
     }, [showApModal])
 
-    // TODO: if chat type is direct then show the user's info
     return <>
         {showApModal ? <div className="modal">
             <GlassButton className="backbutton" onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
@@ -137,9 +143,8 @@ const ChatSettingsPage = () => {
             </div>
         </div> : <div className="modal">
             <GlassButton className="backbutton" onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
-            <h1>Chat settings</h1>
-            <h2>{chat?.type}:{chat?.name} | {chat?.creatorId}:{userInfo?.ID}</h2>
-            {chat?.type == "group" && <>
+            {chat?.type == "group" ? <>
+                <h1>Chat settings</h1>
                 <span>Participants</span>
                 <div className="modal-list">
                     {chat?.participants.map((p) => <div className="list-element">
@@ -150,6 +155,10 @@ const ChatSettingsPage = () => {
                 </div>
                 {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
                 {userInfo?.ID == chat?.creatorId && <button className="redbutton" onClick={() => deleteChat()}>Delete group</button>}
+            </> : <>
+                {remoteUser && <img style={{ width: "10rem", height: "10rem", borderRadius: "100%", objectFit: "cover", marginTop: "1rem", marginInline: "auto" }} src={`${BASEURL}/auth/pfp/${remoteUser.ID}`}></img>}
+                <h1>{remoteUser?.username}</h1>
+                <h2>Registered at: <strong>{remoteUser && new Date(remoteUser?.created_at).toLocaleDateString()}</strong></h2>
             </>}
         </div>}
     </>
