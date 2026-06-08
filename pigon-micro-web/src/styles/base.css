@@ -45,4 +45,5 @@ h1 {
   padding: 0;
   transform: none !important;
   box-shadow: none !important;
+  backdrop-filter: none !important;
 }
