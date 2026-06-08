@@ -151,7 +151,7 @@ const ChatPage = () => {
         </div>
 
         <form className="send-message" onSubmit={(e) => { e.preventDefault(); sendMsg() }}>
-            <LiquidGlass borderRadius={999} brightness={0.5} displacementScale={0.2} blur={1}>
+            <LiquidGlass borderRadius={999} shadowIntensity={1} brightness={0.5} displacementScale={0.5} blur={1}>
                 <input value={message} onChange={(e) => setMessage(e.target.value)} type="text" placeholder="Type your message here..." />
             </LiquidGlass>
             <GlassButton onClick={sendFileRef.current}><PlusCircleIcon width={24} height={24} /></GlassButton>

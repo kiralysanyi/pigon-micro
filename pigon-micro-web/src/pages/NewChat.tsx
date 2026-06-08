@@ -6,6 +6,7 @@ import { KeyRingContext } from "../services/KeyRingProvider";
 import getUserInfo from "../lib/auth/getUserInfo";
 import { generateMasterKey } from "../lib/encryption/masterkey";
 import api from "../services/apiservice";
+import { BASEURL } from "../conf";
 
 const NewChat = () => {
     const [users, setUsers] = useState<userdataBrief[]>()
@@ -115,6 +116,7 @@ const NewChat = () => {
                 {!users && <span>Loading user list...</span>}
                 <div className="modal-list">
                     {users && users.map(user => <div onClick={() => startChat(user.id)} className="list-element">
+                        <img src={`${BASEURL}/auth/pfp/${user.id}`}></img>
                         <span>{user.username}</span>
                     </div>)}
                 </div>

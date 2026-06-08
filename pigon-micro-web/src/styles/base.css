@@ -43,4 +43,6 @@ h1 {
 .glassbutton-parent {
   background-color: transparent;
   padding: 0;
+  transform: none !important;
+  box-shadow: none !important;
 }
