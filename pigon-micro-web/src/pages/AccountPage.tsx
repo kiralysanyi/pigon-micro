@@ -129,8 +129,7 @@ const AccountPage = () => {
                     <input type="password" name="kpassword1" value={newKPassC} onChange={(e) => setNewKPassC(e.target.value)} />
                     <button type="button" onClick={changeKPass}>Change Keyring Password</button>
                 </form>
-                {/* TODO: If endpoint implemented, implement usage here too */}
-                <button className="redbutton">Delete Account</button>
+                <button onClick={() => navigate("/account/delete")} className="redbutton">Delete Account</button>
             </>}
             <p>
                 pigon-micro by Király Sándor

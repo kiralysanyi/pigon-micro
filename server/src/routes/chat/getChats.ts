@@ -15,7 +15,11 @@ const getChats: RequestHandler = async (req: reqWithUserinfo, res) => {
             let chat = result[i];
             let participants = await getParticipants(chat.chatID);
             if (chat.type == "direct") {
-                chat.name = participants.filter((p) => p.id != req.userinfo.ID)[0].username
+                try {
+                    chat.name = participants.filter((p) => p.id != req.userinfo.ID)[0].username
+                } catch (error) {
+                    chat.name = "Deleted user"
+                }
             }
 
             chat.participants = participants;

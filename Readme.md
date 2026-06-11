@@ -158,7 +158,7 @@ All API routes are prefixed with `/api/v1`. A valid access token (Bearer) is req
 | GET    | `/pfp/:id`             | Get profile picture by user ID  |
 | POST   | `/pfp`                 | Upload profile picture          |
 | POST   | `/password`            | Change account password         |
-| DELETE | `/account`             | Delete account                  |
+| POST   | `/delaccount`          | Delete account                  |
 
 ### Chats (`/chat`)
 | Method | Endpoint                         | Description                         |

@@ -226,8 +226,7 @@ const IndexPage = () => {
             {/* Chat list render */}
             <div className="chatlist">
                 {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
-                    {chat.type == "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.filter((p: any) => p.id != userdata.ID)[0].id}`} />}
-                    <span>{chat.name}</span>
+                    {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
                 </div>)}
             </div>
             <div className="newchat" onClick={() => navigate("/newchat", { viewTransition: true })}>Start new chat</div>
