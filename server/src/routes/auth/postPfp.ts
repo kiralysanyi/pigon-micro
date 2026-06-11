@@ -26,8 +26,8 @@ const postPfp: RequestHandler = async (req: reqWithUserinfo, res) => {
 
         // save to db, return
         try {
-            await pool.promise().query("DELETE FROM profile_picture WHERE userId = ?", [req.userinfo.ID]);
-            await pool.promise().query("INSERT INTO profile_picture (userId, filename) VALUES (?,?)", [req.userinfo.ID, req.file.filename]);
+            await pool.query("DELETE FROM profile_picture WHERE userId = ?", [req.userinfo.ID]);
+            await pool.query("INSERT INTO profile_picture (userId, filename) VALUES (?,?)", [req.userinfo.ID, req.file.filename]);
             return res.json({ message: "Uploaded pfp" });
         } catch (error) {
             console.error("Failed to index pfp: ", error);

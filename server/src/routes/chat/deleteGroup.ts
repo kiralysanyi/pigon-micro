@@ -27,7 +27,7 @@ const deleteGroup: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     try {
         const participants = await getParticipants(chatId)
-        await pool.promise().query("DELETE FROM chats WHERE ID = ?", [chatId]);
+        await pool.query("DELETE FROM chats WHERE ID = ?", [chatId]);
         const io = getSocketIOServer();
 
         for (let i in participants) {

@@ -11,6 +11,7 @@ import logout from "./logout";
 import getPfp from "./getPfp";
 import postPfp from "./postPfp";
 import rateLimiter from "../../middlewares/rateLimiter";
+import changePass from "./changePass";
 
 const authRouter = express.Router();
 
@@ -29,7 +30,10 @@ authRouter.post("/login",
     loginHandler)
 
 // TODO: implement delete account endpoint
-
+authRouter.post("/password", verifyAccessMiddleware,
+    body("old_password").notEmpty().trim().withMessage("old_password field is required"),
+    body("new_password").notEmpty().trim().withMessage("new_password field is required"),
+    changePass)
 authRouter.get("/token", tokenHandler);
 authRouter.get("/refreshtoken", refreshTokenHandler);
 authRouter.get("/info", verifyAccessMiddleware, infoHandler);

@@ -34,10 +34,10 @@ const postGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     try {
         // retire old keys
-        await pool.promise().query("UPDATE group_keys SET status = 'retired' WHERE chatId = ? AND status = 'active' AND userId = ?", [chatID, targetUserId]);
+        await pool.query("UPDATE group_keys SET status = 'retired' WHERE chatId = ? AND status = 'active' AND userId = ?", [chatID, targetUserId]);
 
         // insert new key
-        await pool.promise().query("INSERT INTO group_keys (kGuid, userId, creatorId, chatId, encryptedKey) VALUES (?,?,?,?,?)", [kGuid, targetUserId, req.userinfo.ID, chatID, encryptedKey])
+        await pool.query("INSERT INTO group_keys (kGuid, userId, creatorId, chatId, encryptedKey) VALUES (?,?,?,?,?)", [kGuid, targetUserId, req.userinfo.ID, chatID, encryptedKey])
 
 
         return res.status(201).json({

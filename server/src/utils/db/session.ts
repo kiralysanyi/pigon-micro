@@ -7,7 +7,7 @@ import sha256 from "../sha256"
 
 const createSession = async (userID: number, tokenHash: string, refreshTokenHash: string, tokenExpire: Date, refreshTokenExpire: Date): Promise<boolean> => {
     try {
-        await pool.promise().query("INSERT INTO session (userID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire) VALUES (?,?,?,?,?)", [userID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire]);
+        await pool.query("INSERT INTO session (userID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire) VALUES (?,?,?,?,?)", [userID, tokenHash, refreshTokenHash, tokenExpire, refreshTokenExpire]);
         return true;
     } catch (error) {
         throw error;
@@ -26,7 +26,7 @@ const getNewToken = async (refreshToken: string): Promise<{ token: string, token
 
     // handle token expiration
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT refreshTokenExpire FROM session WHERE refreshTokenHash = ?", [hashed]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT refreshTokenExpire FROM session WHERE refreshTokenHash = ?", [hashed]);
 
         const expireDate = new Date(result[0]["refreshTokenExpire"]);
 
@@ -39,7 +39,7 @@ const getNewToken = async (refreshToken: string): Promise<{ token: string, token
         const newExpireDate = new Date();
         newExpireDate.setMinutes(newExpireDate.getMinutes() + serverConfig.ACCESS_EXPIRE);
 
-        await pool.promise().query("UPDATE session SET tokenHash = ?, tokenExpire = ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed]);
+        await pool.query("UPDATE session SET tokenHash = ?, tokenExpire = ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed]);
         return { token: newToken, tokenExpire: newExpireDate };
     } catch (err) {
         throw err;
@@ -59,7 +59,7 @@ const getNewRefreshToken = async (refreshToken: string): Promise<{ refreshToken:
     // handle token expiration
 
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT refreshTokenExpire FROM session WHERE refreshTokenHash = ?", [hashed]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT refreshTokenExpire FROM session WHERE refreshTokenHash = ?", [hashed]);
         const expireDate = new Date(result[0]["refreshTokenExpire"]);
 
         if (expireDate < new Date()) {
@@ -70,7 +70,7 @@ const getNewRefreshToken = async (refreshToken: string): Promise<{ refreshToken:
         const newExpireDate = new Date();
         newExpireDate.setHours(newExpireDate.getHours() + serverConfig.REFRESH_EXPIRE);
 
-        await pool.promise().query("UPDATE session SET refreshTokenHash = ?, refreshTokenExpire= ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed])
+        await pool.query("UPDATE session SET refreshTokenHash = ?, refreshTokenExpire= ? WHERE refreshTokenHash = ?", [newTokenHash, newExpireDate, hashed])
         return { refreshToken: newToken, refreshTokenExpire: newExpireDate }
     } catch (error) {
         throw error;
@@ -80,7 +80,7 @@ const getNewRefreshToken = async (refreshToken: string): Promise<{ refreshToken:
 const verifyAccessToken = async (token: string): Promise<userdata> => {
     const hashed = sha256(token);
 
-    const [rows] = await pool.promise().query<RowDataPacket[]>(
+    const [rows] = await pool.query<RowDataPacket[]>(
         `SELECT u.ID, u.username, u.pubKey, u.created_at, u.updated_at, s.tokenExpire
          FROM session s
          JOIN users u ON u.ID = s.userID

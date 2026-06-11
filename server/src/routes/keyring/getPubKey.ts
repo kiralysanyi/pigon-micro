@@ -10,7 +10,7 @@ const getPubKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT pubKey FROM users WHERE ID = ?", [targetID]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT pubKey FROM users WHERE ID = ?", [targetID]);
 
         if (result.length == 0) {
             return res.status(404).json({

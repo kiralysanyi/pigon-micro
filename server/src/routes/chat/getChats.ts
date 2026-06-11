@@ -8,7 +8,7 @@ const getChats: RequestHandler = async (req: reqWithUserinfo, res) => {
     const sql = `SELECT ch.ID AS chatID, ch.type AS type, ch.name AS name FROM \`user-chats\` uc JOIN chats ch ON ch.ID = uc.chatId WHERE uc.userId = ?`
 
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>(sql, [req.userinfo.ID]);
+        const [result] = await pool.query<RowDataPacket[]>(sql, [req.userinfo.ID]);
         let chats = []
         // get participants, if its a direct chat then get the name of the other user and set it as chat name
         for (let i in result) {

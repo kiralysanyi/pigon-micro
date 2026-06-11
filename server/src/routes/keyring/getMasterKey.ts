@@ -5,7 +5,7 @@ import { RowDataPacket } from "mysql2";
 
 const getMasterKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT masterKey FROM users WHERE ID = ?", [req.userinfo.ID])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT masterKey FROM users WHERE ID = ?", [req.userinfo.ID])
         if (result[0].masterKey == null) {
             return res.status(404).json({
                 message: "No masterkey found for this user"

@@ -16,7 +16,7 @@ const createUser = async (username: string, password: string): Promise<boolean> 
 
     try {
         const passwordHash = await hashPass(password);
-        await pool.promise().query("INSERT INTO users (username, password) VALUES (?,?)", [username, passwordHash])
+        await pool.query("INSERT INTO users (username, password) VALUES (?,?)", [username, passwordHash])
         return true;
     } catch (error) {
         throw error;
@@ -25,7 +25,7 @@ const createUser = async (username: string, password: string): Promise<boolean> 
 
 const loginUser = async (username: string, password: string): Promise<{ token: string, refreshToken: string, tokenExpire: Date, refreshTokenExpire: Date }> => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM users WHERE username = ?", [username])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT * FROM users WHERE username = ?", [username])
 
         if (result.length == 0) {
             console.log("User does not exist: ", username);
@@ -70,7 +70,7 @@ const loginUser = async (username: string, password: string): Promise<{ token: s
 
 const listUsers = async (search: string, limit: number = 50): Promise<userdataBrief[]> => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT id, username, created_at FROM users WHERE username LIKE ? LIMIT ?", [`%${search}%`, limit])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT id, username, created_at FROM users WHERE username LIKE ? LIMIT ?", [`%${search}%`, limit])
         return result as userdataBrief[];
     } catch (error) {
         throw error;
@@ -80,7 +80,7 @@ const listUsers = async (search: string, limit: number = 50): Promise<userdataBr
 // get user info
 const getUser = async (userID: number): Promise<userdata | false> => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT ID, username, created_at, updated_at, pubKey FROM users WHERE ID = ?", [userID])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT ID, username, created_at, updated_at, pubKey FROM users WHERE ID = ?", [userID])
 
         if (result.length == 0) {
             return false;
