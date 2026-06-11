@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import api from "../services/apiservice";
 import { clearKeys } from "../lib/indexedDB/keyDB";
 import { useNavigate } from "react-router";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import GlassButton from "../components/GlassButton";
 
 const DeletePage = () => {
     const [userinfo, setUserinfo] = useState<userdata>()
@@ -50,6 +52,9 @@ const DeletePage = () => {
 
     return <>
         <div className="modal">
+            <GlassButton className="backbutton" onClick={() => navigate("/account", { viewTransition: true })}>
+                <ArrowLeftCircleIcon width={24} height={24} />
+            </GlassButton>
             <h1>Delete Account</h1>
             <h2>Username: <strong>{userinfo?.username}</strong></h2>
             <div className="error-msg">Warning! This action is not reversible! It will delete all your data and messages you sent too.</div>

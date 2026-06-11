@@ -4,6 +4,7 @@ import { RowDataPacket } from "mysql2"
 import serverConfig from "../../config"
 import { userdata } from "../../types/userdata"
 import sha256 from "../sha256"
+import { Session } from "../../types/Session"
 
 const createSession = async (userID: number, tokenHash: string, refreshTokenHash: string, tokenExpire: Date, refreshTokenExpire: Date): Promise<boolean> => {
     try {
@@ -96,4 +97,13 @@ const verifyAccessToken = async (token: string): Promise<userdata> => {
     return rows[0] as userdata;
 };
 
-export { createSession, getNewToken, getNewRefreshToken, verifyAccessToken }
+const getSessionList = async (userId: number): Promise<Session[]> => {
+    const [result] = await pool.query<RowDataPacket[]>("SELECT id, tokenExpire, refreshTokenExpire, created_at, updated_at FROM session WHERE userID = ?", [userId]);
+    return result as Session[]
+}
+
+const deleteSession = async (userId: number, sessionId: number) => {
+    await pool.query("DELETE FROM session WHERE userID = ? AND id = ?", [userId, sessionId])
+}
+
+export { createSession, getNewToken, getNewRefreshToken, verifyAccessToken, getSessionList, deleteSession }

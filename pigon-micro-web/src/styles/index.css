@@ -157,7 +157,7 @@
   height: 3rem;
   border-radius: 100%;
   border: 0.5rem solid transparent;
-  border-top: 0.5rem solid teal;
+  border-top: 0.5rem solid rgb(44, 176, 0);
   animation: spin ease-in-out infinite 1s;
 }
 
