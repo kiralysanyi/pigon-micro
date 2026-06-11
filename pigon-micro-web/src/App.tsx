@@ -13,6 +13,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import CallUI from './pages/CallUI'
 import { useEffect } from 'react'
 import { toast, ToastContainer } from 'react-toastify';
+import DeletePage from './pages/DeletePage'
 
 const router = createBrowserRouter([
   {
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
   {
     path: "/account",
     Component: AccountPage
+  },
+  {
+    path: "/account/delete",
+    Component: DeletePage
   },
   {
     path: "/login",

@@ -1,4 +1,4 @@
-import { createPool, RowDataPacket } from "mysql2";
+import { createPool, RowDataPacket } from "mysql2/promise";
 import serverConfig from "../../config";
 
 const pool = createPool({
@@ -16,7 +16,7 @@ const pool = createPool({
 
 const exists = async (table: string, column: string, value: string | number): Promise<boolean> => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value]);
+        const [result] = await pool.query<RowDataPacket[]>(`SELECT 1 FROM ${table} WHERE ${column} = ?`, [value]);
         if (result.length > 0) {
             return true;
         } else {

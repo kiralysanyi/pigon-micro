@@ -16,8 +16,8 @@ const postChatKeys: RequestHandler = async (req: reqWithUserinfo, res) => {
     const { pubKey, encryptedPrivKey } = req.body;
 
     try {
-        await pool.promise().query("UPDATE chat_keys SET status = 'retired' WHERE status = 'active' AND userID = ?", [userID])
-        await pool.promise().query("INSERT INTO chat_keys (userID, pubKey, encryptedPrivKey, status) VALUES (?,?,?, 'active')", [userID, pubKey, encryptedPrivKey]);
+        await pool.query("UPDATE chat_keys SET status = 'retired' WHERE status = 'active' AND userID = ?", [userID])
+        await pool.query("INSERT INTO chat_keys (userID, pubKey, encryptedPrivKey, status) VALUES (?,?,?, 'active')", [userID, pubKey, encryptedPrivKey]);
         return res.status(201).json({
             message: "New key added"
         })

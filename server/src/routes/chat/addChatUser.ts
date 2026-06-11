@@ -41,7 +41,7 @@ const addChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
     try {
 
         try {
-            await pool.promise().query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, userToAdd])
+            await pool.query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, userToAdd])
             const io = getSocketIOServer();
             io.to("usr" + userToAdd).emit("newchat")
         } catch (error) {

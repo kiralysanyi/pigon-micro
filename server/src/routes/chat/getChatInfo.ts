@@ -17,7 +17,7 @@ const getChatInfo: RequestHandler = async (req: reqWithUserinfo, res) => {
     // get participants
     const participants = await getParticipants(chatID);
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT type, name, creator AS creatorId FROM chats WHERE ID = ?", [chatID]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT type, name, creator AS creatorId FROM chats WHERE ID = ?", [chatID]);
         return res.json({
             chat: {
                 id: chatID,

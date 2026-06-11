@@ -22,8 +22,9 @@
     margin-right: auto;
     height: 2rem;
     width: 4rem;
-    top: 0rem;
+    top: 1rem;
     box-sizing: border-box;
+    z-index: 100;
 }
 
 .modal form {

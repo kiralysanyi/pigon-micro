@@ -20,7 +20,7 @@ const getChatKeys: RequestHandler = async (req: reqWithUserinfo, res) => {
         // get key by userid / keyid
         // Note: if keyid specified we do not return private keys
         try {
-            const [result] = await pool.promise().query<RowDataPacket[]>("SELECT keyID, userID, pubKey, status, created_at FROM chat_keys WHERE keyID = ?", [keyid])
+            const [result] = await pool.query<RowDataPacket[]>("SELECT keyID, userID, pubKey, status, created_at FROM chat_keys WHERE keyID = ?", [keyid])
 
 
             if (result.length == 0) {
@@ -44,7 +44,7 @@ const getChatKeys: RequestHandler = async (req: reqWithUserinfo, res) => {
 
         if (userID) {
             try {
-                const [result] = await pool.promise().query<RowDataPacket[]>("SELECT keyID, userID, pubKey, status, created_at FROM chat_keys WHERE userID = ?", [userID]);
+                const [result] = await pool.query<RowDataPacket[]>("SELECT keyID, userID, pubKey, status, created_at FROM chat_keys WHERE userID = ?", [userID]);
 
                 return res.json({
                     keys: result
@@ -60,7 +60,7 @@ const getChatKeys: RequestHandler = async (req: reqWithUserinfo, res) => {
 
         // get all chatkeys for user
         try {
-            const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM chat_keys WHERE userID = ?", [req.userinfo.ID]);
+            const [result] = await pool.query<RowDataPacket[]>("SELECT * FROM chat_keys WHERE userID = ?", [req.userinfo.ID]);
 
             return res.json({
                 keys: result

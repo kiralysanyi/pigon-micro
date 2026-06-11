@@ -20,7 +20,7 @@ const getPfp: RequestHandler = async (req, res) => {
     }
 
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT filename FROM profile_picture WHERE userId = ?", [userId]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT filename FROM profile_picture WHERE userId = ?", [userId]);
 
         if (result.length == 0) {
             return res.sendFile(src);

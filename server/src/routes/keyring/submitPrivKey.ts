@@ -13,7 +13,7 @@ const submitPrivKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     try {
-        await pool.promise().query("UPDATE users SET encryptedPrivKey = ? WHERE ID = ?", [req.body.encryptedPrivKey, req.userinfo.ID]);
+        await pool.query("UPDATE users SET encryptedPrivKey = ? WHERE ID = ?", [req.body.encryptedPrivKey, req.userinfo.ID]);
         return res.status(201).json({
             success: true
         })

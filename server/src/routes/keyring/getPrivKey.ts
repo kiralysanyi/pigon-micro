@@ -5,7 +5,7 @@ import { RowDataPacket } from "mysql2";
 
 const getPrivKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT encryptedPrivKey FROM users WHERE ID = ?", [req.userinfo.ID]);
+        const [result] = await pool.query<RowDataPacket[]>("SELECT encryptedPrivKey FROM users WHERE ID = ?", [req.userinfo.ID]);
 
         if (result.length == 0) {
             return res.status(404).json({

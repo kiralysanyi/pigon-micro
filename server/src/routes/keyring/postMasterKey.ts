@@ -13,7 +13,7 @@ const postMasterKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     try {
-        await pool.promise().query("UPDATE users SET masterKey = ? WHERE ID = ?", [req.body.masterKey, req.userinfo.ID]);
+        await pool.query("UPDATE users SET masterKey = ? WHERE ID = ?", [req.body.masterKey, req.userinfo.ID]);
 
         return res.status(201).json({
             message: "Masterkey has been set successfully"

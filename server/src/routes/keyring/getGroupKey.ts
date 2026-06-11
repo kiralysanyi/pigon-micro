@@ -11,7 +11,7 @@ const getGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     if (kGuid == "0") {
         // get latest active key for the user
         try {
-            const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM group_keys WHERE userId = ? AND chatID = ? AND status = 'active'", [req.userinfo.ID, chatID])
+            const [result] = await pool.query<RowDataPacket[]>("SELECT * FROM group_keys WHERE userId = ? AND chatID = ? AND status = 'active'", [req.userinfo.ID, chatID])
 
             if (result.length == 0) {
                 console.log("No keys: ", result)
@@ -32,7 +32,7 @@ const getGroupKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT * FROM group_keys WHERE userId = ? AND kGuid = ? AND chatId = ?", [req.userinfo.ID, kGuid, chatID])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT * FROM group_keys WHERE userId = ? AND kGuid = ? AND chatId = ?", [req.userinfo.ID, kGuid, chatID])
 
 
         if (result.length == 0) {

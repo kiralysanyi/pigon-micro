@@ -16,7 +16,7 @@ const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     // get messages
     try {
-        const [result] = await pool.promise().query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, kGuid, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT 100", [chatID])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, kGuid, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT 100", [chatID])
         result.reverse();
 
         return res.json({

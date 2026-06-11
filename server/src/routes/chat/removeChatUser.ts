@@ -50,7 +50,7 @@ const removeChatUser: RequestHandler = async (req: reqWithUserinfo, res) => {
 
 
     try {
-        await pool.promise().query("DELETE FROM `user-chats` WHERE userId = ? AND chatId = ?", [userToRemove, chatID]);
+        await pool.query("DELETE FROM `user-chats` WHERE userId = ? AND chatId = ?", [userToRemove, chatID]);
 
         try {
             const io = getSocketIOServer();

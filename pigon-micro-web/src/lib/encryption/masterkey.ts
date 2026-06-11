@@ -36,7 +36,7 @@ const wrapMasterKey = async (masterKey: CryptoKey, password: string): Promise<st
         }))
 }
 
-const unwrapMasterKey = async (wrapped: string, password: string): Promise<CryptoKey> => {
+const unwrapMasterKey = async (wrapped: string, password: string, extractable: boolean = false): Promise<CryptoKey> => {
     const { iv, key, salt } = JSON.parse(wrapped);
     const ivBytes = Uint8Array.from(atob(iv), c => c.charCodeAt(0));
     const keyBytes = Uint8Array.from(atob(key), c => c.charCodeAt(0));
@@ -49,7 +49,7 @@ const unwrapMasterKey = async (wrapped: string, password: string): Promise<Crypt
         "raw", keyBytes, kek,
         { name: "AES-GCM", iv: ivBytes },
         { name: "AES-GCM", length: 256 },
-        false,
+        extractable,
         ["wrapKey", "unwrapKey", "encrypt", "decrypt"]
     )
 }

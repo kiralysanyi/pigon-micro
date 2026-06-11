@@ -15,9 +15,9 @@ const createGroup: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     const creatorID = req.userinfo.ID;
     try {
-        const [result] = await pool.promise().query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName])
+        const [result] = await pool.query("INSERT INTO chats (type, creator, name) VALUES ('group', ?, ?) RETURNING ID", [creatorID, req.body.chatName])
         const chatID = result[0].ID
-        await pool.promise().query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, creatorID]);
+        await pool.query("INSERT INTO `user-chats` (chatId, userId) VALUES (?,?)", [chatID, creatorID]);
 
         return res.status(201).json({
             success: true,

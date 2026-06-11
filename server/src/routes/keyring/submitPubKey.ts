@@ -13,7 +13,7 @@ const submitPubKey: RequestHandler = async (req: reqWithUserinfo, res) => {
     }
 
     try {
-        await pool.promise().query("UPDATE users SET pubKey = ? WHERE ID = ?", [req.body.pubKey, req.userinfo.ID])
+        await pool.query("UPDATE users SET pubKey = ? WHERE ID = ?", [req.body.pubKey, req.userinfo.ID])
         
         return res.status(201).json({
             success: true

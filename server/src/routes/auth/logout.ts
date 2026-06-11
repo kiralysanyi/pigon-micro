@@ -8,7 +8,7 @@ const logout: RequestHandler = async (req, res) => {
     const hashed = sha256(token);
 
     try {
-        await pool.promise().query("DELETE FROM session WHERE tokenHash = ? ", [hashed]);
+        await pool.query("DELETE FROM session WHERE tokenHash = ? ", [hashed]);
         return res.json({
             message: "Logout was successfull"
         })

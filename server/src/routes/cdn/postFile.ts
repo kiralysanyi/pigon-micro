@@ -30,7 +30,7 @@ const postFile: RequestHandler = (req: reqWithUserinfo, res) => {
             })
         }
 
-        await pool.promise().query("INSERT INTO chat_files (uuid, type, chatId) VALUES (?,?,?)", [req.file.filename, req.body.type, req.params.chatId])
+        await pool.query("INSERT INTO chat_files (uuid, type, chatId) VALUES (?,?,?)", [req.file.filename, req.body.type, req.params.chatId])
         res.json({ assetId: req.file.filename })
     })
 }
