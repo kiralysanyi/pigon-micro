@@ -90,7 +90,7 @@
     transform: scale(2);
 }
 
-.list-element:hover {
+.list-element:hover:has(img) {
     gap: 2rem;
 }
 

@@ -104,6 +104,7 @@ const AccountPage = () => {
             {userinfo && <>
                 <img className="ap-pfp" src={`${BASEURL}/auth/pfp/${userinfo.ID}`} alt="pfp" />
                 <button onClick={setPfp}>Change Profile Picture</button>
+                <button onClick={() => navigate("/account/sessions")}>Manage sessions</button>
                 <form onSubmit={(e) => e.preventDefault()} style={{ border: "1px solid gray", borderRadius: "1rem", backgroundColor: "darkslategrey", padding: "1rem" }}>
                     <h2>Change Password</h2>
                     <label htmlFor="old-password">Current password</label>

@@ -13,6 +13,8 @@ import postPfp from "./postPfp";
 import rateLimiter from "../../middlewares/rateLimiter";
 import changePass from "./changePass";
 import deleteAccount from "./deleteAccount";
+import getSessions from "./getSessions";
+import delSession from "./delSession";
 
 const authRouter = express.Router();
 
@@ -50,5 +52,7 @@ authRouter.post("/delaccount", verifyAccessMiddleware,
     body("password").notEmpty().trim().withMessage("password field is required"),
     deleteAccount)
 
+authRouter.get("/sessions", verifyAccessMiddleware, getSessions);
+authRouter.delete("/sessions/:id", verifyAccessMiddleware, delSession);
 
 export default authRouter;

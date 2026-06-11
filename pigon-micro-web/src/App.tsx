@@ -14,6 +14,7 @@ import CallUI from './pages/CallUI'
 import { useEffect } from 'react'
 import { toast, ToastContainer } from 'react-toastify';
 import DeletePage from './pages/DeletePage'
+import SessionsPage from './pages/SessionsPage'
 
 const router = createBrowserRouter([
   {
@@ -46,6 +47,10 @@ const router = createBrowserRouter([
   {
     path: "/account/delete",
     Component: DeletePage
+  },
+  {
+    path: "/account/sessions",
+    Component: SessionsPage
   },
   {
     path: "/login",
