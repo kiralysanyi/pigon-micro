@@ -9,7 +9,11 @@ const getChatName = async (chatID: number): Promise<string> => {
             return response.data.chat.name;
         }
         const participants = response.data.chat.participants as any[];
-        return participants.filter((p) => p.id != userinfo.ID)[0].username;
+        const participant = participants.filter((p) => p.id != userinfo.ID)[0];
+        if (participant == undefined) {
+            return "Deleted User"
+        }
+        return participant.username;
     } catch (err) {
         console.error("Failed to get chat name: ", err);
         throw err;

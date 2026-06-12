@@ -83,8 +83,8 @@ class ChatService extends EventTarget {
     }
 
     // get messages from server and decrypt
-    getMessageHistory = (chatID: number): Promise<Message[]> => {
-        return historyHandler(this, chatID);
+    getMessageHistory = (chatID: number, page: number): Promise<Message[]> => {
+        return historyHandler(this, chatID, page);
     }
 
     // init function to set masterKey and privKey, also initializes socket connection and event listeners

@@ -7,10 +7,13 @@ import getUserInfo from "../lib/auth/getUserInfo";
 import { generateMasterKey } from "../lib/encryption/masterkey";
 import api from "../services/apiservice";
 import { BASEURL } from "../conf";
+import { useDebounce } from "../hooks/useDebounce";
 
 const NewChat = () => {
     const [users, setUsers] = useState<userdataBrief[]>()
     const navigate = useNavigate();
+    const [searchText, setSearchText] = useState<string>("");
+    const searchQuery = useDebounce(searchText, 1000);
 
     const [groupMode, setGroupMode] = useState(false);
     const [chatname, setChatname] = useState("");
@@ -22,7 +25,7 @@ const NewChat = () => {
     const krp = useContext(KeyRingContext);
 
     useEffect(() => {
-        api.get("/auth/users").then((response) => {
+        api.get(`/auth/users?search=${searchQuery}`).then((response) => {
             setUsers(response.data.users)
             setLoading(false);
             console.log(response.data.users)
@@ -37,7 +40,7 @@ const NewChat = () => {
             }
         })
 
-    }, [])
+    }, [searchQuery])
 
     const startChat = async (userId: number) => {
 
@@ -113,13 +116,14 @@ const NewChat = () => {
             </> : <>
                 <h1>Start new chat</h1>
                 <span>Select user to start new chat with</span>
-                {!users && <span>Loading user list...</span>}
+                {!users && <div className="horizontal-loader"></div>}
                 <div className="modal-list">
                     {users && users.map(user => <div onClick={() => startChat(user.id)} className="list-element">
                         <img src={`${BASEURL}/auth/pfp/${user.id}`}></img>
                         <span>{user.username}</span>
                     </div>)}
                 </div>
+                <input type="search" placeholder="Search users" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
             </>}
             <button onClick={() => setGroupMode(!groupMode)}>{groupMode ? "Start private chat instead" : "Create new group instead"}</button>
             <button onClick={() => navigate("/", { viewTransition: true })}>Cancel</button>

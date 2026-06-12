@@ -99,13 +99,16 @@ const AccountPage = () => {
                 <ArrowLeftCircleIcon width={24} height={24} />
             </GlassButton>
             <h1>Account Settings</h1>
-            {userinfo && <h2>Logged in as: <strong>{userinfo.username}</strong></h2>}
-            <h3>Profile picture</h3>
-            {userinfo && <>
+            {userinfo ? <>
+                {userinfo && <h2>Logged in as: <strong>{userinfo.username}</strong></h2>}
+                <div className="spacer"></div>
+                <h3>Profile picture</h3>
+
                 <img className="ap-pfp" src={`${BASEURL}/auth/pfp/${userinfo.ID}`} alt="pfp" />
                 <button onClick={setPfp}>Change Profile Picture</button>
                 <button onClick={() => navigate("/account/sessions")}>Manage sessions</button>
-                <form onSubmit={(e) => e.preventDefault()} style={{ border: "1px solid gray", borderRadius: "1rem", backgroundColor: "darkslategrey", padding: "1rem" }}>
+                <div className="spacer"></div>
+                <form onSubmit={(e) => e.preventDefault()}>
                     <h2>Change Password</h2>
                     <label htmlFor="old-password">Current password</label>
                     <input value={oldPass} onChange={(e) => setOldPass(e.target.value)} type="password" name="old-password" />
@@ -115,7 +118,8 @@ const AccountPage = () => {
                     <input value={newPassC} onChange={(e) => setNewPassC(e.target.value)} type="password" name="password1" />
                     <button type="button" onClick={changePass}>Change Password</button>
                 </form>
-                <form onSubmit={(e) => e.preventDefault()} style={{ border: "1px solid gray", borderRadius: "1rem", backgroundColor: "darkslategrey", padding: "1rem" }}>
+                <div className="spacer"></div>
+                <form onSubmit={(e) => e.preventDefault()}>
                     <div className="error-msg">
                         <b>Warning! If you forget your keyring password you will not be able to access any previous messages!!!</b>
                         <br />
@@ -130,8 +134,9 @@ const AccountPage = () => {
                     <input type="password" name="kpassword1" value={newKPassC} onChange={(e) => setNewKPassC(e.target.value)} />
                     <button type="button" onClick={changeKPass}>Change Keyring Password</button>
                 </form>
+                <div className="spacer"></div>
                 <button onClick={() => navigate("/account/delete")} className="redbutton">Delete Account</button>
-            </>}
+            </> : <div className="horizontal-loader"></div>}
             <p>
                 pigon-micro by Király Sándor
                 <br />

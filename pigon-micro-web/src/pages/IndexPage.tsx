@@ -16,10 +16,16 @@ import ringtone from "../assets/ringtone.mp3";
 import GlassButton from "../components/GlassButton";
 import { LiquidGlass } from "@liquidglass/react";
 import getUserIdForCall from "../lib/call/getUserIdForCall";
+import { useDebounce } from "../hooks/useDebounce";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
     const [chats, setChats] = useState<ChatinfoBrief[]>();
+
+    const [filteredChats, setFilteredChats] = useState<ChatinfoBrief[]>();
+    const [searchText, setSearchText] = useState<string>("");
+    const searchQuery = useDebounce(searchText, 1000);
+
     const [netError, setNetError] = useState(false);
     const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
 
@@ -48,7 +54,7 @@ const IndexPage = () => {
             if (selectedChat.type == "direct") {
                 getUserIdForCall(selectedChat.chatID).then((id) => {
                     setPfpId(id);
-                }).catch(() => { setPfpId(undefined) })
+                }).catch(() => { setPfpId(0) })
             } else {
                 setPfpId(undefined)
             }
@@ -183,6 +189,20 @@ const IndexPage = () => {
     }, [incomingCall])
 
 
+    // chat search
+    useEffect(() => {
+        if (searchQuery === "") {
+            setFilteredChats(undefined)
+            return;
+        }
+
+        if (chats) {
+            setFilteredChats(chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase())));
+        }
+
+    }, [searchQuery, chats])
+
+
     return (userdata && connected == true) ? <>
         <audio ref={ringtoneRef} playsInline src={ringtone} />
         {incomingCall ? <div className="call-popup">
@@ -210,24 +230,33 @@ const IndexPage = () => {
                     }} />
                 </LiquidGlass>
             </div>
-            {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate("/settings/" + params.id, { viewTransition: true })}>
+            {selectedChat?.name && <div className={`chat-header ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => { if (pfpId != 0) { navigate("/settings/" + params.id, { viewTransition: true }) } }}>
                 <LiquidGlass blur={1} displacementScale={1} borderRadius={999}>
                     <div className="ch-glass">
-                        {pfpId && <img src={`${BASEURL}/auth/pfp/${pfpId}`}></img>}
+                        {(pfpId != undefined && pfpId != 0) && <img src={`${BASEURL}/auth/pfp/${pfpId}`}></img>}
                         <b>{selectedChat.name}</b>
                     </div>
                 </LiquidGlass>
             </div>}
-            {selectedChat?.type == "direct" && <GlassButton className={`callbtn ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate(`/chat/${params.id}/call`)}>
+            {(selectedChat?.type == "direct" && pfpId != 0) && <GlassButton className={`callbtn ${hideSidebar ? "" : "mobilehidden"}`} onClick={() => navigate(`/chat/${params.id}/call`)}>
                 <PhoneIcon width={24} height={24} />
             </GlassButton>}
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
+
             <div className="chatlist">
-                {chats && chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
-                    {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
-                </div>)}
+                <input type="search" placeholder="Search users" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                {filteredChats ? <>
+                    {/* Filtered chats */}
+                    {filteredChats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                        {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                    </div>)}
+                </> : <>
+                    {/* Unfiltered chats */}
+                    {chats ? chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                        {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                    </div>) : <div className="horizontal-loader"></div>}</>}
             </div>
             <div className="newchat" onClick={() => navigate("/newchat", { viewTransition: true })}>Start new chat</div>
         </div>

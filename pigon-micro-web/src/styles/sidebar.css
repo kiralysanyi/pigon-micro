@@ -10,6 +10,16 @@
     flex-direction: column;
     gap: 0.5rem;
     padding-top: 0.5rem;
+    overflow: auto;
+}
+
+.chatlist input[type="search"] {
+    position: sticky;
+    top: 0px;
+    left: 0px;
+    margin-inline: 1rem;
+    border-radius: 999px;
+    z-index: 10000;
 }
 
 .chatlist div {

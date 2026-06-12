@@ -16,8 +16,13 @@ const ChatPage = () => {
     const [message, setMessage] = useState("");
     const [chatProvider, setChatProvider] = useState<ChatService>();
 
-    const { messages, setMessages, loading } = useMessageRenderer(chatProvider, parseInt(params.id as string));
+    const { messages, setMessages, loading, loadNextPage, clearState } = useMessageRenderer(chatProvider, parseInt(params.id as string));
     const [userInfo, setUserInfo] = useState<userdata>();
+
+
+    useEffect(() => {
+        return () => clearState();
+    }, [params])
 
     // load userinfo
     useEffect(() => {
@@ -136,8 +141,15 @@ const ChatPage = () => {
         setMessage("")
     }
 
+    const scrollHandler: React.UIEventHandler<HTMLDivElement> = (e) => {
+        const target = e.currentTarget;
+        if (Math.abs(target.scrollTop) > target.scrollHeight - 1000) {
+            loadNextPage();
+        }
+    }
+
     return <>
-        <div className="message-display">
+        <div className="message-display" onScroll={scrollHandler}>
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"} ${msg.status == "failed" ? "message-failed" : ""}`}>
                 <span className="sname">{msg.senderName}</span>
                 {msg.message ? <>
@@ -158,7 +170,7 @@ const ChatPage = () => {
             <GlassButton onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></GlassButton>
         </form>
         {loading && <div className="loading-popup">
-            <h1>Loading...</h1>
+            <div className="horizontal-loader"></div>
         </div>}
     </>
 }
