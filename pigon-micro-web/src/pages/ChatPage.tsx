@@ -136,8 +136,17 @@ const ChatPage = () => {
         setMessage("")
     }
 
+    const scrollHandler: React.UIEventHandler<HTMLDivElement> = (e) => {
+        const target = e.currentTarget;
+        let needsUpdate = false;
+        if (Math.abs(target.scrollTop) > target.scrollHeight - 1000) {
+            needsUpdate = true
+        }
+        console.log(target.scrollTop, target.scrollHeight, needsUpdate);
+    }
+
     return <>
-        <div className="message-display">
+        <div className="message-display" onScroll={scrollHandler}>
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"} ${msg.status == "failed" ? "message-failed" : ""}`}>
                 <span className="sname">{msg.senderName}</span>
                 {msg.message ? <>

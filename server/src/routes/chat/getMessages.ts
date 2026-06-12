@@ -6,6 +6,24 @@ import { RowDataPacket } from "mysql2";
 
 const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
     const chatID = parseInt(req.params.chatID as string);
+    const pageSize = 100
+    let offset = 0;
+
+    if (req.query.page) {
+        try {
+            const requestedPage: number = parseInt(req.query.page as string)
+            if (requestedPage == 0) {
+                offset = 0;
+            } else {
+                offset = pageSize * requestedPage
+            }
+        } catch (error) {
+            return res.status(400).json({
+                message: "Page parameter has to be a number"
+            })
+        }
+    }
+
 
     // check permission
     if (!await checkUserInChat(req.userinfo.ID, chatID)) {
@@ -16,7 +34,7 @@ const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
 
     // get messages
     try {
-        const [result] = await pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, kGuid, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT 100", [chatID])
+        const [result] = await pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, kGuid, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT ? OFFSET ?", [chatID, pageSize, offset])
         result.reverse();
 
         return res.json({

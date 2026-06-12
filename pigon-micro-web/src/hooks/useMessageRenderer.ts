@@ -7,6 +7,31 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const getHistory = () => {
+        if (chatProvider == undefined) {
+            return;
+        }
+        // get message history
+        chatProvider.getMessageHistory(cID).then((pastMessages) => {
+
+            console.log("Got decrypted message history: ", pastMessages)
+            setMessages(pastMessages);
+            // dynamically load files for messages with toLoad field
+            pastMessages.forEach(async (msg, i) => {
+                if (msg.toLoad && msg.dKey) {
+                    const bUrl = await getDecryptedFile(msg.toLoad, msg.type, msg.dKey);
+                    pastMessages[i].message = bUrl;
+                    pastMessages[i].dKey = undefined; // free memory
+                    pastMessages[i].toLoad = undefined; // free memory
+                    setMessages([...pastMessages]);
+                }
+            })
+            setLoading(false);
+        }).catch((err) => {
+            console.error("Failed to get message history: ", err)
+        })
+    }
+
     useEffect(() => {
         if (chatProvider == undefined) {
             return
@@ -38,31 +63,17 @@ const useMessageRenderer = (chatProvider: ChatService | undefined, cID: number) 
             }
         })
 
-        // get message history
-        chatProvider.getMessageHistory(cID).then((pastMessages) => {
-
-            console.log("Got decrypted message history: ", pastMessages)
-            setMessages(pastMessages);
-            // dynamically load files for messages with toLoad field
-            pastMessages.forEach(async (msg, i) => {
-                if (msg.toLoad && msg.dKey) {
-                    const bUrl = await getDecryptedFile(msg.toLoad, msg.type, msg.dKey);
-                    pastMessages[i].message = bUrl;
-                    pastMessages[i].dKey = undefined; // free memory
-                    pastMessages[i].toLoad = undefined; // free memory
-                    setMessages([...pastMessages]);
-                }
-            })
-            setLoading(false);
-        }).catch((err) => {
-            console.error("Failed to get message history: ", err)
-        })
+        getHistory();
 
         return () => {
             // cleanup event listeners
             chatProvider.removeEventListener("message", () => { })
         }
     }, [chatProvider])
+
+    const loadNextPage = () => {
+
+    }
 
     return { messages, setMessages, loading }
 
