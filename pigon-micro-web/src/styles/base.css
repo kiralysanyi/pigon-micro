@@ -11,6 +11,7 @@ body {
   background-size: cover;
   background-attachment: fixed;
   color: rgba(255, 255, 255, 0.87);
+  box-sizing: border-box;
 }
 
 a {

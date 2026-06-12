@@ -158,7 +158,7 @@ const ChatPage = () => {
             <GlassButton onClick={sendMsg}><PaperAirplaneIcon width={24} height={24} /></GlassButton>
         </form>
         {loading && <div className="loading-popup">
-            <h1>Loading...</h1>
+            <div className="horizontal-loader"></div>
         </div>}
     </>
 }
