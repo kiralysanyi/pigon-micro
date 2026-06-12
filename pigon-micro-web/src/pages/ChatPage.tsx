@@ -16,8 +16,13 @@ const ChatPage = () => {
     const [message, setMessage] = useState("");
     const [chatProvider, setChatProvider] = useState<ChatService>();
 
-    const { messages, setMessages, loading } = useMessageRenderer(chatProvider, parseInt(params.id as string));
+    const { messages, setMessages, loading, loadNextPage, clearState } = useMessageRenderer(chatProvider, parseInt(params.id as string));
     const [userInfo, setUserInfo] = useState<userdata>();
+
+
+    useEffect(() => {
+        return () => clearState();
+    }, [params])
 
     // load userinfo
     useEffect(() => {
@@ -138,11 +143,9 @@ const ChatPage = () => {
 
     const scrollHandler: React.UIEventHandler<HTMLDivElement> = (e) => {
         const target = e.currentTarget;
-        let needsUpdate = false;
         if (Math.abs(target.scrollTop) > target.scrollHeight - 1000) {
-            needsUpdate = true
+            loadNextPage();
         }
-        console.log(target.scrollTop, target.scrollHeight, needsUpdate);
     }
 
     return <>

@@ -6,11 +6,11 @@ import api from "../apiservice";
 import { getGroupDecryptKey, getMessageDecryptionKey } from "../keyservice";
 import type ChatService from "./chatservice";
 
-const historyHandler = async (cs: ChatService, chatID: number): Promise<Message[]> => {
+const historyHandler = async (cs: ChatService, chatID: number, page: number): Promise<Message[]> => {
     // get decryption key
 
     // get messages
-    const response = await api.get(`/chat/${chatID}/messages`);
+    const response = await api.get(`/chat/${chatID}/messages?page=${page}`);
     const messages: EncryptedMessage[] = response.data.messages;
     let decrypted: Message[] = [];
     let dkey: CryptoKey | undefined;
