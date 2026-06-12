@@ -16,10 +16,16 @@ import ringtone from "../assets/ringtone.mp3";
 import GlassButton from "../components/GlassButton";
 import { LiquidGlass } from "@liquidglass/react";
 import getUserIdForCall from "../lib/call/getUserIdForCall";
+import { useDebounce } from "../hooks/useDebounce";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
     const [chats, setChats] = useState<ChatinfoBrief[]>();
+
+    const [filteredChats, setFilteredChats] = useState<ChatinfoBrief[]>();
+    const [searchText, setSearchText] = useState<string>("");
+    const searchQuery = useDebounce(searchText, 1000);
+
     const [netError, setNetError] = useState(false);
     const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
 
@@ -183,6 +189,20 @@ const IndexPage = () => {
     }, [incomingCall])
 
 
+    // chat search
+    useEffect(() => {
+        if (searchQuery === "") {
+            setFilteredChats(undefined)
+            return;
+        }
+
+        if (chats) {
+            setFilteredChats(chats.filter((chat) => chat.name.toLowerCase().includes(searchQuery.toLowerCase())));
+        }
+
+    }, [searchQuery, chats])
+
+
     return (userdata && connected == true) ? <>
         <audio ref={ringtoneRef} playsInline src={ringtone} />
         {incomingCall ? <div className="call-popup">
@@ -224,10 +244,19 @@ const IndexPage = () => {
         </div>
         <div className={`sidebar ${hideSidebar ? "sidebar-hidden" : ""}`}>
             {/* Chat list render */}
+
             <div className="chatlist">
-                {chats ? chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
-                    {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
-                </div>) : <div className="horizontal-loader"></div>}
+                <input type="search" placeholder="Search users" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+                {filteredChats ? <>
+                    {/* Filtered chats */}
+                    {filteredChats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                        {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                    </div>)}
+                </> : <>
+                    {/* Unfiltered chats */}
+                    {chats ? chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                        {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                    </div>) : <div className="horizontal-loader"></div>}</>}
             </div>
             <div className="newchat" onClick={() => navigate("/newchat", { viewTransition: true })}>Start new chat</div>
         </div>

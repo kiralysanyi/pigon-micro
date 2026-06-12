@@ -14,6 +14,7 @@ import api from "../services/apiservice";
 import GlassButton from "../components/GlassButton";
 import { BASEURL } from "../conf";
 import getUserIdForCall from "../lib/call/getUserIdForCall";
+import { useDebounce } from "../hooks/useDebounce";
 
 const ChatSettingsPage = () => {
     const [chat, setChat] = useState<chatinfo>();
@@ -24,6 +25,8 @@ const ChatSettingsPage = () => {
     const [showApModal, setShowApModal] = useState(false);
     const [users, setUsers] = useState<userdataBrief[]>();
     const krp = useContext(KeyRingContext);
+    const [searchText, setSearchText] = useState<string>("");
+    const searchQuery = useDebounce(searchText, 1000);
 
     const addUser = async (id: number) => {
         if (!krp || !krp.privKey) {
@@ -117,7 +120,7 @@ const ChatSettingsPage = () => {
         }
 
 
-        api.get("/auth/users").then((response) => {
+        api.get(`/auth/users?search=${searchQuery}`).then((response) => {
             setUsers(response.data.users)
             console.log(response.data.users)
         }).catch((err) => {
@@ -130,36 +133,42 @@ const ChatSettingsPage = () => {
                 }
             }
         })
-    }, [showApModal])
+    }, [showApModal, searchQuery])
 
     return <>
-        {showApModal ? <div className="modal">
-            <GlassButton className="backbutton" onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
-            <h1>Add participant</h1>
-            <div className="modal-list">
-                {users?.map((u) => <div onClick={() => addUser(u.id)} className="list-element">
-                    {u.username}
-                </div>)}
-            </div>
-        </div> : <div className="modal">
-            <GlassButton className="backbutton" onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
-            {chat?.type == "group" ? <>
-                <h1>Chat settings</h1>
-                <span>Participants</span>
+        {chat ? <>
+            {showApModal ? <div className="modal">
+                <GlassButton className="backbutton" onClick={() => setShowApModal(false)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
+                <h1>Add participant</h1>
+                <span>Click on a user to add it</span>
                 <div className="modal-list">
-                    {chat?.participants.map((p) => <div className="list-element">
-                        <img src={`${BASEURL}/auth/pfp/${p.id}`} alt="" />
-                        <span style={{ marginRight: "auto" }}>{p.username}</span>
-                        {userInfo?.ID != p.id ? userInfo?.ID == chat?.creatorId && <button onClick={(e) => { e.stopPropagation(); removeUser(p.id) }} style={{ marginLeft: "auto" }}>Remove</button> : <span style={{ fontSize: "1.3rem", fontWeight: "bold", color: "gray" }}>You</span>}
+                    {users?.map((u) => <div onClick={() => addUser(u.id)} className="list-element">
+                        <img src={`${BASEURL}/auth/pfp/${u.id}`}></img>
+                        <span>{u.username}</span>
                     </div>)}
                 </div>
-                {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
-                {userInfo?.ID == chat?.creatorId && <button className="redbutton" onClick={() => deleteChat()}>Delete group</button>}
-            </> : <>
-                {remoteUser && <img style={{ width: "10rem", height: "10rem", borderRadius: "100%", objectFit: "cover", marginTop: "1rem", marginInline: "auto" }} src={`${BASEURL}/auth/pfp/${remoteUser.ID}`}></img>}
-                <h1>{remoteUser?.username}</h1>
-                <h2>Registered at: <strong>{remoteUser && new Date(remoteUser?.created_at).toLocaleDateString()}</strong></h2>
-            </>}
+                <input type="search" placeholder="Search Users" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
+            </div> : <div className="modal">
+                <GlassButton className="backbutton" onClick={() => navigate("/chat/" + params.id)}><ArrowLeftCircleIcon width={24} height={24} /></GlassButton>
+                {chat?.type == "group" ? <>
+                    <h1>Chat settings</h1>
+                    <span>Participants</span>
+                    <div className="modal-list">
+                        {chat?.participants.map((p) => <div className="list-element">
+                            <img src={`${BASEURL}/auth/pfp/${p.id}`} alt="" />
+                            <span style={{ marginRight: "auto" }}>{p.username}</span>
+                            {userInfo?.ID != p.id ? userInfo?.ID == chat?.creatorId && <button onClick={(e) => { e.stopPropagation(); removeUser(p.id) }} style={{ marginLeft: "auto" }}>Remove</button> : <span style={{ fontSize: "1.3rem", fontWeight: "bold", color: "gray" }}>You</span>}
+                        </div>)}
+                    </div>
+                    {userInfo?.ID == chat?.creatorId && <button onClick={() => setShowApModal(true)}>Add participant</button>}
+                    {userInfo?.ID == chat?.creatorId && <button className="redbutton" onClick={() => deleteChat()}>Delete group</button>}
+                </> : <>
+                    {remoteUser && <img style={{ width: "10rem", height: "10rem", borderRadius: "100%", objectFit: "cover", marginTop: "1rem", marginInline: "auto" }} src={`${BASEURL}/auth/pfp/${remoteUser.ID}`}></img>}
+                    <h1>{remoteUser?.username}</h1>
+                    <h2>Registered at: <strong>{remoteUser && new Date(remoteUser?.created_at).toLocaleDateString()}</strong></h2>
+                </>}
+            </div>}</> : <div className="modal">
+            <div className="horizontal-loader" style={{ width: "100%", maxWidth: "100%", minWidth: "10rem" }}></div>
         </div>}
     </>
 }
