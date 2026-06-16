@@ -37,6 +37,9 @@ const getMessages: RequestHandler = async (req: reqWithUserinfo, res) => {
         const [result] = await pool.query<RowDataPacket[]>("SELECT ID as messageID, chatID, senderID, type, message AS payload, senderKeyId, recipientKeyId, kGuid, created_at AS date FROM messages WHERE chatID = ? ORDER BY ID DESC LIMIT ? OFFSET ?", [chatID, pageSize, offset])
         result.reverse();
 
+        // write lastread column in user-chats connection table
+        await pool.query("UPDATE `user-chats` SET lastRead = CURRENT_TIMESTAMP() WHERE chatId = ? AND userId = ?", [chatID, req.userinfo.ID]);
+
         return res.json({
             messages: result
         })
