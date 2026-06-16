@@ -29,6 +29,7 @@ const IndexPage = () => {
 
     const [netError, setNetError] = useState(false);
     const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
+    const selectedChatIdRef = useRef(0);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -55,6 +56,9 @@ const IndexPage = () => {
                 return prev;
             }
             const i = prev.findIndex(chat => chat.chatID == chatId);
+            if (selectedChatIdRef.current == chatId) {
+                setUnread = false;
+            }
             prev[i].hasUnread = setUnread;
             const nChats = [...prev];
             const [chat] = nChats.splice(i, 1);
@@ -198,7 +202,9 @@ const IndexPage = () => {
     useEffect(() => {
         if (params.id && chats) {
             setHideSidebar(true);
-            setSelectedChat(chats?.filter((chat) => chat.chatID.toString() == params.id)[0])
+            const selected = chats?.filter((chat) => chat.chatID.toString() == params.id)[0];
+            setSelectedChat(selected);
+            selectedChatIdRef.current = selected.chatID;
         }
     }, [params, chats])
 
