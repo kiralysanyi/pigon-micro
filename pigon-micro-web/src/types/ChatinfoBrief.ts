@@ -5,7 +5,8 @@ interface ChatinfoBrief {
     chatID: number,
     name: string,
     participants: userdataBrief[]
-    type: "group" | "direct"
+    type: "group" | "direct",
+    hasUnread: boolean
 }
 
 export type { ChatinfoBrief }
