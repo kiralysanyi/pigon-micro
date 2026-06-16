@@ -10,6 +10,7 @@ npm i
 npm run build
 cd ..
 cp -r ./server/dist ./build
+cp -r ./server/migrations ./build/migrations
 cp -r ./server/src/assets ./build/assets
 cp ./server/package.json ./build/package.json
 cp ./server/package-lock.json ./build/package-lock.json
