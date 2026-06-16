@@ -49,6 +49,20 @@ const IndexPage = () => {
         })
     }
 
+    const reorderChats = (chatId: number, setUnread = false) => {
+        setChats((prev) => {
+            if (!prev) {
+                return prev;
+            }
+            const i = prev.findIndex(chat => chat.chatID == chatId);
+            prev[i].hasUnread = setUnread;
+            const nChats = [...prev];
+            const [chat] = nChats.splice(i, 1);
+            nChats.unshift(chat);
+            return nChats;
+        })
+    }
+
     // set pfp id
     useEffect(() => {
         if (selectedChat) {
@@ -132,21 +146,13 @@ const IndexPage = () => {
 
         // order chats on incoming messages
         const onMessage = (data: EncryptedMessage) => {
-            setChats((prev) => {
-                if (!prev) {
-                    return prev;
-                }
-                console.log(data.chatID)
-                const i = prev.findIndex(chat => chat.chatID == data.chatID);
-                prev[i].hasUnread = true;
-                const nChats = [...prev];
-                const [chat] = nChats.splice(i, 1);
-                nChats.unshift(chat);
-                console.log(nChats)
-                return nChats;
-            })
+            reorderChats(data.chatID, true)
         }
 
+        // order chats on message sending
+        const onMessageSend = (e: any) => {
+            reorderChats(e.detail.chatId, false);
+        }
         (async () => {
 
             // get userinfo
@@ -171,6 +177,7 @@ const IndexPage = () => {
             socket.on("ring", onRing);
             socket.on("ring-end", onRingEnd);
             socket.on("message", onMessage);
+            window.addEventListener("chat:msgsend", onMessageSend);
             setConnected(true)
         })()
         return () => {

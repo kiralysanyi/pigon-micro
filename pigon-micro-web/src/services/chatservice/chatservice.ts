@@ -37,10 +37,11 @@ class ChatService extends EventTarget {
         handleMessageEvent({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }, this);
     }
 
-    // send message handler for private chats
+    // send message handler
     sendMessage = async (message: string, chatID: number) => {
         console.log("Send: ", message, chatID)
         await sendMessage(message, chatID, this);
+        window.dispatchEvent(new CustomEvent("chat:msgsend", { detail: { chatId: chatID } }))
         return;
     }
 
