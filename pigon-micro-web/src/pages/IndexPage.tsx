@@ -17,6 +17,7 @@ import GlassButton from "../components/GlassButton";
 import { LiquidGlass } from "@liquidglass/react";
 import getUserIdForCall from "../lib/call/getUserIdForCall";
 import { useDebounce } from "../hooks/useDebounce";
+import type { EncryptedMessage } from "../types/EncryptedMessage";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -28,6 +29,7 @@ const IndexPage = () => {
 
     const [netError, setNetError] = useState(false);
     const [selectedChat, setSelectedChat] = useState<ChatinfoBrief>();
+    const selectedChatIdRef = useRef(0);
 
     const navigate = useNavigate();
     const params = useParams();
@@ -37,7 +39,7 @@ const IndexPage = () => {
     const [handleCall, setHandleCall] = useState<(accept: boolean) => void>();
     const [incomingCall, setIncomingCall] = useState<{ from: string, socketId: string } | undefined>(undefined)
     const ringtoneRef = useRef<HTMLAudioElement>(null);
-    const [pfpId, setPfpId] = useState<number | undefined>(undefined)
+    const [pfpId, setPfpId] = useState<number | undefined>(undefined);
 
     const updateChatList = async () => {
         api.get("/chat").then((response) => {
@@ -45,6 +47,23 @@ const IndexPage = () => {
             console.log(response.data)
         }).catch((err) => {
             console.error("Failed to get chats: ", err)
+        })
+    }
+
+    const reorderChats = (chatId: number, setUnread = false) => {
+        setChats((prev) => {
+            if (!prev) {
+                return prev;
+            }
+            const i = prev.findIndex(chat => chat.chatID == chatId);
+            if (selectedChatIdRef.current == chatId) {
+                setUnread = false;
+            }
+            prev[i].hasUnread = setUnread;
+            const nChats = [...prev];
+            const [chat] = nChats.splice(i, 1);
+            nChats.unshift(chat);
+            return nChats;
         })
     }
 
@@ -129,6 +148,15 @@ const IndexPage = () => {
             setHandleCall(undefined);
         }
 
+        // order chats on incoming messages
+        const onMessage = (data: EncryptedMessage) => {
+            reorderChats(data.chatID, true)
+        }
+
+        // order chats on message sending
+        const onMessageSend = (e: any) => {
+            reorderChats(e.detail.chatId, false);
+        }
         (async () => {
 
             // get userinfo
@@ -152,6 +180,8 @@ const IndexPage = () => {
             socket.on("newchat", onNewChat);
             socket.on("ring", onRing);
             socket.on("ring-end", onRingEnd);
+            socket.on("message", onMessage);
+            window.addEventListener("chat:msgsend", onMessageSend);
             setConnected(true)
         })()
         return () => {
@@ -162,6 +192,7 @@ const IndexPage = () => {
                 socket.off("newchat", onNewChat);
                 socket.off("ring", onRing);
                 socket.off("ring-end", onRingEnd);
+                socket.off("message", onMessage);
             }
         }
 
@@ -171,7 +202,9 @@ const IndexPage = () => {
     useEffect(() => {
         if (params.id && chats) {
             setHideSidebar(true);
-            setSelectedChat(chats?.filter((chat) => chat.chatID.toString() == params.id)[0])
+            const selected = chats?.filter((chat) => chat.chatID.toString() == params.id)[0];
+            setSelectedChat(selected);
+            selectedChatIdRef.current = selected.chatID;
         }
     }, [params, chats])
 
@@ -201,6 +234,21 @@ const IndexPage = () => {
         }
 
     }, [searchQuery, chats])
+
+    const markRead = (chatId: number) => {
+        setChats((prev) => {
+            if (prev) {
+                return prev.map((chat) => {
+                    if (chat.chatID == chatId) {
+                        chat.hasUnread = false;
+                    }
+                    return chat;
+                })
+            }
+
+            return prev
+        })
+    }
 
 
     return (userdata && connected == true) ? <>
@@ -249,13 +297,15 @@ const IndexPage = () => {
                 <input type="search" placeholder="Search users" value={searchText} onChange={(e) => setSearchText(e.target.value)} />
                 {filteredChats ? <>
                     {/* Filtered chats */}
-                    {filteredChats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                    {filteredChats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { markRead(chat.chatID); navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
                         {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                        {chat.hasUnread && <span className="unread-indicator"></span>}
                     </div>)}
                 </> : <>
                     {/* Unfiltered chats */}
-                    {chats ? chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
+                    {chats ? chats.map((chat) => <div className={chat.chatID == parseInt(params.id as string) ? "focused" : ""} onClick={() => { markRead(chat.chatID); navigate("/chat/" + chat.chatID, { viewTransition: true }); setHideSidebar(true) }}>
                         {chat.type === "direct" && <img src={`${BASEURL}/auth/pfp/${chat.participants.find((p: any) => p.id !== userdata.ID)?.id ?? 0}`} />}<span>{chat.name}</span>
+                        {chat.hasUnread && <span className="unread-indicator"></span>}
                     </div>) : <div className="horizontal-loader"></div>}</>}
             </div>
             <div className="newchat" onClick={() => navigate("/newchat", { viewTransition: true })}>Start new chat</div>

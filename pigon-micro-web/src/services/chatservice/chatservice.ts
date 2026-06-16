@@ -4,6 +4,8 @@ import type { Message } from "../../types/Message";
 import uploadChatKeyPair from "../../lib/chat/uploadChatKeyPair";
 import historyHandler from "./historyHandler";
 import { handleMessageEvent, sendFileMessage, sendMessage } from "./messageHelper";
+import getChatName from "../../lib/chat/getChatName";
+import NotificationService from "../NotificationService";
 
 // event map for chatservice, used for typing event listeners
 interface ChatServiceEventMap {
@@ -30,17 +32,21 @@ class ChatService extends EventTarget {
     masterKey: CryptoKey | undefined;
     privKey: CryptoKey | undefined;
     initialized: boolean = false;
+    notifService = new NotificationService();
 
     // handler for incoming messages
 
     private messageHandler = async ({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderId: number, senderKeyId: number | undefined, recipientKeyId: number | undefined, kGuid: string | undefined, type: "text" | "image" | "video" | "file" }) => {
         handleMessageEvent({ payload, chatID, senderId, senderKeyId, recipientKeyId, kGuid, type }, this);
+        const chatname = await getChatName(chatID);
+        this.notifService.sendNotif(chatname, `New message from: ${chatname}`)
     }
 
-    // send message handler for private chats
+    // send message handler
     sendMessage = async (message: string, chatID: number) => {
         console.log("Send: ", message, chatID)
         await sendMessage(message, chatID, this);
+        window.dispatchEvent(new CustomEvent("chat:msgsend", { detail: { chatId: chatID } }))
         return;
     }
 
