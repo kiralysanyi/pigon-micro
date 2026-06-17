@@ -10,21 +10,35 @@ async function encryptFile(file: File, key: CryptoKey): Promise<encryptedFile> {
         key,
         await file.arrayBuffer()
     );
-
-    return { iv, ciphertext };
+    console.log(file.name)
+    const ext = file.name.split('.')[file.name.split('.').length - 1];
+    console.log("Encrypt|extension: ", ext)
+    return { iv, ciphertext, extension: ext };
 }
 
-
-
-
-async function decryptFile(packed: ArrayBuffer, key: CryptoKey, mimeType: string): Promise<File> {
-    const { iv, ciphertext } = unpackEncryptedFile(packed);
+async function decryptFile(packed: ArrayBuffer, key: CryptoKey): Promise<File> {
+    const { iv, ciphertext, extension } = unpackEncryptedFile(packed);
     const decrypted = await crypto.subtle.decrypt(
         { name: "AES-GCM", iv: iv as Uint8Array<ArrayBuffer> },
         key,
         ciphertext
     );
-    return new File([decrypted], "decrypted", { type: mimeType });
+
+    const MIME_MAP: Record<string, string> = {
+        png: "image/png",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        webp: "image/webp",
+        gif: "image/gif",
+        mp4: "video/mp4",
+        webm: "video/webm"
+    };
+
+    const mime = MIME_MAP[extension] ?? "application/octet-stream";
+
+    const uid = window.crypto.randomUUID();
+
+    return new File([decrypted], `${uid}.${extension}`, { type: mime });
 }
 
 export { encryptFile, decryptFile }

@@ -6,7 +6,7 @@ const sendFile = (chatId: number, key: CryptoKey): Promise<{ type: "image" | "vi
     return new Promise((resolve, reject) => {
         const input = document.createElement("input");
         input.type = "file";
-        input.accept = "image/png,image/jpeg,image/jpg,image/webp,image/gif,video/mp4,video/webp";
+        input.accept = "image/png,image/jpeg,image/jpg,image/webp,image/gif,video/mp4,video/webm";
 
         const handleChange = async () => {
             const file = input.files?.item(0)
