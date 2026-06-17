@@ -69,7 +69,8 @@
 
 .list-element {
     font-size: 2rem;
-    height: 4rem;
+    min-height: 4rem;
+    height: auto;
     line-height: 4rem;
     text-align: center;
     background-color: rgba(32, 32, 32, 0.752);
@@ -77,13 +78,14 @@
     cursor: pointer;
     border: 2px solid transparent;
     transition: 200ms;
-    flex: 0;
     display: flex;
     align-items: center;
     padding-left: 0.5rem;
     padding-right: 0.5rem;
     justify-content: start;
     user-select: none;
+    flex-wrap: wrap;
+    overflow: hidden;
     gap: 1rem;
 }
 
