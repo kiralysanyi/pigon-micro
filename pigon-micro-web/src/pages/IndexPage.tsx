@@ -18,6 +18,7 @@ import { LiquidGlass } from "@liquidglass/react";
 import getUserIdForCall from "../lib/call/getUserIdForCall";
 import { useDebounce } from "../hooks/useDebounce";
 import type { EncryptedMessage } from "../types/EncryptedMessage";
+import loadSW from "../services/swloader";
 
 const IndexPage = () => {
     const [userdata, setUserdata] = useState<userdata>();
@@ -83,6 +84,7 @@ const IndexPage = () => {
     }, [selectedChat])
 
     useEffect(() => {
+        loadSW();
         let socket: Socket | undefined;
         const onConnect = () => {
             console.log("Connected")
