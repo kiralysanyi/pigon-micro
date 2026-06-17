@@ -10,12 +10,11 @@ async function encryptFile(file: File, key: CryptoKey): Promise<encryptedFile> {
         key,
         await file.arrayBuffer()
     );
-
-    return { iv, ciphertext };
+    console.log(file.name)
+    const ext = file.name.split('.')[file.name.split('.').length - 1];
+    console.log("Encrypt|extension: ", ext)
+    return { iv, ciphertext, extension: ext };
 }
-
-
-
 
 async function decryptFile(packed: ArrayBuffer, key: CryptoKey, mimeType: string): Promise<File> {
     const { iv, ciphertext } = unpackEncryptedFile(packed);
