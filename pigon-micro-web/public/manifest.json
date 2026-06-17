@@ -4,6 +4,8 @@
     "start_url": "/",
     "display": "standalone",
     "description": "Pigon Micro by kiralysanyi",
+    "theme_color": "#000000",
+    "background_color": "#000000",
     "icons": [
         {
             "src": "/icon.png",
@@ -14,7 +16,7 @@
     "screenshots": [
         {
             "src": "/desktop.png",
-            "sizes": "1280x720",
+            "sizes": "2560x1440",
             "type": "image/png",
             "form_factor": "wide",
             "label": "Chat screen"
