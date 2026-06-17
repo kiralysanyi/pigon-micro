@@ -3,7 +3,7 @@ import { getFile, saveFile } from "../../indexedDB/fileDB";
 import { decryptFile } from "./fileEncrypt";
 
 // helper function to fetch and decrypt file, returns a blob url
-const getDecryptedFile = async (toLoad: string, type: string, dKey: CryptoKey): Promise<string> => {
+const getDecryptedFile = async (toLoad: string, dKey: CryptoKey): Promise<string> => {
     try {
         const loadedFile = await getFile(toLoad);
         return URL.createObjectURL(loadedFile);
@@ -13,7 +13,7 @@ const getDecryptedFile = async (toLoad: string, type: string, dKey: CryptoKey): 
 
     const response = await api.get(`/cdn/${toLoad}`, { responseType: "arraybuffer" });
 
-    const decryptedFile: File = await decryptFile(response.data, dKey, type);
+    const decryptedFile: File = await decryptFile(response.data, dKey);
     const bUrl: string = URL.createObjectURL(decryptedFile);
     saveFile(toLoad, decryptedFile).then(() => {
         console.log("File saved to indexedDB for future use: ", toLoad);

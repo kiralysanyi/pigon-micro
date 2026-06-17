@@ -19,7 +19,7 @@ function unpackEncryptedFile(packed: ArrayBuffer): encryptedFile {
     console.log(extSlice)
     let end = extSlice.length;
     while (end > 0 && extSlice[end - 1] === 0) end--;
-    const ext = dec.decode(extSlice);
+    const ext = dec.decode(extSlice.subarray(0, end));
     console.log("Extension: ", ext);
     console.log(extSlice)
     return {
