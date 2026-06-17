@@ -12,8 +12,8 @@ export default defineConfig({
       start_url: "/",
       description: "Pigon Micro by kiralysanyi",
       icons: [{
-        src: "/vite.svg",
-        type: "image/svg+xml",
+        src: "/icon.png",
+        type: "image/png",
         sizes: '256x256'
       }]
     }
