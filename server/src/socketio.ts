@@ -2,8 +2,9 @@ import { Server } from "http";
 import * as SocketIO from "socket.io";
 import { verifyAccessToken } from "./utils/db/session";
 import { ExtendedSocket } from "./types/ExtendedSocket";
-import { checkUserInChat, getParticipants } from "./utils/db/chat";
+import { checkUserInChat, getChatName, getParticipants } from "./utils/db/chat";
 import { pool } from "./utils/db/db";
+import { sendNotif } from "./utils/webpush";
 
 let io: SocketIO.Server;
 
@@ -73,8 +74,11 @@ const attachSocketio = (server: Server) => {
             }
 
             // Send message to recipient devices
-            filteredParticipants.forEach((p) => {
+            filteredParticipants.forEach(async (p) => {
                 io.to(`usr${p.id}`).emit("message", { payload, chatID, senderId: socket.userinfo.ID, senderKeyId, recipientKeyId, kGuid, type: msgType });
+                const chatname = await getChatName(chatID, socket.userinfo.ID);
+                console.log("New message: ", chatname, chatID)
+                sendNotif(p.id, "New message", `New message from ${chatname}`);
             });
             // Save to db
             if (kGuid == undefined) {

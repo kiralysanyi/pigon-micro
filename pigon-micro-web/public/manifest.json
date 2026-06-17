@@ -1,0 +1,32 @@
+{
+    "name": "Pigon Micro",
+    "short_name": "Pigon",
+    "start_url": "/",
+    "display": "standalone",
+    "description": "Pigon Micro by kiralysanyi",
+    "theme_color": "#000000",
+    "background_color": "#000000",
+    "icons": [
+        {
+            "src": "/icon.png",
+            "type": "image/png",
+            "sizes": "190x190"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/desktop.png",
+            "sizes": "2560x1440",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Chat screen"
+        },
+        {
+            "src": "/mobile.png",
+            "sizes": "800x1812",
+            "type": "image/png",
+            "platform": "android",
+            "label": "Chat screen"
+        }
+    ]
+}

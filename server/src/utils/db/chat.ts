@@ -56,14 +56,22 @@ const getChatType = async (chatID: number): Promise<"direct" | "group"> => {
     }
 }
 
-const getChatName = async (chatID: number): Promise<string | null> => {
+const getChatName = async (chatID: number, includeUserId?: number): Promise<string | null> => {
     try {
         const [result] = await pool.query<RowDataPacket[]>("SELECT name FROM chats WHERE ID = ?", [chatID]);
         if (result.length == 0) {
             throw "Not found"
         }
 
-        return result[0].name
+        let name = result[0].name;
+
+        if (includeUserId && name == null) {
+            const participants = await getParticipants(chatID);
+            const otherP = participants.filter((p) => p.id == includeUserId)[0];
+            name = otherP.username;
+        }
+
+        return name;
     } catch (error) {
         throw error;
     }
