@@ -5,6 +5,7 @@ import { ExtendedSocket } from "./types/ExtendedSocket";
 import { checkUserInChat, getChatName, getParticipants } from "./utils/db/chat";
 import { pool } from "./utils/db/db";
 import { sendNotif } from "./utils/webpush";
+import { ResultSetHeader } from "mysql2";
 
 let io: SocketIO.Server;
 
@@ -50,7 +51,7 @@ const attachSocketio = (server: Server) => {
     io.on('connection', (socket: ExtendedSocket) => {
         console.log("Socket connected:", socket.id, socket.authenticated);
 
-        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string, type: "text" | "video" | "image" | "file" }) => {
+        socket.on("message", async ({ payload, chatID, senderKeyId, recipientKeyId, kGuid, type }: { payload: string, chatID: number, senderKeyId?: number, recipientKeyId?: number, kGuid?: string, type: "text" | "video" | "image" | "file" }, cb?: (messageId: number, error?: string) => void) => {
             const msgType = type;
             if ((senderKeyId == undefined || recipientKeyId == undefined) && kGuid == undefined) {
                 console.log("Invalid message dropped");
@@ -84,16 +85,20 @@ const attachSocketio = (server: Server) => {
             if (kGuid == undefined) {
                 // Private message
                 try {
-                    await pool.query("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId]);
+                    const [result] = await pool.query<ResultSetHeader>("INSERT INTO messages (chatID, senderID, type, message, senderKeyId, recipientKeyId) VALUES (?,?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, senderKeyId, recipientKeyId]);
+                    cb?.(result.insertId);
                 } catch (error) {
                     console.error("Failed to save message:", error);
+                    cb?.(0, error);
                 }
             } else {
                 // Group message
                 try {
-                    await pool.query("INSERT INTO messages (chatID, senderID, type, message, kGuid) VALUES (?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, kGuid]);
+                    const [result] = await pool.query<ResultSetHeader>("INSERT INTO messages (chatID, senderID, type, message, kGuid) VALUES (?,?,?,?,?)", [chatID, socket.userinfo.ID, msgType, payload, kGuid]);
+                    cb?.(result.insertId)
                 } catch (error) {
                     console.error("Failed to save message:", error);
+                    cb?.(0, error)
                 }
             }
         });

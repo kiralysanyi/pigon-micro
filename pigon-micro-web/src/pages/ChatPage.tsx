@@ -33,7 +33,7 @@ const ChatPage = () => {
 
     const krp = useContext(KeyRingContext);
 
-    const sendMessageRef = useRef<((message: string) => Promise<void>) | undefined>(undefined);
+    const sendMessageRef = useRef<((message: string) => Promise<number>) | undefined>(undefined);
     const sendFileRef = useRef<(() => void) | undefined>(undefined);
 
     // Load chatservice
@@ -62,11 +62,10 @@ const ChatPage = () => {
 
         console.log(chatProvider.sendMessage)
 
-        const smsg = async (message: string) => {
+        const smsg = async (message: string): Promise<number> => {
             console.log("Sending")
             try {
-                await chatProvider.sendMessage(message, parseInt(params.id as string))
-                console.log("Sent")
+                return await chatProvider.sendMessage(message, parseInt(params.id as string))
             } catch (error) {
                 console.error("Failed to send message");
                 throw "err_msg_send_failed"
@@ -85,9 +84,11 @@ const ChatPage = () => {
                 setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: "Sending file...", type: "text", status: "sending", localId: localUID }])
 
                 try {
-                    const data = await chatProvider.sendFile(parseInt(params.id as string));
-                    console.log("File sent, got url: ", data.url);
-                    setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "sent", type: data.type, message: data.url } : msg))
+                    const data = await chatProvider.sendFile(parseInt(params.id as string), (messageId: number) => {
+                        console.log("Sent file with id:", messageId)
+                        console.log("File sent, got url: ", data.url);
+                        setMessages(prev => prev.map((msg) => msg.localId == localUID ? { ...msg, status: "sent", type: data.type, message: data.url, ID: messageId } : msg))
+                    });
                 } catch (error) {
                     if (error == "No file selected") {
                         setMessages(prev => prev.filter(msg => msg.localId !== localUID));
@@ -128,9 +129,9 @@ const ChatPage = () => {
         setMessages(prev => [...prev, { senderID: userInfo.ID, senderName: userInfo.username, chatID: parseInt(params.id as string), date: new Date(), message: message, type: "text", status: "sending", localId: localUID }])
 
         try {
-            await sendMessageRef.current?.(message);
+            const srvMessageId = await sendMessageRef.current?.(message);
             // set state by uuid to sent
-            setMessages((prev) => prev.map(msg => msg.localId == localUID ? { ...msg, status: "sent" } : msg))
+            setMessages((prev) => prev.map(msg => msg.localId == localUID ? { ...msg, status: "sent", ID: srvMessageId } : msg))
 
         } catch (error) {
             // set state by uuid to failed
@@ -151,7 +152,7 @@ const ChatPage = () => {
     return <>
         <div className="message-display" onScroll={scrollHandler}>
             {[...messages].reverse().map((msg) => <div className={`${msg.senderID == userInfo?.ID ? "mymessage" : "message"} ${msg.status == "failed" ? "message-failed" : ""}`}>
-                <span className="sname">{msg.senderName}</span>
+                <span className="sname">{msg.senderName}</span><span>{msg.ID}</span>
                 {msg.message ? <>
                     {msg.type == "text" && <span className="msg">{msg.message}</span>}
                     {msg.type == "image" && <img src={msg.message}></img>}

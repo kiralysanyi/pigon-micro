@@ -38,16 +38,17 @@ class ChatService extends EventTarget {
     }
 
     // send message handler
-    sendMessage = async (message: string, chatID: number) => {
+    sendMessage = async (message: string, chatID: number): Promise<number> => {
         console.log("Send: ", message, chatID)
-        await sendMessage(message, chatID, this);
+        const messageId = await sendMessage(message, chatID, this);
+        console.log("Sent message with id: ", messageId)
         window.dispatchEvent(new CustomEvent("chat:msgsend", { detail: { chatId: chatID } }))
-        return;
+        return messageId;
     }
 
     // send file handler, works for both group and private chats
-    sendFile = async (chatID: number): Promise<{ type: "image" | "video", url: string }> => {
-        return sendFileMessage(chatID, this);
+    sendFile = async (chatID: number, sentCB?: (messageId: number) => void): Promise<{ type: "image" | "video", url: string }> => {
+        return sendFileMessage(chatID, this, sentCB);
     }
 
     rotateInterval?: number = undefined

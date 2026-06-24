@@ -23,6 +23,7 @@ const historyHandler = async (cs: ChatService, chatID: number, page: number): Pr
         }
 
         decrypted.push({
+            ID: msg.messageID,
             chatID: chatID,
             date: new Date(msg.date),
             message: dMesssage,
@@ -41,6 +42,7 @@ const historyHandler = async (cs: ChatService, chatID: number, page: number): Pr
         }
         const assetId = JSON.parse(msg.payload).assetId;
         decrypted.push({
+            ID: msg.messageID,
             chatID: msg.chatID,
             date: new Date(msg.date),
             message: undefined,

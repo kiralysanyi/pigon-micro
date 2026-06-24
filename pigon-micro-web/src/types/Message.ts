@@ -1,4 +1,5 @@
 interface Message {
+    ID?: number,
     chatID: number,
     message?: string,
     senderID: number,
