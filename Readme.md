@@ -48,14 +48,7 @@ git clone https://github.com/kiralysanyi/pigon-micro.git
 cd pigon-micro
 ```
 
-### 2. Set up the database
-Import the provided SQL schema:
-```bash
-mysql -u root -p < pigonmicro.sql
-```
-Or use your favourite database tool to execute `pigonmicro.sql`.
-
-### 3. Configure environment variables
+### 2. Configure environment variables
 Copy the example configuration and edit it:
 ```bash
 cp server/.env.example server/.env
@@ -74,7 +67,7 @@ Adjust the following values in `server/.env`:
 | `PFP_MAX_SIZE`     | Max profile picture size in MB (default: 1)      |
 | `MEDIA_MAX_SIZE`   | Max file upload size in MB (default: 100)        |
 
-### 4. Build the frontend
+### 3. Build the frontend
 ```bash
 cd pigon-micro-web
 npm install
@@ -82,7 +75,7 @@ npm run build
 ```
 The built files will be placed in `dist/`. When running the backend in production, it will serve these static files automatically if they exist.
 
-### 5. Build the backend
+### 4. Build the backend
 ```bash
 cd ../server
 npm install
@@ -90,7 +83,7 @@ npm run build
 ```
 This compiles TypeScript to `dist/`.
 
-### 6. (Optional) Run the build script
+### 5. (Optional) Run the build script
 The project includes a `build.sh` script that performs steps 4 & 5 and packages everything into a `build/` directory ready for Docker.
 ```bash
 chmod +x build.sh
@@ -100,7 +93,7 @@ chmod +x build.sh
 ## Running the Application
 
 ### Development Mode
-Start backend with hot‑reload:
+Start backend:
 ```bash
 cd server
 npm run start
