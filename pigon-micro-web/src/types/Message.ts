@@ -3,6 +3,7 @@ interface Message {
     chatID: number,
     message?: string,
     senderID: number,
+    replyTo?: number, // Referencing message ID
     toLoad?: string, // assetid of the file to load, only used for file messages
     date: Date,
     senderName?: string,

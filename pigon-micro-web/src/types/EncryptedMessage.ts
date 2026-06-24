@@ -8,6 +8,7 @@ interface EncryptedMessage {
     chatID: number,
     date: string,
     messageID: number,
+    replyTo?: number, // Referencing message ID
     payload: string,
     senderID: number,
     kGuid?: string,
